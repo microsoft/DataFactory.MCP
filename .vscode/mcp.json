@@ -1,0 +1,14 @@
+{
+	"servers": {
+		"DataFactory.MCP": {
+			"type": "stdio",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"DataFactory.MCP.csproj"
+			]
+		}
+	},
+	"inputs": []
+}
