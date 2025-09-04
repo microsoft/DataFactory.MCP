@@ -38,7 +38,7 @@ To test this MCP server from source code (locally) without using a built MCP ser
 
 ## Testing the MCP Server
 
-Once configured, you can ask Copilot Chat for a random number, for example, `Give me 3 random numbers`. It should prompt you to use the `get_random_number` tool on the `DataFactory.MCP` MCP server and show you the results.
+Once configured, you can test the MCP server functionality using the available tools for Azure Data Factory gateway management and authentication.
 
 ## Publishing to NuGet.org
 

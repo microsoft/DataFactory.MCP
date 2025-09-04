@@ -27,7 +27,6 @@ builder.Services.AddTransient<FabricGatewayTool>();
 builder.Services
     .AddMcpServer()
     .WithStdioServerTransport()
-    .WithTools<RandomNumberTools>()
     .WithTools<AuthenticationTool>()
     .WithTools<FabricGatewayTool>();
 
