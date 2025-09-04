@@ -13,10 +13,10 @@
 
     <!-- Set recommended package metadata -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageId>SampleMcpServer</PackageId>
+    <PackageId>Microsoft.DataFactory.MCP</PackageId>
     <PackageVersion>0.1.0-beta</PackageVersion>
     <PackageTags>AI; MCP; server; stdio</PackageTags>
-    <Description>An MCP server using the MCP C# SDK.</Description>
+    <Description>An MCP server using the MCP C# SDK for DataFactory operations.</Description>
   </PropertyGroup>
 
   <!-- Include additional files for browsing the MCP server. -->
