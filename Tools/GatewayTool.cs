@@ -7,16 +7,16 @@ using System.Text.Json;
 namespace DataFactory.MCP.Tools;
 
 [McpServerToolType]
-public class FabricGatewayTool
+public class GatewayTool
 {
     private readonly IFabricGatewayService _gatewayService;
 
-    public FabricGatewayTool(IFabricGatewayService gatewayService)
+    public GatewayTool(IFabricGatewayService gatewayService)
     {
         _gatewayService = gatewayService;
     }
 
-    [McpServerTool, Description(@"Lists all Microsoft Fabric gateways the user has permission for, including on-premises, on-premises (personal mode), and virtual network gateways")]
+    [McpServerTool, Description(@"Lists all gateways the user has permission for, including on-premises, on-premises (personal mode), and virtual network gateways")]
     public async Task<string> ListGatewaysAsync(
         [Description("A token for retrieving the next page of results (optional)")] string? continuationToken = null)
     {
@@ -57,7 +57,7 @@ public class FabricGatewayTool
         }
     }
 
-    [McpServerTool, Description(@"Gets details about a specific Microsoft Fabric gateway by its ID")]
+    [McpServerTool, Description(@"Gets details about a specific gateway by its ID")]
     public async Task<string> GetGatewayAsync(
         [Description("The ID of the gateway to retrieve")] string gatewayId)
     {
