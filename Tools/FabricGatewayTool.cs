@@ -1,7 +1,7 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
 using DataFactory.MCP.Abstractions.Interfaces;
-using DataFactory.MCP.Models.Gateway;
+using DataFactory.MCP.Extensions;
 using System.Text.Json;
 
 namespace DataFactory.MCP.Tools;
@@ -34,7 +34,7 @@ public class FabricGatewayTool
                 TotalCount = response.Value.Count,
                 ContinuationToken = response.ContinuationToken,
                 HasMoreResults = !string.IsNullOrEmpty(response.ContinuationToken),
-                Gateways = response.Value.Select(g => FormatGatewayInfo(g))
+                Gateways = response.Value.Select(g => g.ToFormattedInfo())
             };
 
             return JsonSerializer.Serialize(result, new JsonSerializerOptions
@@ -75,7 +75,7 @@ public class FabricGatewayTool
                 return $"Gateway with ID '{gatewayId}' not found or you don't have permission to access it.";
             }
 
-            var result = FormatGatewayInfo(gateway);
+            var result = gateway.ToFormattedInfo();
             return JsonSerializer.Serialize(result, new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -90,66 +90,5 @@ public class FabricGatewayTool
         {
             return $"Error retrieving gateway: {ex.Message}";
         }
-    }
-
-    private static object FormatGatewayInfo(Gateway gateway)
-    {
-        var baseInfo = new
-        {
-            Id = gateway.Id,
-            Type = gateway.Type
-        };
-
-        return gateway switch
-        {
-            OnPremisesGateway onPrem => new
-            {
-                baseInfo.Id,
-                baseInfo.Type,
-                DisplayName = onPrem.DisplayName,
-                Version = onPrem.Version,
-                NumberOfMembers = onPrem.NumberOfMemberGateways,
-                LoadBalancing = onPrem.LoadBalancingSetting,
-                AllowCloudRefresh = onPrem.AllowCloudConnectionRefresh,
-                AllowCustomConnectors = onPrem.AllowCustomConnectors,
-                PublicKey = new
-                {
-                    Exponent = onPrem.PublicKey.Exponent,
-                    Modulus = onPrem.PublicKey.Modulus.Length > 20
-                        ? onPrem.PublicKey.Modulus[..20] + "..."
-                        : onPrem.PublicKey.Modulus
-                }
-            },
-            OnPremisesGatewayPersonal personal => new
-            {
-                baseInfo.Id,
-                baseInfo.Type,
-                Version = personal.Version,
-                PublicKey = new
-                {
-                    Exponent = personal.PublicKey.Exponent,
-                    Modulus = personal.PublicKey.Modulus.Length > 20
-                        ? personal.PublicKey.Modulus[..20] + "..."
-                        : personal.PublicKey.Modulus
-                }
-            },
-            VirtualNetworkGateway vnet => new
-            {
-                baseInfo.Id,
-                baseInfo.Type,
-                DisplayName = vnet.DisplayName,
-                CapacityId = vnet.CapacityId,
-                NumberOfMembers = vnet.NumberOfMemberGateways,
-                InactivityMinutes = vnet.InactivityMinutesBeforeSleep,
-                VirtualNetwork = new
-                {
-                    SubscriptionId = vnet.VirtualNetworkAzureResource.SubscriptionId,
-                    ResourceGroup = vnet.VirtualNetworkAzureResource.ResourceGroupName,
-                    VNetName = vnet.VirtualNetworkAzureResource.VirtualNetworkName,
-                    Subnet = vnet.VirtualNetworkAzureResource.SubnetName
-                }
-            },
-            _ => baseInfo
-        };
     }
 }
