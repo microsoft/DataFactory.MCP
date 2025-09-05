@@ -92,45 +92,6 @@ public class FabricGatewayTool
         }
     }
 
-    [McpServerTool, Description(@"Lists all gateways in a summarized table format for easy viewing")]
-    public async Task<string> ListGatewaysSummaryAsync()
-    {
-        try
-        {
-            var response = await _gatewayService.ListGatewaysAsync();
-
-            if (!response.Value.Any())
-            {
-                return "No gateways found.";
-            }
-
-            var summary = "Microsoft Fabric Gateways Summary:\n" +
-                         "=" + new string('=', 80) + "\n\n";
-
-            foreach (var gateway in response.Value)
-            {
-                summary += FormatGatewaySummary(gateway) + "\n";
-            }
-
-            summary += $"\nTotal: {response.Value.Count} gateway(s)";
-
-            if (!string.IsNullOrEmpty(response.ContinuationToken))
-            {
-                summary += "\n(More results available - use ListGatewaysAsync with continuationToken)";
-            }
-
-            return summary;
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return $"Authentication error: {ex.Message}";
-        }
-        catch (Exception ex)
-        {
-            return $"Error listing gateways summary: {ex.Message}";
-        }
-    }
-
     private static object FormatGatewayInfo(Gateway gateway)
     {
         var baseInfo = new
@@ -189,34 +150,6 @@ public class FabricGatewayTool
                 }
             },
             _ => baseInfo
-        };
-    }
-
-    private static string FormatGatewaySummary(Gateway gateway)
-    {
-        return gateway switch
-        {
-            OnPremisesGateway onPrem =>
-                $"🏢 {onPrem.DisplayName}\n" +
-                $"   ID: {onPrem.Id}\n" +
-                $"   Type: {onPrem.Type} | Version: {onPrem.Version}\n" +
-                $"   Members: {onPrem.NumberOfMemberGateways} | Load Balancing: {onPrem.LoadBalancingSetting}\n" +
-                $"   Cloud Refresh: {(onPrem.AllowCloudConnectionRefresh ? "✓" : "✗")} | Custom Connectors: {(onPrem.AllowCustomConnectors ? "✓" : "✗")}\n",
-
-            OnPremisesGatewayPersonal personal =>
-                $"👤 Personal Gateway\n" +
-                $"   ID: {personal.Id}\n" +
-                $"   Type: {personal.Type} | Version: {personal.Version}\n",
-
-            VirtualNetworkGateway vnet =>
-                $"🌐 {vnet.DisplayName}\n" +
-                $"   ID: {vnet.Id}\n" +
-                $"   Type: {vnet.Type} | Members: {vnet.NumberOfMemberGateways}\n" +
-                $"   Capacity: {vnet.CapacityId}\n" +
-                $"   VNet: {vnet.VirtualNetworkAzureResource.VirtualNetworkName} ({vnet.VirtualNetworkAzureResource.ResourceGroupName})\n" +
-                $"   Auto-sleep: {vnet.InactivityMinutesBeforeSleep} minutes\n",
-
-            _ => $"Gateway ID: {gateway.Id} | Type: {gateway.Type}\n"
         };
     }
 }
