@@ -1,4 +1,4 @@
-namespace DataFactory.MCP.Models;
+namespace DataFactory.MCP.Models.Gateway;
 
 /// <summary>
 /// The type of the gateway

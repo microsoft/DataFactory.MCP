@@ -1,4 +1,4 @@
-using DataFactory.MCP.Models;
+using DataFactory.MCP.Models.Gateway;
 
 namespace DataFactory.MCP.Abstractions.Interfaces;
 

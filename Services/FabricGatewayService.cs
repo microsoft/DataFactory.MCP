@@ -1,5 +1,6 @@
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models;
+using DataFactory.MCP.Models.Gateway;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Text.Json;

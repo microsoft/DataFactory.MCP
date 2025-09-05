@@ -1,6 +1,7 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
 using DataFactory.MCP.Abstractions.Interfaces;
+using DataFactory.MCP.Models.Gateway;
 using System.Text.Json;
 
 namespace DataFactory.MCP.Tools;
@@ -130,7 +131,7 @@ public class FabricGatewayTool
         }
     }
 
-    private static object FormatGatewayInfo(Models.Gateway gateway)
+    private static object FormatGatewayInfo(Gateway gateway)
     {
         var baseInfo = new
         {
@@ -140,7 +141,7 @@ public class FabricGatewayTool
 
         return gateway switch
         {
-            Models.OnPremisesGateway onPrem => new
+            OnPremisesGateway onPrem => new
             {
                 baseInfo.Id,
                 baseInfo.Type,
@@ -158,7 +159,7 @@ public class FabricGatewayTool
                         : onPrem.PublicKey.Modulus
                 }
             },
-            Models.OnPremisesGatewayPersonal personal => new
+            OnPremisesGatewayPersonal personal => new
             {
                 baseInfo.Id,
                 baseInfo.Type,
@@ -171,7 +172,7 @@ public class FabricGatewayTool
                         : personal.PublicKey.Modulus
                 }
             },
-            Models.VirtualNetworkGateway vnet => new
+            VirtualNetworkGateway vnet => new
             {
                 baseInfo.Id,
                 baseInfo.Type,
@@ -191,23 +192,23 @@ public class FabricGatewayTool
         };
     }
 
-    private static string FormatGatewaySummary(Models.Gateway gateway)
+    private static string FormatGatewaySummary(Gateway gateway)
     {
         return gateway switch
         {
-            Models.OnPremisesGateway onPrem =>
+            OnPremisesGateway onPrem =>
                 $"🏢 {onPrem.DisplayName}\n" +
                 $"   ID: {onPrem.Id}\n" +
                 $"   Type: {onPrem.Type} | Version: {onPrem.Version}\n" +
                 $"   Members: {onPrem.NumberOfMemberGateways} | Load Balancing: {onPrem.LoadBalancingSetting}\n" +
                 $"   Cloud Refresh: {(onPrem.AllowCloudConnectionRefresh ? "✓" : "✗")} | Custom Connectors: {(onPrem.AllowCustomConnectors ? "✓" : "✗")}\n",
 
-            Models.OnPremisesGatewayPersonal personal =>
+            OnPremisesGatewayPersonal personal =>
                 $"👤 Personal Gateway\n" +
                 $"   ID: {personal.Id}\n" +
                 $"   Type: {personal.Type} | Version: {personal.Version}\n",
 
-            Models.VirtualNetworkGateway vnet =>
+            VirtualNetworkGateway vnet =>
                 $"🌐 {vnet.DisplayName}\n" +
                 $"   ID: {vnet.Id}\n" +
                 $"   Type: {vnet.Type} | Members: {vnet.NumberOfMemberGateways}\n" +

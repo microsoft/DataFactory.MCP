@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace DataFactory.MCP.Models;
+namespace DataFactory.MCP.Models.Gateway;
 
 /// <summary>
 /// Custom JSON converter for Gateway polymorphic deserialization

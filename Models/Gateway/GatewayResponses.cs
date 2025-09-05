@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace DataFactory.MCP.Models;
+namespace DataFactory.MCP.Models.Gateway;
 
 /// <summary>
 /// Response for listing gateways
