@@ -97,12 +97,3 @@ get_gateway(gatewayId: "12345678-1234-1234-1234-123456789012")
 # Get specific gateway details by name
 > get details for gateway with name test-gateway
 ```
-
-### Working with Paginated Results
-```
-# Get first page of gateways
-> list gateways
-
-# Get next page using continuation token
-> list gateways with continuation token eyJza2lwIjoyMCwidGFrZSI6MjB9
-```
