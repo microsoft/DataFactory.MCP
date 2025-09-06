@@ -103,14 +103,18 @@ dotnet pack -c Release
 
 - **[Authentication Guide](./docs/authentication.md)** - Complete authentication setup and usage
 - **[Gateway Management Guide](./docs/gateway-management.md)** - Gateway operations and examples
+- **[Architecture Guide](./docs/ARCHITECTURE.md)** - Technical architecture and design details
 
 ## Contributing
 
+We welcome contributions! To get started:
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
 4. Add tests if applicable
 5. Submit a pull request
+
+Please follow standard .NET coding conventions and ensure all tests pass before submitting.
 
 ## License
 
