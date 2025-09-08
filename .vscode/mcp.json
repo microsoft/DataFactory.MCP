@@ -6,7 +6,7 @@
 			"args": [
 				"run",
 				"--project",
-				"DataFactory.MCP.csproj"
+				"./DataFactory.MCP/DataFactory.MCP.csproj"
 			]
 		}
 	},
