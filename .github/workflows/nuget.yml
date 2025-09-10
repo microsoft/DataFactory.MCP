@@ -6,7 +6,7 @@ on:
       - "v*"
 
 env:
-  PROJECT_PATH: "DataFactory.MCP.csproj"
+  PROJECT_PATH: "DataFactory.MCP/DataFactory.MCP.csproj"
   PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}\output
   NUGET_SOURCE_URL: "https://api.nuget.org/v3/index.json"
 
@@ -16,7 +16,7 @@ jobs:
     runs-on: "windows-latest"
     steps:
       - name: "Checkout"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: "Install dotnet"
         uses: actions/setup-dotnet@v4
