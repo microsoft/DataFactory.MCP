@@ -97,6 +97,8 @@ extends:
                 inputs:
                   command: "restore"
                   projects: '$(Build.SourcesDirectory)\DataFactory.MCP\DataFactory.MCP.csproj'
+                  arguments: '--configfile $(Build.SourcesDirectory)\nuget.config --verbosity normal'
+                retryCountOnTaskFailure: 3
 
               # Build the project
               - task: DotNetCoreCLI@2
