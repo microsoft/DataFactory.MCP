@@ -63,7 +63,6 @@ jobs:
           signing_profile: "external_distribution"
           files_to_sign: '**\bin\**\DataFactory.MCP.dll'
           search_root: '$(Build.SourcesDirectory)\$(DataFactorySourceDir)DataFactory.MCP'
-        condition: and(succeeded(), eq(variables['PipelineType'], 'OneBranch'))
 
       # Pack the project
       - task: DotNetCoreCLI@2
@@ -85,7 +84,6 @@ jobs:
           signing_profile: "CP-401405"
           files_to_sign: "*nupkg"
           search_root: '$(Build.ArtifactStagingDirectory)\packages'
-        condition: and(succeeded(), eq(variables['PipelineType'], 'OneBranch'))
 
       - task: CmdLine@2
         displayName: "Verify packages are signed"
