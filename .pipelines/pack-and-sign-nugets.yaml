@@ -149,16 +149,25 @@ extends:
                   files_to_sign: "*.nupkg;"
                   search_root: '$(Build.SourcesDirectory)\DataFactory.MCP\bin\$(BuildConfiguration)'
 
+              # Copy signed packages to output directory for OneBranch publishing
+              - task: CopyFiles@2
+                displayName: "Copy packages to output directory"
+                inputs:
+                  SourceFolder: '$(Build.SourcesDirectory)\DataFactory.MCP\bin\$(BuildConfiguration)'
+                  Contents: "*.nupkg"
+                  TargetFolder: "$(OUTPUTROOT)"
+                  CleanTargetFolder: false
+
               # Verify packages are signed
               - task: CmdLine@2
                 displayName: "Verify packages are signed"
                 inputs:
-                  script: "dotnet nuget verify $(OUTPUTROOT)\\*.nupkg"
+                  script: 'dotnet nuget verify "$(Build.SourcesDirectory)\DataFactory.MCP\bin\$(BuildConfiguration)\*.nupkg"'
                 continueOnError: true
 
               # List created packages for verification
               - task: CmdLine@2
                 displayName: "List created packages"
                 inputs:
-                  script: 'dir "$(OUTPUTROOT)" *.nupkg /s'
+                  script: 'dir "$(Build.SourcesDirectory)\DataFactory.MCP\bin\$(BuildConfiguration)" *.nupkg /s'
                 continueOnError: true
