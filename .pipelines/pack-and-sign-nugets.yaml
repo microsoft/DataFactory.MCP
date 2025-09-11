@@ -95,33 +95,21 @@ extends:
                   version: "10.0.x"
                   includePreviewVersions: true
 
-              # Restore packages using MSBuild (exactly like OneBranch.Official.yml)
-              - task: MSBuild@1
+              # Restore packages using DotNetCoreCLI with MSBuild arguments (hybrid approach)
+              - task: DotNetCoreCLI@2
                 displayName: "Restore packages"
                 inputs:
-                  solution: '$(Build.SourcesDirectory)\DataFactory.MCP\DataFactory.MCP.csproj'
-                  msbuildLocationMethod: "version"
-                  msbuildVersion: "latest"
-                  platform: "Any CPU"
-                  configuration: "$(BuildConfiguration)"
-                  msbuildArguments: '/t:Restore /p:RestoreConfigFile=$(Build.SourcesDirectory)\nuget.config'
-                  clean: true
-                  maximumCpuCount: true
-                  logProjectEvents: true
+                  command: "msbuild"
+                  projects: '$(Build.SourcesDirectory)\DataFactory.MCP\DataFactory.MCP.csproj'
+                  arguments: '/t:Restore /p:RestoreConfigFile=$(Build.SourcesDirectory)\nuget.config /v:n'
 
-              # Build the project using MSBuild
-              - task: MSBuild@1
+              # Build the project using DotNetCoreCLI with MSBuild arguments
+              - task: DotNetCoreCLI@2
                 displayName: "Build project"
                 inputs:
-                  solution: '$(Build.SourcesDirectory)\DataFactory.MCP\DataFactory.MCP.csproj'
-                  msbuildLocationMethod: "version"
-                  msbuildVersion: "latest"
-                  platform: "Any CPU"
-                  configuration: "$(BuildConfiguration)"
-                  msbuildArguments: "/v:n /nr:false /p:build_all_project_references=0"
-                  clean: false
-                  maximumCpuCount: true
-                  logProjectEvents: true
+                  command: "msbuild"
+                  projects: '$(Build.SourcesDirectory)\DataFactory.MCP\DataFactory.MCP.csproj'
+                  arguments: "/v:n /nr:false /p:build_all_project_references=0 /p:Configuration=$(BuildConfiguration)"
 
               # Sign binary files with OneBranch (exactly like OneBranch.Official.yml)
               - task: onebranch.pipeline.signing@1
@@ -137,19 +125,13 @@ extends:
                     **/*.psd1;
                   search_root: '$(Build.SourcesDirectory)\DataFactory.MCP'
 
-              # Pack the project using MSBuild (like OneBranch.Official.yml)
-              - task: MSBuild@1
+              # Pack the project using DotNetCoreCLI with MSBuild arguments
+              - task: DotNetCoreCLI@2
                 displayName: "Build NuGet Packages"
                 inputs:
-                  solution: '$(Build.SourcesDirectory)\DataFactory.MCP\DataFactory.MCP.csproj'
-                  msbuildLocationMethod: "version"
-                  msbuildVersion: "latest"
-                  platform: "Any CPU"
-                  configuration: "$(BuildConfiguration)"
-                  msbuildArguments: "/t:Pack /v:n /nr:false /p:build_all_project_references=0"
-                  clean: false
-                  maximumCpuCount: true
-                  logProjectEvents: true
+                  command: "msbuild"
+                  projects: '$(Build.SourcesDirectory)\DataFactory.MCP\DataFactory.MCP.csproj'
+                  arguments: "/t:Pack /v:n /nr:false /p:build_all_project_references=0 /p:Configuration=$(BuildConfiguration)"
 
               # Sign NuGet packages with OneBranch (exactly like OneBranch.Official.yml)
               - task: onebranch.pipeline.signing@1
