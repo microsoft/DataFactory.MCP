@@ -117,11 +117,11 @@ extends:
                 inputs:
                   command: "build"
                   projects: '$(Build.SourcesDirectory)\DataFactory.MCP\DataFactory.MCP.csproj'
-                  arguments: "--configuration $(BuildConfiguration) --no-restore"
+                  arguments: "--configuration $(BuildConfiguration) --no-restore --output $(OUTPUTROOT)\bin"
 
-              # Sign binaries using exclusion pattern (like OneBranch.Official.yml)
+              # Sign binary files (following OneBranch.Official.yml pattern)
               - task: onebranch.pipeline.signing@1
-                displayName: "Sign binary files with exclusions"
+                displayName: "Sign binary files"
                 inputs:
                   command: "sign"
                   signing_profile: "external_distribution"
@@ -136,9 +136,9 @@ extends:
                     !**/Microsoft.Extensions.*.dll;
                     !**/Microsoft.Identity.Client.dll;
                     !**/System.*.dll;
-                  search_root: '$(Build.SourcesDirectory)\DataFactory.MCP'
+                  search_root: '$(OUTPUTROOT)\bin'
 
-              # Sign 3rd party dlls with special profile (like OneBranch.Official.yml)
+              # Sign 3rd party dlls (following OneBranch.Official.yml pattern)
               - task: onebranch.pipeline.signing@1
                 displayName: "Sign 3rd party dlls"
                 inputs:
@@ -147,47 +147,38 @@ extends:
                   files_to_sign: |
                     **/ModelContextProtocol.dll;
                     **/ModelContextProtocol.Core.dll;
-                  search_root: '$(Build.SourcesDirectory)\DataFactory.MCP'
+                  search_root: '$(OUTPUTROOT)\bin'
 
-              # Pack the project using standard dotnet pack
+              # Pack the project using standard dotnet pack (to OUTPUTROOT like OneBranch.Official.yml)
               - task: DotNetCoreCLI@2
                 displayName: "Pack NuGet packages"
                 inputs:
                   command: "pack"
                   packagesToPack: '$(Build.SourcesDirectory)\DataFactory.MCP\DataFactory.MCP.csproj'
                   configuration: "$(BuildConfiguration)"
-                  outputDir: '$(Build.SourcesDirectory)\DataFactory.MCP\bin\$(BuildConfiguration)'
+                  outputDir: "$(OUTPUTROOT)"
                   nobuild: true
                   includeSymbols: true
 
-              # Sign NuGet packages with OneBranch (exactly like OneBranch.Official.yml)
+              # Sign NuGet packages (following OneBranch.Official.yml pattern)
               - task: onebranch.pipeline.signing@1
                 displayName: "Sign NuGet Packages"
                 inputs:
                   command: "sign"
                   signing_profile: "external_distribution"
                   files_to_sign: "*.nupkg;"
-                  search_root: '$(Build.SourcesDirectory)\DataFactory.MCP\bin\$(BuildConfiguration)'
-
-              # Copy signed packages to output directory for OneBranch publishing
-              - task: CopyFiles@2
-                displayName: "Copy packages to output directory"
-                inputs:
-                  SourceFolder: '$(Build.SourcesDirectory)\DataFactory.MCP\bin\$(BuildConfiguration)'
-                  Contents: "*.nupkg"
-                  TargetFolder: "$(OUTPUTROOT)"
-                  CleanTargetFolder: false
+                  search_root: "$(OUTPUTROOT)"
 
               # Verify packages are signed
               - task: CmdLine@2
                 displayName: "Verify packages are signed"
                 inputs:
-                  script: 'dotnet nuget verify "$(Build.SourcesDirectory)\DataFactory.MCP\bin\$(BuildConfiguration)\*.nupkg"'
+                  script: 'dotnet nuget verify "$(OUTPUTROOT)\*.nupkg"'
                 continueOnError: true
 
               # List created packages for verification
               - task: CmdLine@2
                 displayName: "List created packages"
                 inputs:
-                  script: 'dir "$(Build.SourcesDirectory)\DataFactory.MCP\bin\$(BuildConfiguration)" *.nupkg /s'
+                  script: 'dir "$(OUTPUTROOT)" *.nupkg /s'
                 continueOnError: true
