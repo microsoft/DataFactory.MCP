@@ -1,0 +1,12 @@
+{
+    "codebaseName": "DataFactory.MCP",
+    "instanceUrl": "https://powerbi.visualstudio.com/",
+    "projectName": "Power Query",
+    "areaPath": "Power Query\\Gateway\\MetadataService",
+    "iterationPath": "Power Query\\Releases",
+    "notificationAliases": [
+        "ebramtawfik@microsoft.com"
+    ],
+    "ignoreBranchName": true,
+    "template": "TFSPowerBI"
+}
