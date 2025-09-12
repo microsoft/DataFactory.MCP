@@ -161,8 +161,10 @@ extends:
                     if (-not $targets) { Write-Error "No target assemblies found to verify." }
                     $unsigned = @()
                     foreach ($f in $targets) {
-                      $sig = Get-AuthenticodeSignature $f.FullName
-                      Write-Host ("{0} => Status={1}; Subject={2}" -f $f.Name, $sig.Status, ($sig.SignerCertificate.Subject )))
+                      $sig = Get-AuthenticodeSignature -FilePath $f.FullName
+                      $subject = if ($sig.SignerCertificate) { $sig.SignerCertificate.Subject } else { '<none>' }
+                      $thumb = if ($sig.SignerCertificate) { $sig.SignerCertificate.Thumbprint } else { '<none>' }
+                      Write-Host ("{0} => Status={1}; Thumbprint={2}; Subject={3}" -f $f.Name, $sig.Status, $thumb, $subject)
                       if ($sig.Status -ne 'Valid') { $unsigned += $f }
                     }
                     if ($unsigned.Count -gt 0) {
