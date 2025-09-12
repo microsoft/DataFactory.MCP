@@ -120,9 +120,19 @@ extends:
                   projects: "$(Build.SourcesDirectory)/DataFactory.MCP/DataFactory.MCP.csproj"
                   arguments: "--configuration $(BuildConfiguration) --no-restore"
 
+              # Publish (tool publish output is what gets packed for PackAsTool; we must sign those bits)
+              - task: DotNetCoreCLI@2
+                displayName: "Publish project (tool payload)"
+                inputs:
+                  command: "publish"
+                  publishWebProjects: false
+                  projects: "$(Build.SourcesDirectory)/DataFactory.MCP/DataFactory.MCP.csproj"
+                  arguments: "--configuration $(BuildConfiguration) --no-restore --no-build"
+                  zipAfterPublish: false
+
               # Sign binary files (following OneBranch.Official.yml pattern)
               - task: onebranch.pipeline.signing@1
-                displayName: "Sign binary files"
+                displayName: "Sign published binary files"
                 inputs:
                   command: "sign"
                   signing_profile: "external_distribution"
@@ -137,29 +147,30 @@ extends:
                     !**/Microsoft.Extensions.*.dll;
                     !**/Microsoft.Identity.Client.dll;
                     !**/System.*.dll;
-                  search_root: "$(Build.SourcesDirectory)\\DataFactory.MCP\\bin\\$(BuildConfiguration)\\net10.0"
+                  search_root: "$(Build.SourcesDirectory)\\DataFactory.MCP\\bin\\$(BuildConfiguration)\\net10.0\\publish"
 
               # Sign 3rd party dlls (following OneBranch.Official.yml pattern)
               - task: onebranch.pipeline.signing@1
-                displayName: "Sign 3rd party dlls"
+                displayName: "Sign 3rd party dlls (published)"
                 inputs:
                   command: "sign"
                   signing_profile: "135020002"
                   files_to_sign: |
                     **/ModelContextProtocol.dll;
                     **/ModelContextProtocol.Core.dll;
-                  search_root: "$(Build.SourcesDirectory)\\DataFactory.MCP\\bin\\$(BuildConfiguration)\\net10.0"
+                  search_root: "$(Build.SourcesDirectory)\\DataFactory.MCP\\bin\\$(BuildConfiguration)\\net10.0\\publish"
 
               # Verify signatures after signing (pre-pack)
               - task: PowerShell@2
-                displayName: "Verify signed binaries (pre-pack)"
+                displayName: "Verify published binaries (pre-pack)"
                 inputs:
                   targetType: inline
                   script: |
-                    $root = "$(Build.SourcesDirectory)\DataFactory.MCP\bin\$(BuildConfiguration)\net10.0"
-                    Write-Host "Checking signatures under $root"
-                    $targets = Get-ChildItem $root -Recurse -Filter *.dll | Where-Object { $_.Name -in @('DataFactory.MCP.dll','ModelContextProtocol.dll','ModelContextProtocol.Core.dll') }
-                    if (-not $targets) { Write-Error "No target assemblies found to verify." }
+                    $root = "$(Build.SourcesDirectory)\DataFactory.MCP\bin\$(BuildConfiguration)\net10.0\publish"
+                    Write-Host "Checking signatures under $root (published output)"
+                    if (-not (Test-Path $root)) { Write-Error "Publish output not found: $root" }
+                    $targets = Get-ChildItem $root -Filter *.dll | Where-Object { $_.Name -in @('DataFactory.MCP.dll','ModelContextProtocol.dll','ModelContextProtocol.Core.dll') }
+                    if (-not $targets) { Write-Error "No target assemblies found to verify in publish output." }
                     $unsigned = @()
                     foreach ($f in $targets) {
                       $sig = Get-AuthenticodeSignature -FilePath $f.FullName
@@ -168,9 +179,7 @@ extends:
                       Write-Host ("{0} => Status={1}; Thumbprint={2}; Subject={3}" -f $f.Name, $sig.Status, $thumb, $subject)
                       if ($sig.Status -ne 'Valid') { $unsigned += $f }
                     }
-                    if ($unsigned.Count -gt 0) {
-                      Write-Warning "The following files are still unsigned prior to pack:"; $unsigned | ForEach-Object { Write-Warning $_.FullName }
-                    }
+                    if ($unsigned.Count -gt 0) { Write-Warning "Unsigned published assemblies:"; $unsigned | ForEach-Object { Write-Warning $_.FullName } }
 
               # Pack the project using standard dotnet pack with nobuild to preserve signatures
               - task: DotNetCoreCLI@2
