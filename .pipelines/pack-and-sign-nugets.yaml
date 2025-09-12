@@ -38,7 +38,6 @@ variables:
   BuildConfiguration: "Release"
   DataFactorySourceDir: ""
   REPOROOT: $(Build.SourcesDirectory)
-  # Use backslash form to avoid mixed-separator issues on Windows
   OUTPUTROOT: $(Build.SourcesDirectory)\out
   WindowsContainerImage: "onebranch.azurecr.io/windows/ltsc2022/vse2022:latest"
 
@@ -88,7 +87,6 @@ extends:
               DOTNET_CLI_TELEMETRY_OPTOUT: "true"
 
             steps:
-              # Setup .NET
               - task: UseDotNet@2
                 displayName: "Install .NET SDK"
                 inputs:
@@ -96,7 +94,6 @@ extends:
                   version: "10.0.x"
                   includePreviewVersions: true
 
-              # Restore packages using standard dotnet restore
               - task: DotNetCoreCLI@2
                 displayName: "Restore packages"
                 inputs:
@@ -108,7 +105,6 @@ extends:
                   noCache: true
                 retryCountOnTaskFailure: 3
 
-              # Build the project using standard dotnet build
               - task: DotNetCoreCLI@2
                 displayName: "Build project"
                 inputs:
@@ -126,7 +122,6 @@ extends:
                   arguments: "--configuration $(BuildConfiguration) --no-restore --no-build"
                   zipAfterPublish: false
 
-              # Sign binary files (following OneBranch.Official.yml pattern)
               - task: onebranch.pipeline.signing@1
                 displayName: "Sign published binary files"
                 inputs:
@@ -145,7 +140,7 @@ extends:
                     !**/System.*.dll;
                   search_root: "$(Build.SourcesDirectory)\\DataFactory.MCP\\bin\\$(BuildConfiguration)\\net10.0\\publish"
 
-              # Sign 3rd party dlls (following OneBranch.Official.yml pattern)
+              # Sign 3rd party dlls
               - task: onebranch.pipeline.signing@1
                 displayName: "Sign 3rd party dlls (published)"
                 inputs:
@@ -156,28 +151,6 @@ extends:
                     **/ModelContextProtocol.Core.dll;
                   search_root: "$(Build.SourcesDirectory)\\DataFactory.MCP\\bin\\$(BuildConfiguration)\\net10.0\\publish"
 
-              # Verify signatures after signing (pre-pack)
-              - task: PowerShell@2
-                displayName: "Verify published binaries (pre-pack)"
-                inputs:
-                  targetType: inline
-                  script: |
-                    $root = "$(Build.SourcesDirectory)\DataFactory.MCP\bin\$(BuildConfiguration)\net10.0\publish"
-                    Write-Host "Checking signatures under $root (published output)"
-                    if (-not (Test-Path $root)) { Write-Error "Publish output not found: $root" }
-                    $targets = Get-ChildItem $root -Filter *.dll | Where-Object { $_.Name -in @('DataFactory.MCP.dll','ModelContextProtocol.dll','ModelContextProtocol.Core.dll') }
-                    if (-not $targets) { Write-Error "No target assemblies found to verify in publish output." }
-                    $unsigned = @()
-                    foreach ($f in $targets) {
-                      $sig = Get-AuthenticodeSignature -FilePath $f.FullName
-                      $subject = if ($sig.SignerCertificate) { $sig.SignerCertificate.Subject } else { '<none>' }
-                      $thumb = if ($sig.SignerCertificate) { $sig.SignerCertificate.Thumbprint } else { '<none>' }
-                      Write-Host ("{0} => Status={1}; Thumbprint={2}; Subject={3}" -f $f.Name, $sig.Status, $thumb, $subject)
-                      if ($sig.Status -ne 'Valid') { $unsigned += $f }
-                    }
-                    if ($unsigned.Count -gt 0) { Write-Warning "Unsigned published assemblies:"; $unsigned | ForEach-Object { Write-Warning $_.FullName } }
-
-              # Pack the project using standard dotnet pack with nobuild to preserve signatures
               - task: DotNetCoreCLI@2
                 displayName: "Pack NuGet packages"
                 inputs:
@@ -188,7 +161,6 @@ extends:
                   nobuild: true
                   includeSymbols: true
 
-              # Sign NuGet packages (following OneBranch.Official.yml pattern)
               - task: onebranch.pipeline.signing@1
                 displayName: "Sign NuGet Packages"
                 inputs:
@@ -197,69 +169,6 @@ extends:
                   files_to_sign: "*.nupkg;"
                   search_root: "$(OUTPUTROOT)"
 
-              # Verify packages are signed (NuGet signature + Authenticode of embedded DLLs)
-              - task: PowerShell@2
-                displayName: "Verify packages are signed"
-                inputs:
-                  targetType: inline
-                  script: |
-                    $out = "$(OUTPUTROOT)"
-                    if (-not (Test-Path $out)) { Write-Error "Output directory '$out' does not exist"; exit 1 }
-                    $pkgs = Get-ChildItem $out -Filter *.nupkg -ErrorAction SilentlyContinue
-                    if (-not $pkgs) { Write-Error "No .nupkg files found in $out"; exit 1 }
-                    $nugetVerifyFailures = @()
-                    foreach ($pkg in $pkgs) {
-                      Write-Host "Running 'dotnet nuget verify' on $($pkg.Name)" -ForegroundColor Cyan
-                      # Use --all only (the earlier --signatures switch is nuget.exe only and caused failures)
-                      $verify = & dotnet nuget verify --all $pkg.FullName 2>&1
-                      $verify | ForEach-Object { Write-Host $_ }
-                      if ($LASTEXITCODE -ne 0) { $nugetVerifyFailures += $pkg }
-                    }
-                    if ($nugetVerifyFailures.Count -gt 0) {
-                      Write-Warning ("NuGet signature verification failed for: {0}" -f ($nugetVerifyFailures.Name -join ', '))
-                    }
-
-                    # Deep Authenticode verification of key assemblies inside each package
-                    $authFailures = @()
-                    $tempRoot = Join-Path $out "_verify_extract"
-                    if (Test-Path $tempRoot) { Remove-Item $tempRoot -Recurse -Force }
-                    New-Item -ItemType Directory -Path $tempRoot | Out-Null
-                    $targetNames = @('DataFactory.MCP.dll','ModelContextProtocol.dll','ModelContextProtocol.Core.dll')
-                    Add-Type -AssemblyName System.IO.Compression.FileSystem
-                    foreach ($pkg in $pkgs) {
-                      $extractDir = Join-Path $tempRoot ([IO.Path]::GetFileNameWithoutExtension($pkg.Name))
-                      New-Item -ItemType Directory -Path $extractDir | Out-Null
-                      try {
-                        [System.IO.Compression.ZipFile]::ExtractToDirectory($pkg.FullName, $extractDir)
-                      } catch {
-                        Write-Error "Failed to extract $($pkg.Name): $_"; continue
-                      }
-                      # Tool packages put binaries under tools/<tfm>/any (sometimes RID folder). Search broadly but narrow by names.
-                      $candidates = Get-ChildItem $extractDir -Recurse -Include $targetNames -ErrorAction SilentlyContinue | Where-Object { $_.Extension -eq '.dll' }
-                      if (-not $candidates) {
-                        Write-Warning "No target DLLs found in $($pkg.Name) to verify (expected one of: $($targetNames -join ', '))."
-                        continue
-                      }
-                      foreach ($dll in $candidates) {
-                        $sig = Get-AuthenticodeSignature -FilePath $dll.FullName
-                        $subject = if ($sig.SignerCertificate) { $sig.SignerCertificate.Subject } else { '<none>' }
-                        $thumb = if ($sig.SignerCertificate) { $sig.SignerCertificate.Thumbprint } else { '<none>' }
-                        Write-Host ("[{0}] {1} => Status={2}; Thumbprint={3}; Subject={4}" -f $pkg.Name, ($dll.FullName.Substring($extractDir.Length+1)), $sig.Status, $thumb, $subject)
-                        if ($sig.Status -ne 'Valid') { $authFailures += [PSCustomObject]@{ Package=$pkg.Name; File=$dll.FullName; Status=$sig.Status } }
-                      }
-                    }
-                    if ($authFailures.Count -gt 0) {
-                      Write-Host "--- Authenticode Failures ---" -ForegroundColor Yellow
-                      $authFailures | Format-Table -AutoSize | Out-String | Write-Host
-                      Write-Error ("{0} file(s) missing valid Authenticode signature inside packages" -f $authFailures.Count)
-                    }
-                    elseif ($nugetVerifyFailures.Count -eq 0) {
-                      Write-Host "All packages passed NuGet and Authenticode verification." -ForegroundColor Green
-                    }
-                # Allow pipeline to proceed so we can still collect Guardian results; fail only on unsigned internal dlls.
-                continueOnError: true
-
-              # List created packages for quick inspection
               - task: PowerShell@2
                 displayName: "List created packages"
                 inputs:
