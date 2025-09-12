@@ -69,10 +69,6 @@ extends:
       binskim:
         enabled: true
         break: true
-      suppression:
-        suppressionFile: $(Build.SourcesDirectory)/.gdn/build.official.gdnsuppress
-      baseline:
-        baselineFile: $(Build.SourcesDirectory)/.gdn/build.official.gdnbaselines
 
     stages:
       - stage: build
