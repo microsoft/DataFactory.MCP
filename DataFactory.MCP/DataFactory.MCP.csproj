@@ -31,7 +31,6 @@
   <ItemGroup>
     <None Include="..\.mcp\server.json" Pack="true" PackagePath="/.mcp/" />
     <None Include="..\README.md" Pack="true" PackagePath="/" />
-    <None Include="appsettings.json" Pack="true" PackagePath="/content/" />
     <None Include="..\assets\Data-Factory-300.png" Pack="true" PackagePath="/" />
   </ItemGroup>
 
