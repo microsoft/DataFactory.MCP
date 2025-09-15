@@ -46,8 +46,6 @@ public class McpTestFixture : IDisposable
                 // Configure HTTP client
                 services.AddHttpClient();
 
-                // Configure Azure AD settings
-                services.Configure<AzureAdConfiguration>(configuration.GetSection("AzureAd"));
 
                 // Register services
                 services.AddScoped<IAuthenticationService, AuthenticationService>();
