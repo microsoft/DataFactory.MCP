@@ -11,10 +11,6 @@ var builder = Host.CreateApplicationBuilder(args);
 // Configure all logs to go to stderr (stdout is used for the MCP protocol messages).
 builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
 
-// Configure Azure AD settings
-builder.Services.Configure<AzureAdConfiguration>(
-    builder.Configuration.GetSection(AzureAdConfiguration.SectionName));
-
 // Add authentication services directly
 builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
 builder.Services.AddTransient<AuthenticationTool>();

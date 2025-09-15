@@ -1,7 +1,6 @@
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
 
 namespace DataFactory.MCP.Services;
@@ -12,16 +11,12 @@ namespace DataFactory.MCP.Services;
 public class AuthenticationService : IAuthenticationService
 {
     private readonly ILogger<AuthenticationService> _logger;
-    private readonly AzureAdConfiguration _azureAdConfig;
     private McpAuthenticationResult? _currentAuth;
     private IPublicClientApplication? _publicClientApp;
 
-    public AuthenticationService(
-        ILogger<AuthenticationService> logger,
-        IOptions<AzureAdConfiguration> azureAdConfig)
+    public AuthenticationService(ILogger<AuthenticationService> logger)
     {
         _logger = logger;
-        _azureAdConfig = azureAdConfig.Value;
         InitializeClientApplications();
     }
 
@@ -31,9 +26,9 @@ public class AuthenticationService : IAuthenticationService
         {
             // Initialize public client for interactive authentication
             _publicClientApp = PublicClientApplicationBuilder
-                .Create(_azureAdConfig.ClientId)
-                .WithAuthority(_azureAdConfig.Authority)
-                .WithRedirectUri(_azureAdConfig.RedirectUri)
+                .Create(AzureAdConfiguration.ClientId)
+                .WithAuthority(AzureAdConfiguration.Authority)
+                .WithRedirectUri(AzureAdConfiguration.RedirectUri)
                 .Build();
 
             _logger.LogInformation("Azure AD client applications initialized successfully");
@@ -57,7 +52,7 @@ public class AuthenticationService : IAuthenticationService
             _logger.LogInformation("Starting interactive authentication...");
 
             var result = await _publicClientApp
-                .AcquireTokenInteractive(_azureAdConfig.DefaultScopes)
+                .AcquireTokenInteractive(AzureAdConfiguration.DefaultScopes)
                 .ExecuteAsync();
 
             _currentAuth = McpAuthenticationResult.Success(
@@ -92,7 +87,7 @@ public class AuthenticationService : IAuthenticationService
             _logger.LogInformation("Starting service principal authentication for app: {ApplicationId}", applicationId);
 
             // Create a confidential client application for this specific authentication
-            var authority = $"https://login.microsoftonline.com/{tenantId ?? _azureAdConfig.TenantId}";
+            var authority = $"https://login.microsoftonline.com/{tenantId ?? AzureAdConfiguration.TenantId}";
             var confidentialClient = ConfidentialClientApplicationBuilder
                 .Create(applicationId)
                 .WithClientSecret(clientSecret)
@@ -100,13 +95,13 @@ public class AuthenticationService : IAuthenticationService
                 .Build();
 
             var result = await confidentialClient
-                .AcquireTokenForClient(_azureAdConfig.DefaultScopes)
+                .AcquireTokenForClient(AzureAdConfiguration.DefaultScopes)
                 .ExecuteAsync();
 
             _currentAuth = McpAuthenticationResult.Success(
                 result.AccessToken,
                 $"ServicePrincipal-{applicationId}",
-                tenantId ?? _azureAdConfig.TenantId,
+                tenantId ?? AzureAdConfiguration.TenantId,
                 result.ExpiresOn.DateTime,
                 string.Join(", ", result.Scopes)
             );
@@ -200,7 +195,7 @@ public class AuthenticationService : IAuthenticationService
                         try
                         {
                             var result = await _publicClientApp
-                                .AcquireTokenSilent(_azureAdConfig.DefaultScopes, accounts.First())
+                                .AcquireTokenSilent(AzureAdConfiguration.DefaultScopes, accounts.First())
                                 .ExecuteAsync();
 
                             _currentAuth = McpAuthenticationResult.Success(

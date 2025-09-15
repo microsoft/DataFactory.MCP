@@ -3,37 +3,31 @@ namespace DataFactory.MCP.Models;
 /// <summary>
 /// Configuration settings for Azure Active Directory authentication
 /// </summary>
-public class AzureAdConfiguration
+public static class AzureAdConfiguration
 {
-    public const string SectionName = "AzureAd";
-
     /// <summary>
     /// Azure AD tenant ID
     /// </summary>
-    public string TenantId { get; set; } = string.Empty;
+    public const string TenantId = "common";
 
     /// <summary>
     /// Application (client) ID from Azure AD app registration
+    /// Azure CLI public client ID - https://github.com/Azure/azure-cli/blob/main/src/azure-cli-core/azure/cli/core/auth/constants.py
     /// </summary>
-    public string ClientId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Client secret (for service principal authentication)
-    /// </summary>
-    public string? ClientSecret { get; set; }
+    public const string ClientId = "04b07795-8ddb-461a-bbee-02f9e1bf7b46";
 
     /// <summary>
     /// Azure AD authority URL
     /// </summary>
-    public string Authority => $"https://login.microsoftonline.com/{TenantId}";
+    public const string Authority = "https://login.microsoftonline.com/organizations";
 
     /// <summary>
     /// Default scopes for authentication
     /// </summary>
-    public string[] DefaultScopes { get; set; } = new[] { "https://analysis.windows.net/powerbi/api/.default" };
+    public static readonly string[] DefaultScopes = new[] { "https://analysis.windows.net/powerbi/api/.default" };
 
     /// <summary>
     /// Redirect URI for interactive authentication
     /// </summary>
-    public string RedirectUri { get; set; } = "http://localhost:8080";
+    public const string RedirectUri = "http://localhost:8080";
 }

@@ -14,7 +14,7 @@
     <!-- Set recommended package metadata -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageId>Microsoft.DataFactory.MCP</PackageId>
-    <PackageVersion>0.1.0-beta</PackageVersion>
+    <PackageVersion>0.2.0-beta</PackageVersion>
     <PackageTags>AI; MCP; server; stdio</PackageTags>
     <Description>An MCP server using the MCP C# SDK for DataFactory operations.</Description>
     <Authors>Microsoft</Authors>
@@ -31,7 +31,6 @@
   <ItemGroup>
     <None Include="..\.mcp\server.json" Pack="true" PackagePath="/.mcp/" />
     <None Include="..\README.md" Pack="true" PackagePath="/" />
-    <None Include="appsettings.json" Pack="true" PackagePath="/content/" />
     <None Include="..\assets\Data-Factory-300.png" Pack="true" PackagePath="/" />
   </ItemGroup>
 
