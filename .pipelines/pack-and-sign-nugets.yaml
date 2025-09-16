@@ -219,11 +219,32 @@ extends:
                     - input: pipelineArtifact
                       artifactName: drop
                 steps:
+                  - task: PowerShell@2
+                    displayName: "List available packages for debugging"
+                    inputs:
+                      targetType: inline
+                      script: |
+                        Write-Host "=== Debugging Package Location ===" -ForegroundColor Cyan
+                        Write-Host "Pipeline.Workspace: $(Pipeline.Workspace)"
+                        Write-Host "Looking for packages in: $(Pipeline.Workspace)/drop"
+
+                        if (Test-Path "$(Pipeline.Workspace)/drop") {
+                          Write-Host "Contents of drop folder:" -ForegroundColor Green
+                          Get-ChildItem "$(Pipeline.Workspace)/drop" -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+                          
+                          Write-Host "NuGet packages found:" -ForegroundColor Green
+                          Get-ChildItem "$(Pipeline.Workspace)/drop" -Filter "*.nupkg" -Recurse | Select-Object FullName | Format-Table -AutoSize
+                        } else {
+                          Write-Host "Drop folder not found!" -ForegroundColor Red
+                          Write-Host "Available folders in Pipeline.Workspace:" -ForegroundColor Yellow
+                          Get-ChildItem "$(Pipeline.Workspace)" | Select-Object FullName | Format-Table -AutoSize
+                        }
+
                   - task: NuGetCommand@2
                     displayName: "Publish to NuGet.org"
                     inputs:
                       command: "push"
-                      packagesToPush: "$(Pipeline.Workspace)/drop/**/Microsoft.DataFactory.MCP.*.nupkg;!$(Pipeline.Workspace)/drop/**/*.symbols.nupkg"
+                      packagesToPush: "$(Pipeline.Workspace)/drop/**/*.nupkg"
                       nuGetFeedType: "external"
                       publishFeedCredentials: "DataIntegration NuGet"
                       allowPackageConflicts: true
