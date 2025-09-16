@@ -204,7 +204,7 @@ extends:
 
       # Publishing stage - uses release pool for better network access
       - ${{ if eq(parameters.publishToNuGet, true) }}:
-          - stage: Prod_DataFactory_MCP_NuGet_Gallery
+          - stage: publish_to_nuget_gallery
             displayName: "Publish to NuGet.org"
             dependsOn: build
             jobs:
