@@ -6,8 +6,8 @@
 #   - debug: Enable debug output (default: false)                              #
 #   - publishToNuGet: Publish to NuGet.org (default: false)                    #
 #                                                                               #
-# Required Pipeline Variables for NuGet publishing:                            #
-#   - NUGET_API_KEY: Secret variable with NuGet.org API key                    #
+# Required Service Connections for NuGet publishing:                           #
+#   - "DataIntegration NuGet": Service connection configured for NuGet.org     #
 #                                                                               #
 # Documentation:  https://aka.ms/obpipelines                                    #
 # Yaml Schema:    https://aka.ms/obpipelines/yaml/schema                        #
@@ -217,45 +217,16 @@ extends:
             jobs:
               - job: publish_to_nuget
                 displayName: "Publish to NuGet.org"
-                pool:
-                  type: release
                 templateContext:
                   inputs:
                     - input: pipelineArtifact
                       artifactName: drop
                 steps:
-                  - task: PowerShell@2
-                    displayName: "Push to NuGet.org"
+                  - task: NuGetCommand@2
+                    displayName: "Publish to NuGet.org"
                     inputs:
-                      targetType: "inline"
-                      script: |
-                        Write-Host "🚀 Publishing packages to NuGet.org..." -ForegroundColor Cyan
-
-                        # Find the main package (exclude symbols packages)
-                        $packages = Get-ChildItem "$(Pipeline.Workspace)/drop" -Filter "Microsoft.DataFactory.MCP.*.nupkg" -Recurse | Where-Object { $_.Name -notlike "*symbols*" }
-
-                        if ($packages.Count -eq 0) {
-                            Write-Error "❌ No packages found to publish"
-                            Get-ChildItem "$(Pipeline.Workspace)/drop" -Recurse | Select-Object FullName | Format-Table -AutoSize
-                            exit 1
-                        }
-
-                        Write-Host "📦 Found $($packages.Count) package(s) to publish:"
-                        $packages | ForEach-Object { Write-Host "  - $($_.Name)" }
-
-                        foreach ($package in $packages) {
-                            Write-Host "📤 Publishing: $($package.Name)"
-                            dotnet nuget push "$($package.FullName)" --api-key "$(NUGET_API_KEY)" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
-                            
-                            if ($LASTEXITCODE -eq 0) {
-                                Write-Host "✅ Successfully published $($package.Name)" -ForegroundColor Green
-                            } else {
-                                Write-Error "❌ Failed to publish $($package.Name)"
-                                exit 1
-                            }
-                        }
-
-                        Write-Host "🎉 All packages published successfully!" -ForegroundColor Green
-                      pwsh: true
-                    env:
-                      NUGET_API_KEY: $(NUGET_API_KEY)
+                      command: "push"
+                      packagesToPush: "$(Pipeline.Workspace)/drop/**/Microsoft.DataFactory.MCP.*.nupkg;!$(Pipeline.Workspace)/drop/**/*.symbols.nupkg"
+                      nuGetFeedType: "external"
+                      publishFeedCredentials: "DataIntegration NuGet"
+                      allowPackageConflicts: true
