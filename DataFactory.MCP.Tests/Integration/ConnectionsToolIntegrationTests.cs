@@ -153,6 +153,9 @@ public class ConnectionsToolIntegrationTests : FabricToolIntegrationTestBase
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
+        // Skip if upstream service is blocking requests
+        SkipIfUpstreamBlocked(result);
+
         // When authenticated, should either get JSON response or a "no connections" message
         try
         {
@@ -190,6 +193,9 @@ public class ConnectionsToolIntegrationTests : FabricToolIntegrationTestBase
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
+        // Skip if upstream service is blocking requests
+        SkipIfUpstreamBlocked(result);
+
         // Should not contain authentication error when properly authenticated
         Assert.DoesNotContain("Authentication error", result);
         Assert.DoesNotContain("authentication required", result, StringComparison.OrdinalIgnoreCase);
@@ -222,6 +228,9 @@ public class ConnectionsToolIntegrationTests : FabricToolIntegrationTestBase
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
+        // Skip if upstream service is blocking requests
+        SkipIfUpstreamBlocked(result);
+
         // Should not contain authentication error when properly authenticated
         Assert.DoesNotContain("Authentication error", result);
         Assert.DoesNotContain("authentication required", result, StringComparison.OrdinalIgnoreCase);
@@ -247,6 +256,9 @@ public class ConnectionsToolIntegrationTests : FabricToolIntegrationTestBase
 
         // First, try to get a list of connections to find an existing one
         var listResult = await _connectionsTool.ListConnectionsAsync();
+
+        // Skip if upstream service is blocking requests
+        SkipIfUpstreamBlocked(listResult);
 
         if (listResult.Contains("No connections found") || listResult.Contains("Authentication error"))
         {
@@ -288,6 +300,9 @@ public class ConnectionsToolIntegrationTests : FabricToolIntegrationTestBase
         // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result);
+
+        // Skip if upstream service is blocking requests
+        SkipIfUpstreamBlocked(result);
 
         // Should not contain authentication error
         Assert.DoesNotContain("Authentication error", result);
@@ -332,6 +347,9 @@ public class ConnectionsToolIntegrationTests : FabricToolIntegrationTestBase
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
+        // Skip if upstream service is blocking requests
+        SkipIfUpstreamBlocked(result);
+
         // Should not contain authentication error when properly authenticated
         Assert.DoesNotContain("Authentication error", result);
         Assert.DoesNotContain("authentication required", result, StringComparison.OrdinalIgnoreCase);
@@ -360,6 +378,11 @@ public class ConnectionsToolIntegrationTests : FabricToolIntegrationTestBase
         var listResult = await _connectionsTool.ListConnectionsAsync();
         var invalidTokenResult = await _connectionsTool.ListConnectionsAsync("invalid-continuation-token");
         var getResult = await _connectionsTool.GetConnectionAsync("test-connection-id");
+
+        // Skip if any upstream service is blocking requests
+        SkipIfUpstreamBlocked(listResult);
+        SkipIfUpstreamBlocked(invalidTokenResult);
+        SkipIfUpstreamBlocked(getResult);
 
         // Assert - None should contain authentication errors
         Assert.DoesNotContain("Authentication error", listResult);

@@ -100,6 +100,9 @@ public class GatewayToolIntegrationTests : FabricToolIntegrationTestBase
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
+        // Skip if upstream service is blocking requests
+        SkipIfUpstreamBlocked(result);
+
         AssertNoAuthenticationError(result);
 
         // Should either be valid JSON with gateway data or a "no gateways" message
@@ -124,6 +127,9 @@ public class GatewayToolIntegrationTests : FabricToolIntegrationTestBase
         // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result);
+
+        // Skip if upstream service is blocking requests
+        SkipIfUpstreamBlocked(result);
 
         AssertNoAuthenticationError(result);
 

@@ -121,4 +121,13 @@ public abstract class FabricToolIntegrationTestBase : IClassFixture<McpTestFixtu
                 $"Non-JSON response should contain one of: {string.Join(", ", expectedMessageTypes)}. Got: {result}");
         }
     }
+
+    /// <summary>
+    /// Skip test if the API response indicates upstream service blocking.
+    /// Uses the actual response message as the skip reason.
+    /// </summary>
+    protected static void SkipIfUpstreamBlocked(string result)
+    {
+        Skip.If(result.Contains("Request is blocked by the upstream service"), result);
+    }
 }
