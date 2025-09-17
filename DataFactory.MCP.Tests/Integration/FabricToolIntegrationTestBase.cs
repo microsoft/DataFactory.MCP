@@ -130,4 +130,46 @@ public abstract class FabricToolIntegrationTestBase : IClassFixture<McpTestFixtu
     {
         Skip.If(result.Contains("Request is blocked by the upstream service"), result);
     }
+
+    protected static void AssertResult(string scenarioType, string result)
+    {
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+
+        // Skip if upstream service is blocking requests
+        SkipIfUpstreamBlocked(result);
+
+        AssertNoAuthenticationError(result);
+
+        if (result.Contains($"No {scenarioType} found"))
+        {
+            // If no connections, that's a valid response
+            Assert.Contains($"No {scenarioType} found", result);
+            return;
+        }
+
+        var jsonDoc = JsonDocument.Parse(result);
+
+        // If it's JSON, verify it has the expected structure
+        Assert.True(jsonDoc.RootElement.TryGetProperty("totalCount", out _), "JSON response should have totalCount property");
+        Assert.True(jsonDoc.RootElement.TryGetProperty(scenarioType, out _), $"JSON response should have {scenarioType} property");
+    }
+
+    protected static void AssertOneItemResult(string scenarioType, string testId, string result)
+    {
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+
+        AssertNoAuthenticationError(result);
+
+        // Skip if upstream service is blocking requests
+        SkipIfUpstreamBlocked(result);
+
+        // The result should be either a "not found" message or a JSON object
+        Assert.Equal($"{scenarioType} with ID '{testId}' not found or you don't have permission to access it.", result);
+    }
+
 }

@@ -76,36 +76,6 @@ public class ConnectionsToolIntegrationTests : FabricToolIntegrationTestBase
 
     #region Authenticated Scenarios
 
-    private static void AssertConnectionResult(string result)
-    {
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.NotEmpty(result);
-
-        // Skip if upstream service is blocking requests
-        SkipIfUpstreamBlocked(result);
-
-        // Should not contain authentication error when properly authenticated
-        Assert.DoesNotContain("Authentication error", result);
-        Assert.DoesNotContain("authentication required", result, StringComparison.OrdinalIgnoreCase);
-
-        if (result.Contains("No connections found"))
-        {
-            // If no connections, that's a valid response
-            Assert.Contains("No connections found", result);
-            return;
-        }
-
-
-        var jsonDoc = JsonDocument.Parse(result);
-
-        // If it's JSON, verify it has the expected structure
-        Assert.True(jsonDoc.RootElement.TryGetProperty("totalCount", out _), "JSON response should have totalCount property");
-        Assert.True(jsonDoc.RootElement.TryGetProperty("connections", out _), "JSON response should have connections property");
-
-    }
-
     /// <summary>
     /// Helper method to authenticate using environment variables if available
     /// </summary>
@@ -121,7 +91,7 @@ public class ConnectionsToolIntegrationTests : FabricToolIntegrationTestBase
         var result = await _connectionsTool.ListConnectionsAsync();
 
         // Assert
-        AssertConnectionResult(result);
+        AssertResult("connections", result);
     }
 
     [SkippableFact]
@@ -138,7 +108,7 @@ public class ConnectionsToolIntegrationTests : FabricToolIntegrationTestBase
         var result = await _connectionsTool.ListConnectionsAsync(testToken);
 
         // Assert
-        AssertConnectionResult(result);
+        AssertResult("connections", result);
     }
 
     [SkippableFact]
@@ -155,14 +125,7 @@ public class ConnectionsToolIntegrationTests : FabricToolIntegrationTestBase
         var result = await _connectionsTool.GetConnectionAsync(testConnectionId);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.NotEmpty(result);
-
-        // Skip if upstream service is blocking requests
-        SkipIfUpstreamBlocked(result);
-
-        // The result should be either a "not found" message or connection details
-        Assert.Equal($"Connection with ID '{testConnectionId}' not found or you don't have permission to access it.", result);
+        AssertOneItemResult("Connection", testConnectionId, result);
     }
 
     #endregion
