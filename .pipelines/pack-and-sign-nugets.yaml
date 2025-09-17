@@ -1,14 +1,6 @@
 #################################################################################
 #                               OneBranch Pipelines                             #
 # Pack and Sign DataFactory.MCP NuGet Packages                                  #
-#                                                                               #
-# Parameters:                                                                   #
-#   - debug: Enable debug output (default: false)                              #
-#   - publishToNuGet: Publish to NuGet.org (default: false)                    #
-#                                                                               #
-# Required Service Connections for NuGet publishing:                           #
-#   - "DataIntegration NuGet": Service connection configured for NuGet.org     #
-#                                                                               #
 # Documentation:  https://aka.ms/obpipelines                                    #
 # Yaml Schema:    https://aka.ms/obpipelines/yaml/schema                        #
 # Retail Tasks:   https://aka.ms/obpipelines/tasks                              #
@@ -36,10 +28,6 @@ pr:
 parameters:
   - name: "debug"
     displayName: "Enable debug output"
-    type: boolean
-    default: false
-  - name: "publishToNuGet"
-    displayName: "Publish to NuGet.org"
     type: boolean
     default: false
 
@@ -83,7 +71,6 @@ extends:
 
     stages:
       - stage: build
-        displayName: "Build and Pack"
         jobs:
           - job: main
             pool:
@@ -201,78 +188,3 @@ extends:
                       Get-ChildItem $out -Filter *.nupkg -Recurse | Select-Object FullName, Length, LastWriteTime | Format-Table -AutoSize | Out-String | Write-Host
                     } else { Write-Host "Output directory not found: $out" }
                 continueOnError: true
-
-      # Publishing stage - uses regular pool to avoid release stage restrictions
-      - ${{ if eq(parameters.publishToNuGet, true) }}:
-          - stage: publish_to_nuget_gallery
-            displayName: "Publish to NuGet.org"
-            dependsOn: build
-            jobs:
-              - job: publish_to_nuget
-                displayName: "Publish to NuGet.org"
-                pool:
-                  type: windows
-                variables:
-                  ob_outputDirectory: "$(Pipeline.Workspace)/main"
-                templateContext:
-                  inputs:
-                    - input: pipelineArtifact
-                      artifactName: main
-                steps:
-                  - task: PowerShell@2
-                    displayName: "List available packages for debugging"
-                    inputs:
-                      targetType: inline
-                      script: |
-                        Write-Host "=== Debugging Package Location ===" -ForegroundColor Cyan
-                        Write-Host "Pipeline.Workspace: $(Pipeline.Workspace)"
-
-                        # Check all possible artifact locations
-                        Write-Host "=== Checking all possible artifact locations ===" -ForegroundColor Yellow
-
-                        # 1. Check drop_build_main folder
-                        $dropPath = "$(Pipeline.Workspace)/drop_build_main"
-                        if (Test-Path $dropPath) {
-                          Write-Host "Found drop_build_main folder:" -ForegroundColor Green
-                          Get-ChildItem $dropPath -Filter "*.nupkg" -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
-                        } else {
-                          Write-Host "drop_build_main folder not found!" -ForegroundColor Red
-                        }
-
-                        # 1a. Check alternative OneBranch artifact names
-                        $possibleNames = @("build", "build_main", "build_windows_main", "main")
-                        foreach ($name in $possibleNames) {
-                          $path = "$(Pipeline.Workspace)/$name"
-                          if (Test-Path $path) {
-                            Write-Host "Found artifact folder: $name" -ForegroundColor Green
-                            Get-ChildItem $path -Filter "*.nupkg" -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
-                          }
-                        }
-
-                        # 2. Check 'a' folder (Azure DevOps standard artifact location)
-                        $artifactPath = "$(Pipeline.Workspace)/a"
-                        if (Test-Path $artifactPath) {
-                          Write-Host "Found 'a' folder (standard artifact location):" -ForegroundColor Green
-                          Write-Host "All contents of 'a' folder:" -ForegroundColor Cyan
-                          Get-ChildItem $artifactPath -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
-                          Write-Host "Looking specifically for .nupkg files in 'a' folder:" -ForegroundColor Cyan
-                          Get-ChildItem $artifactPath -Filter "*.nupkg" -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
-                        } else {
-                          Write-Host "'a' folder not found!" -ForegroundColor Red
-                        }
-
-                        # 3. Search entire Pipeline.Workspace for any .nupkg files
-                        Write-Host "=== Searching entire Pipeline.Workspace for .nupkg files ===" -ForegroundColor Yellow
-                        Get-ChildItem "$(Pipeline.Workspace)" -Filter "*.nupkg" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize
-
-                        # 4. List all folders in Pipeline.Workspace
-                        Write-Host "All folders in Pipeline.Workspace:" -ForegroundColor Yellow
-                        Get-ChildItem "$(Pipeline.Workspace)" | Select-Object FullName | Format-Table -AutoSize
-                  - task: NuGetCommand@2
-                    displayName: "Publish to NuGet.org"
-                    inputs:
-                      command: "push"
-                      packagesToPush: "$(Pipeline.Workspace)/main/Microsoft.DataFactory.MCP.*.nupkg;!$(Pipeline.Workspace)/main/*.symbols.nupkg"
-                      nuGetFeedType: "external"
-                      publishFeedCredentials: "DataIntegration NuGet"
-                      allowPackageConflicts: true
