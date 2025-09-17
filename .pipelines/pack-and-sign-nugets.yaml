@@ -202,14 +202,6 @@ extends:
                     } else { Write-Host "Output directory not found: $out" }
                 continueOnError: true
 
-              # Publish NuGet packages as pipeline artifacts
-              - task: PublishPipelineArtifact@1
-                displayName: "Publish NuGet packages as artifacts"
-                inputs:
-                  targetPath: "$(OUTPUTROOT)"
-                  artifactName: "drop_build_main"
-                  publishLocation: "pipeline"
-
       # Publishing stage - uses regular pool to avoid release stage restrictions
       - ${{ if eq(parameters.publishToNuGet, true) }}:
           - stage: publish_to_nuget_gallery
@@ -221,11 +213,11 @@ extends:
                 pool:
                   type: windows
                 variables:
-                  ob_outputDirectory: "$(Pipeline.Workspace)/drop_build_main"
+                  ob_outputDirectory: "$(Pipeline.Workspace)/main"
                 templateContext:
                   inputs:
                     - input: pipelineArtifact
-                      artifactName: drop_build_main
+                      artifactName: main
                 steps:
                   - task: PowerShell@2
                     displayName: "List available packages for debugging"
@@ -247,10 +239,23 @@ extends:
                           Write-Host "drop_build_main folder not found!" -ForegroundColor Red
                         }
 
+                        # 1a. Check alternative OneBranch artifact names
+                        $possibleNames = @("build", "build_main", "build_windows_main", "main")
+                        foreach ($name in $possibleNames) {
+                          $path = "$(Pipeline.Workspace)/$name"
+                          if (Test-Path $path) {
+                            Write-Host "Found artifact folder: $name" -ForegroundColor Green
+                            Get-ChildItem $path -Filter "*.nupkg" -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+                          }
+                        }
+
                         # 2. Check 'a' folder (Azure DevOps standard artifact location)
                         $artifactPath = "$(Pipeline.Workspace)/a"
                         if (Test-Path $artifactPath) {
                           Write-Host "Found 'a' folder (standard artifact location):" -ForegroundColor Green
+                          Write-Host "All contents of 'a' folder:" -ForegroundColor Cyan
+                          Get-ChildItem $artifactPath -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+                          Write-Host "Looking specifically for .nupkg files in 'a' folder:" -ForegroundColor Cyan
                           Get-ChildItem $artifactPath -Filter "*.nupkg" -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
                         } else {
                           Write-Host "'a' folder not found!" -ForegroundColor Red
@@ -267,7 +272,7 @@ extends:
                     displayName: "Publish to NuGet.org"
                     inputs:
                       command: "push"
-                      packagesToPush: "$(Pipeline.Workspace)/drop_build_main/Microsoft.DataFactory.MCP.*.nupkg;!$(Pipeline.Workspace)/drop_build_main/*.symbols.nupkg"
+                      packagesToPush: "$(Pipeline.Workspace)/main/Microsoft.DataFactory.MCP.*.nupkg;!$(Pipeline.Workspace)/main/*.symbols.nupkg"
                       nuGetFeedType: "external"
                       publishFeedCredentials: "DataIntegration NuGet"
                       allowPackageConflicts: true
