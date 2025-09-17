@@ -26,7 +26,7 @@ public class ConnectionsTool
 
             if (!response.Value.Any())
             {
-                return "No connections found. Make sure you have the required permissions (Connection.Read.All or Connection.ReadWrite.All).";
+                return "No connections found. Response has an empty list.";
             }
 
             var result = new
