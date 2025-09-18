@@ -51,11 +51,13 @@ public class McpTestFixture : IDisposable
                 services.AddScoped<IAuthenticationService, AuthenticationService>();
                 services.AddScoped<IFabricGatewayService, FabricGatewayService>();
                 services.AddScoped<IFabricConnectionService, FabricConnectionService>();
+                services.AddScoped<IFabricWorkspaceService, FabricWorkspaceService>();
 
                 // Register tools
                 services.AddScoped<AuthenticationTool>();
                 services.AddScoped<GatewayTool>();
                 services.AddScoped<ConnectionsTool>();
+                services.AddScoped<WorkspacesTool>();
             })
             .Build();
 
