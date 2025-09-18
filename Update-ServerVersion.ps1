@@ -1,4 +1,6 @@
 # Update server.json and README.md with current version from Directory.Build.props
+# This script replaces version placeholders (#{VERSION}#) and actual version numbers
+# with the current version from Directory.Build.props
 [CmdletBinding()]
 param(
     [string]$Version,
@@ -63,11 +65,13 @@ function Update-ReadmeVersion {
         $originalContent = $content
         
         # Simple regex to find and replace version in README
-        # Looking for version pattern after "--version",
-        $pattern = '("--version",\s*[\r\n]+\s*)"[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?"'
+        # Looking for version pattern after "--version", supporting both actual versions and placeholders
+        $pattern1 = '("--version",\s*[\r\n]+\s*)"[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?"'
+        $pattern2 = '("--version",\s*[\r\n]+\s*)"#{VERSION}#"'
         $replacement = "`$1`"$NewVersion`""
         
-        $content = $content -replace $pattern, $replacement
+        $content = $content -replace $pattern1, $replacement
+        $content = $content -replace $pattern2, $replacement
         
         if ($content -ne $originalContent) {
             Set-Content $Path -Value $content -Encoding UTF8 -NoNewline

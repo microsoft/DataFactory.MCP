@@ -35,7 +35,7 @@ A Model Context Protocol (MCP) server for Microsoft Data Factory and Azure Fabri
          "args": [
            "Microsoft.DataFactory.MCP",
            "--version",
-           "0.2.0-beta",
+           "#{VERSION}#",
            "--yes"
          ]
        }
