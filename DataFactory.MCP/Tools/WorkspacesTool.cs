@@ -63,48 +63,4 @@ public class WorkspacesTool
             return string.Format(Messages.ErrorListingWorkspacesTemplate, ex.Message);
         }
     }
-
-    [McpServerTool, Description(@"Gets a summary list of workspaces with essential information only. Useful for quick overview.")]
-    public async Task<string> ListWorkspacesSummaryAsync(
-        [Description("A list of roles. Separate values using a comma (e.g., 'Admin,Member,Contributor,Viewer'). If not provided, all workspaces are returned.")] string? roles = null,
-        [Description("A token for retrieving the next page of results (optional)")] string? continuationToken = null)
-    {
-        try
-        {
-            var response = await _workspaceService.ListWorkspacesAsync(roles, continuationToken, false);
-
-            if (!response.Value.Any())
-            {
-                return Messages.NoWorkspacesFound;
-            }
-
-            var result = new
-            {
-                TotalCount = response.Value.Count,
-                ContinuationToken = response.ContinuationToken,
-                HasMoreResults = !string.IsNullOrEmpty(response.ContinuationToken),
-                FilteredByRoles = !string.IsNullOrEmpty(roles),
-                Roles = roles,
-                Workspaces = response.Value.Select(w => w.ToSummaryInfo())
-            };
-
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return string.Format(Messages.AuthenticationErrorTemplate, ex.Message);
-        }
-        catch (HttpRequestException ex)
-        {
-            return string.Format(Messages.ApiRequestFailedTemplate, ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return string.Format(Messages.ErrorListingWorkspacesTemplate, ex.Message);
-        }
-    }
 }

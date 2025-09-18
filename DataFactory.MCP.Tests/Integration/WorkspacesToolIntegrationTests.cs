@@ -66,29 +66,6 @@ public class WorkspacesToolIntegrationTests : FabricToolIntegrationTestBase
     }
 
     [Fact]
-    public async Task ListWorkspacesSummaryAsync_WithoutAuthentication_ShouldReturnAuthenticationError()
-    {
-        // Act
-        var result = await _workspacesTool.ListWorkspacesSummaryAsync();
-
-        // Assert
-        AssertAuthenticationError(result);
-    }
-
-    [Fact]
-    public async Task ListWorkspacesSummaryAsync_WithRoles_WithoutAuthentication_ShouldReturnAuthenticationError()
-    {
-        // Arrange
-        var testRoles = "Viewer,Contributor";
-
-        // Act
-        var result = await _workspacesTool.ListWorkspacesSummaryAsync(testRoles);
-
-        // Assert
-        AssertAuthenticationError(result);
-    }
-
-    [Fact]
     public void WorkspacesTool_ShouldBeRegisteredInDI()
     {
         // Assert
@@ -180,55 +157,6 @@ public class WorkspacesToolIntegrationTests : FabricToolIntegrationTestBase
             var jsonDoc = JsonDocument.Parse(result);
             Assert.True(jsonDoc.RootElement.TryGetProperty("includesApiEndpoints", out var includesApiEndpoints));
             Assert.True(includesApiEndpoints.GetBoolean());
-        }
-    }
-
-    [SkippableFact]
-    public async Task ListWorkspacesSummaryAsync_WithAuthentication_ShouldReturnSummaryFormat()
-    {
-        // Arrange - Try to authenticate
-        var isAuthenticated = await TryAuthenticateAsync();
-
-        Skip.IfNot(isAuthenticated, "Skipping authenticated test - no valid credentials available");
-
-        // Act
-        var result = await _workspacesTool.ListWorkspacesSummaryAsync();
-
-        // Assert
-        AssertResult("workspaces", result);
-
-        // Additional check that summary format doesn't include API endpoints flag
-        if (IsValidJson(result) && !result.Contains("No workspaces found"))
-        {
-            var jsonDoc = JsonDocument.Parse(result);
-            Assert.False(jsonDoc.RootElement.TryGetProperty("includesApiEndpoints", out _));
-        }
-    }
-
-    [SkippableFact]
-    public async Task ListWorkspacesSummaryAsync_WithAuthentication_AndRoles_ShouldReturnFilteredSummary()
-    {
-        // Arrange - Try to authenticate
-        var isAuthenticated = await TryAuthenticateAsync();
-
-        Skip.IfNot(isAuthenticated, "Skipping authenticated test - no valid credentials available");
-
-        var testRoles = "Admin,Member";
-
-        // Act
-        var result = await _workspacesTool.ListWorkspacesSummaryAsync(testRoles);
-
-        // Assert
-        AssertResult("workspaces", result);
-
-        // Additional check for roles filtering in summary
-        if (IsValidJson(result) && !result.Contains("No workspaces found"))
-        {
-            var jsonDoc = JsonDocument.Parse(result);
-            Assert.True(jsonDoc.RootElement.TryGetProperty("filteredByRoles", out var filteredByRoles));
-            Assert.True(filteredByRoles.GetBoolean());
-            Assert.True(jsonDoc.RootElement.TryGetProperty("roles", out var roles));
-            Assert.Equal(testRoles, roles.GetString());
         }
     }
 

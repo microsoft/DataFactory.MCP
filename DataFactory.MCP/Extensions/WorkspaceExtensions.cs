@@ -28,22 +28,4 @@ public static class WorkspaceExtensions
 
         return formattedInfo;
     }
-
-    /// <summary>
-    /// Formats a Workspace object for summary display (minimal information).
-    /// Used when displaying multiple workspaces in a list format.
-    /// </summary>
-    /// <param name="workspace">The workspace object to format</param>
-    /// <returns>Formatted summary object</returns>
-    public static object ToSummaryInfo(this Workspace workspace)
-    {
-        return new
-        {
-            Id = workspace.Id,
-            DisplayName = workspace.DisplayName,
-            Type = workspace.Type.ToString(),
-            HasCapacity = !string.IsNullOrEmpty(workspace.CapacityId),
-            HasDescription = !string.IsNullOrEmpty(workspace.Description)
-        };
-    }
 }
