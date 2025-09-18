@@ -124,6 +124,11 @@ public static class Messages
     /// Error retrieving gateway message template
     /// </summary>
     public const string ErrorRetrievingGatewayTemplate = "Error retrieving gateway: {0}";
+
+    /// <summary>
+    /// Error listing workspaces message template
+    /// </summary>
+    public const string ErrorListingWorkspacesTemplate = "Error listing workspaces: {0}";
     #endregion
 
     #region Validation Messages
@@ -168,6 +173,11 @@ public static class Messages
     /// Template for gateway not found message
     /// </summary>
     public const string GatewayNotFoundTemplate = "Gateway with ID '{0}' not found or you don't have permission to access it.";
+
+    /// <summary>
+    /// Message when no workspaces are found
+    /// </summary>
+    public const string NoWorkspacesFound = "No workspaces found. Make sure you have the required permissions (Workspace.Read.All or Workspace.ReadWrite.All).";
     #endregion
 
     #region Service Messages

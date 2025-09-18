@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using DataFactory.MCP.Models;
 using DataFactory.MCP.Tools;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Services;
@@ -23,12 +22,17 @@ builder.Services.AddTransient<GatewayTool>();
 builder.Services.AddHttpClient<IFabricConnectionService, FabricConnectionService>();
 builder.Services.AddTransient<ConnectionsTool>();
 
+// Add HTTP client and Fabric Workspace services
+builder.Services.AddHttpClient<IFabricWorkspaceService, FabricWorkspaceService>();
+builder.Services.AddTransient<WorkspacesTool>();
+
 // Add the MCP services: the transport to use (stdio) and the tools to register.
 builder.Services
     .AddMcpServer()
     .WithStdioServerTransport()
     .WithTools<AuthenticationTool>()
     .WithTools<GatewayTool>()
-    .WithTools<ConnectionsTool>();
+    .WithTools<ConnectionsTool>()
+    .WithTools<WorkspacesTool>();
 
 await builder.Build().RunAsync();
