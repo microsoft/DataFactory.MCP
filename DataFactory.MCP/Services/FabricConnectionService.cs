@@ -12,10 +12,9 @@ namespace DataFactory.MCP.Services;
 public class FabricConnectionService : FabricServiceBase, IFabricConnectionService
 {
     public FabricConnectionService(
-        HttpClient httpClient,
         ILogger<FabricConnectionService> logger,
         IAuthenticationService authService)
-        : base(httpClient, logger, authService)
+        : base(logger, authService)
     {
         // Add the custom connection converter to handle polymorphic deserialization
         JsonOptions.Converters.Add(new ConnectionJsonConverter());

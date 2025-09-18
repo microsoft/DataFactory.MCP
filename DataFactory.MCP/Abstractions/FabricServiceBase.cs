@@ -10,7 +10,7 @@ namespace DataFactory.MCP.Abstractions;
 /// <summary>
 /// Abstract base class for Microsoft Fabric API services providing common functionality
 /// </summary>
-public abstract class FabricServiceBase
+public abstract class FabricServiceBase : IDisposable
 {
     protected const string BaseUrl = "https://api.fabric.microsoft.com/v1";
     protected readonly HttpClient HttpClient;
@@ -19,11 +19,10 @@ public abstract class FabricServiceBase
     protected readonly JsonSerializerOptions JsonOptions;
 
     protected FabricServiceBase(
-        HttpClient httpClient,
         ILogger logger,
         IAuthenticationService authService)
     {
-        HttpClient = httpClient;
+        HttpClient = new HttpClient();
         Logger = logger;
         AuthService = authService;
 
@@ -87,5 +86,10 @@ public abstract class FabricServiceBase
 
             throw new HttpRequestException($"API request failed: {response.StatusCode} - {errorContent}");
         }
+    }
+
+    public void Dispose()
+    {
+        HttpClient?.Dispose();
     }
 }

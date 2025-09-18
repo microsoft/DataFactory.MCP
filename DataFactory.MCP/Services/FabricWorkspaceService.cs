@@ -12,10 +12,9 @@ namespace DataFactory.MCP.Services;
 public class FabricWorkspaceService : FabricServiceBase, IFabricWorkspaceService
 {
     public FabricWorkspaceService(
-        HttpClient httpClient,
         ILogger<FabricWorkspaceService> logger,
         IAuthenticationService authService)
-        : base(httpClient, logger, authService)
+        : base(logger, authService)
     {
     }
 
