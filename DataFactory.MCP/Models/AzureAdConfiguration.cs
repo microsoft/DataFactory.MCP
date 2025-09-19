@@ -29,5 +29,5 @@ public static class AzureAdConfiguration
     /// <summary>
     /// Redirect URI for interactive authentication
     /// </summary>
-    public const string RedirectUri = "http://localhost:8080";
+    public const string RedirectUri = "http://localhost:0";
 }
