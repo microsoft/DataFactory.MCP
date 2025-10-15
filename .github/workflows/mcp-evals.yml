@@ -35,7 +35,7 @@ jobs:
           node-version: "20"
 
       - name: Restore .NET dependencies
-        run: dotnet restore DataFactory.MCP/DataFactory.MCP.csproj
+        run: dotnet restore DataFactory.MCP/DataFactory.MCP.csproj --configfile nuget.public.config
 
       - name: Build DataFactory MCP Server
         run: dotnet build DataFactory.MCP/DataFactory.MCP.csproj --configuration Release --no-restore
@@ -91,7 +91,7 @@ jobs:
           node-version: "20"
 
       - name: Restore .NET dependencies
-        run: dotnet restore DataFactory.MCP/DataFactory.MCP.csproj
+        run: dotnet restore DataFactory.MCP/DataFactory.MCP.csproj --configfile nuget.public.config
 
       - name: Build DataFactory MCP Server
         run: dotnet build DataFactory.MCP/DataFactory.MCP.csproj --configuration Release --no-restore
