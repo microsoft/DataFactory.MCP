@@ -1,0 +1,109 @@
+name: MCP Server Evaluations
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "DataFactory.MCP/**"
+      - "evals/**"
+      - ".github/workflows/mcp-evals.yml"
+  push:
+    branches: [main, dev/**]
+    paths:
+      - "DataFactory.MCP/**"
+      - "evals/**"
+
+jobs:
+  build-and-evaluate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Restore .NET dependencies
+        run: dotnet restore DataFactory.MCP/DataFactory.MCP.csproj
+
+      - name: Build DataFactory MCP Server
+        run: dotnet build DataFactory.MCP/DataFactory.MCP.csproj --configuration Release --no-restore
+
+      - name: Install Node.js dependencies
+        working-directory: ./evals
+        run: npm install
+
+      - name: Run Core Functionality Evaluations
+        uses: mclenhard/mcp-evals@v1.0.14
+        with:
+          evals_path: "evals/core-functionality-evals.yaml"
+          server_path: "DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe"
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          model: "gpt-4o"
+
+      - name: Run Authentication Evaluations
+        uses: mclenhard/mcp-evals@v1.0.14
+        with:
+          evals_path: "evals/authentication-evals.yaml"
+          server_path: "DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe"
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          model: "gpt-4o"
+
+      - name: Run Workspace Evaluations
+        uses: mclenhard/mcp-evals@v1.0.14
+        with:
+          evals_path: "evals/workspace-evals.yaml"
+          server_path: "DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe"
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          model: "gpt-4o"
+
+  comprehensive-evaluation:
+    runs-on: ubuntu-latest
+    needs: build-and-evaluate
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Restore .NET dependencies
+        run: dotnet restore DataFactory.MCP/DataFactory.MCP.csproj
+
+      - name: Build DataFactory MCP Server
+        run: dotnet build DataFactory.MCP/DataFactory.MCP.csproj --configuration Release --no-restore
+
+      - name: Install Node.js dependencies
+        working-directory: ./evals
+        run: npm install
+
+      - name: Run Comprehensive Evaluations
+        uses: mclenhard/mcp-evals@v1.0.14
+        with:
+          evals_path: "evals/datafactory-mcp-evals.yaml"
+          server_path: "DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe"
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          model: "gpt-4o"

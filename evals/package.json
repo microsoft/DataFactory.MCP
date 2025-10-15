@@ -1,0 +1,38 @@
+{
+    "name": "datafactory-mcp-evals",
+    "version": "1.0.0",
+    "description": "Evaluation tests for Microsoft DataFactory MCP Server",
+    "main": "index.js",
+    "scripts": {
+        "eval:all": "npx mcp-eval datafactory-mcp-evals.yaml ../DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe",
+        "eval:core": "npx mcp-eval core-functionality-evals.yaml ../DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe",
+        "eval:auth": "npx mcp-eval authentication-evals.yaml ../DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe",
+        "eval:workspace": "npx mcp-eval workspace-evals.yaml ../DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe",
+        "eval:connection": "npx mcp-eval connection-evals.yaml ../DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe",
+        "eval:gateway": "npx mcp-eval gateway-evals.yaml ../DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe",
+        "eval:dataflow": "npx mcp-eval dataflow-evals.yaml ../DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe",
+        "eval:tools": "npm run eval:auth && npm run eval:workspace && npm run eval:connection && npm run eval:gateway && npm run eval:dataflow",
+        "install-evals": "npm install mcp-evals",
+        "build": "cd .. && dotnet build DataFactory.MCP.sln --configuration Release",
+        "test": "npm run build && npm run eval:core"
+    },
+    "keywords": [
+        "mcp",
+        "microsoft-fabric",
+        "datafactory",
+        "evaluations",
+        "testing"
+    ],
+    "author": "Microsoft",
+    "license": "MIT",
+    "devDependencies": {
+        "mcp-evals": "^1.0.14"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/DataFactory.MCP.git"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

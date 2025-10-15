@@ -1,0 +1,101 @@
+# Gateway Management Tool Evaluations
+
+model:
+  provider: openai
+  name: gpt-4o
+
+evals:
+  - name: list_gateways_all_types
+    description: Test listing all gateway types
+    prompt: "List all gateways including on-premises, personal mode, and virtual network gateways"
+    expected_result: "Should return all gateway types with their configurations and status"
+
+  - name: list_gateways_on_premises
+    description: Test listing on-premises gateways specifically
+    prompt: "Show me all on-premises data gateways"
+    expected_result: "Should return on-premises gateways with installation and configuration details"
+
+  - name: list_gateways_personal_mode
+    description: Test listing personal mode gateways
+    prompt: "List personal mode gateways available to me"
+    expected_result: "Should return personal mode gateways with user-specific configuration"
+
+  - name: list_gateways_virtual_network
+    description: Test listing virtual network gateways
+    prompt: "Show virtual network gateways and their configurations"
+    expected_result: "Should return VNet gateways with network configuration details"
+
+  - name: list_gateways_empty_result
+    description: Test gateway listing when no gateways exist
+    prompt: "List gateways for user with no gateway access"
+    expected_result: "Should return no gateways found message"
+
+  - name: list_gateways_with_pagination
+    description: Test gateway listing with pagination
+    prompt: "List gateways with pagination support"
+    expected_result: "Should return paginated results with continuation token for next page"
+
+  - name: list_gateways_unauthorized
+    description: Test gateway listing without authentication
+    prompt: "List gateways when user is not authenticated"
+    expected_result: "Should return authentication error with appropriate guidance"
+
+  - name: list_gateways_json_format
+    description: Test gateway listing response format
+    prompt: "List gateways and verify JSON response structure"
+    expected_result: "Should return properly formatted JSON with gateway details and metadata"
+
+  - name: get_gateway_valid_id
+    description: Test retrieving specific gateway with valid ID
+    prompt: "Get details for gateway with ID 'gateway-123-abc'"
+    expected_result: "Should return comprehensive gateway information including type, status, and configuration"
+
+  - name: get_gateway_invalid_id
+    description: Test retrieving gateway with invalid ID
+    prompt: "Get details for gateway with ID 'invalid-gateway-xyz'"
+    expected_result: "Should return appropriate error message for gateway not found"
+
+  - name: get_gateway_empty_id
+    description: Test retrieving gateway with empty ID
+    prompt: "Get gateway details without providing gateway ID"
+    expected_result: "Should return error indicating gateway ID is required"
+
+  - name: get_gateway_null_id
+    description: Test retrieving gateway with null ID
+    prompt: "Get gateway details with null gateway ID"
+    expected_result: "Should handle null ID gracefully with appropriate error message"
+
+  - name: get_gateway_unauthorized
+    description: Test gateway retrieval without proper authentication
+    prompt: "Get gateway details when user is not authenticated"
+    expected_result: "Should return authentication error and prompt to authenticate"
+
+  - name: get_gateway_access_denied
+    description: Test gateway retrieval when user lacks permissions
+    prompt: "Get details for gateway user doesn't have access to"
+    expected_result: "Should return access denied error with appropriate message"
+
+  - name: gateway_service_exception
+    description: Test handling of gateway service exceptions
+    prompt: "Retrieve gateway when underlying service throws exception"
+    expected_result: "Should handle service exceptions gracefully with user-friendly error message"
+
+  - name: gateway_status_information
+    description: Test gateway status and health information
+    prompt: "Get gateway status and availability information"
+    expected_result: "Should return current gateway status, health metrics, and availability"
+
+  - name: gateway_configuration_details
+    description: Test gateway configuration information retrieval
+    prompt: "Get detailed configuration for a specific gateway"
+    expected_result: "Should return complete gateway configuration including network settings and capabilities"
+
+  - name: gateway_permissions_validation
+    description: Test gateway access permissions validation
+    prompt: "List gateways and verify only accessible gateways are returned"
+    expected_result: "Should return only gateways user has permission to view and manage"
+
+  - name: gateway_metadata_completeness
+    description: Test gateway metadata completeness
+    prompt: "List gateways and verify all required metadata is present"
+    expected_result: "Should return gateways with complete metadata including type, version, and capabilities"

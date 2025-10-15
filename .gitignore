@@ -2,3 +2,5 @@ obj/
 bin/
 *.sln
 DataFactory.MCP.Tests/Infrastructure/.env
+*node_modules/
+*package-lock.json

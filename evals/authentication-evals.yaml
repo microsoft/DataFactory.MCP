@@ -1,0 +1,71 @@
+# Authentication Tool Specific Evaluations
+
+model:
+  provider: openai
+  name: gpt-4o
+
+evals:
+  - name: interactive_auth_success
+    description: Test successful interactive authentication
+    prompt: "Start interactive Azure AD authentication"
+    expected_result: "Should initiate browser-based auth flow and return success confirmation"
+
+  - name: interactive_auth_service_unavailable
+    description: Test interactive auth when service is unavailable
+    prompt: "Attempt interactive authentication when auth service is not initialized"
+    expected_result: "Should return service unavailable message gracefully"
+
+  - name: service_principal_valid_params
+    description: Test service principal auth with all required parameters
+    prompt: "Authenticate with service principal: appId='test-app', secret='test-secret', tenant='test-tenant'"
+    expected_result: "Should authenticate successfully with all parameters provided"
+
+  - name: service_principal_missing_app_id
+    description: Test service principal auth with missing application ID
+    prompt: "Authenticate with service principal but don't provide application ID"
+    expected_result: "Should return error about missing or empty application ID"
+
+  - name: service_principal_missing_secret
+    description: Test service principal auth with missing client secret
+    prompt: "Authenticate with service principal but don't provide client secret"
+    expected_result: "Should return error about missing or empty client secret"
+
+  - name: service_principal_optional_tenant
+    description: Test service principal auth without tenant ID
+    prompt: "Authenticate with service principal: appId='test-app', secret='test-secret' (no tenant)"
+    expected_result: "Should authenticate successfully as tenant ID is optional"
+
+  - name: get_auth_status_authenticated
+    description: Test getting auth status when user is authenticated
+    prompt: "Get my current authentication status after successful login"
+    expected_result: "Should return authenticated status with user details and token info"
+
+  - name: get_auth_status_not_authenticated
+    description: Test getting auth status when user is not authenticated
+    prompt: "Get authentication status without being logged in"
+    expected_result: "Should return not authenticated status with guidance to authenticate"
+
+  - name: get_access_token_valid
+    description: Test getting access token for authenticated user
+    prompt: "Get my current access token"
+    expected_result: "Should return valid access token with expiration information"
+
+  - name: get_access_token_expired
+    description: Test getting access token when token is expired
+    prompt: "Get access token when current token has expired"
+    expected_result: "Should handle expired token gracefully and prompt for re-authentication"
+
+  - name: sign_out_success
+    description: Test successful sign out
+    prompt: "Sign out from current session"
+    expected_result: "Should clear authentication state and confirm successful sign out"
+
+  - name: sign_out_not_authenticated
+    description: Test sign out when not authenticated
+    prompt: "Attempt to sign out when not currently authenticated"
+    expected_result: "Should handle gracefully and return appropriate message"
+
+  - name: auth_error_handling
+    description: Test authentication error handling
+    prompt: "Authenticate with invalid credentials or when auth service throws exception"
+    expected_result: "Should return formatted error message without exposing sensitive details"
