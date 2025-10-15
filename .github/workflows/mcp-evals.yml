@@ -40,39 +40,31 @@ jobs:
       - name: Build DataFactory MCP Server
         run: dotnet build DataFactory.MCP/DataFactory.MCP.csproj --configuration Release --no-restore
 
-      - name: Create executable wrapper
-        run: |
-          echo '#!/bin/bash' > datafactory-mcp-server
-          echo 'dotnet DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.dll "$@"' >> datafactory-mcp-server
-          chmod +x datafactory-mcp-server
-
       - name: Install Node.js dependencies
         working-directory: ./evals
         run: npm install
 
       - name: Run Core Functionality Evaluations
-        uses: mclenhard/mcp-evals@v1.0.14
-        with:
-          evals_path: "evals/core-functionality-evals.yaml"
-          server_path: "./datafactory-mcp-server"
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          model: "gpt-4o"
+        working-directory: ./evals
+        run: |
+          echo '#!/bin/bash' > ../datafactory-mcp-server
+          echo 'dotnet ../DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.dll "$@"' >> ../datafactory-mcp-server
+          chmod +x ../datafactory-mcp-server
+          npx mcp-eval core-functionality-evals.yaml ../datafactory-mcp-server
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Run Authentication Evaluations
-        uses: mclenhard/mcp-evals@v1.0.14
-        with:
-          evals_path: "evals/authentication-evals.yaml"
-          server_path: "./datafactory-mcp-server"
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          model: "gpt-4o"
+        working-directory: ./evals
+        run: npx mcp-eval authentication-evals.yaml ../datafactory-mcp-server
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Run Workspace Evaluations
-        uses: mclenhard/mcp-evals@v1.0.14
-        with:
-          evals_path: "evals/workspace-evals.yaml"
-          server_path: "./datafactory-mcp-server"
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          model: "gpt-4o"
+        working-directory: ./evals
+        run: npx mcp-eval workspace-evals.yaml ../datafactory-mcp-server
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   comprehensive-evaluation:
     runs-on: ubuntu-latest
@@ -102,20 +94,16 @@ jobs:
       - name: Build DataFactory MCP Server
         run: dotnet build DataFactory.MCP/DataFactory.MCP.csproj --configuration Release --no-restore
 
-      - name: Create executable wrapper
-        run: |
-          echo '#!/bin/bash' > datafactory-mcp-server
-          echo 'dotnet DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.dll "$@"' >> datafactory-mcp-server
-          chmod +x datafactory-mcp-server
-
       - name: Install Node.js dependencies
         working-directory: ./evals
         run: npm install
 
       - name: Run Comprehensive Evaluations
-        uses: mclenhard/mcp-evals@v1.0.14
-        with:
-          evals_path: "evals/datafactory-mcp-evals.yaml"
-          server_path: "./datafactory-mcp-server"
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          model: "gpt-4o"
+        working-directory: ./evals
+        run: |
+          echo '#!/bin/bash' > ../datafactory-mcp-server
+          echo 'dotnet ../DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.dll "$@"' >> ../datafactory-mcp-server
+          chmod +x ../datafactory-mcp-server
+          npx mcp-eval datafactory-mcp-evals.yaml ../datafactory-mcp-server
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
