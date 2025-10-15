@@ -48,7 +48,7 @@ jobs:
         uses: mclenhard/mcp-evals@v1.0.14
         with:
           evals_path: "evals/core-functionality-evals.yaml"
-          server_path: "DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe"
+          server_path: "dotnet DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.dll"
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           model: "gpt-4o"
 
@@ -56,7 +56,7 @@ jobs:
         uses: mclenhard/mcp-evals@v1.0.14
         with:
           evals_path: "evals/authentication-evals.yaml"
-          server_path: "DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe"
+          server_path: "dotnet DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.dll"
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           model: "gpt-4o"
 
@@ -64,7 +64,7 @@ jobs:
         uses: mclenhard/mcp-evals@v1.0.14
         with:
           evals_path: "evals/workspace-evals.yaml"
-          server_path: "DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe"
+          server_path: "dotnet DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.dll"
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           model: "gpt-4o"
 
@@ -104,6 +104,6 @@ jobs:
         uses: mclenhard/mcp-evals@v1.0.14
         with:
           evals_path: "evals/datafactory-mcp-evals.yaml"
-          server_path: "DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.exe"
+          server_path: "dotnet DataFactory.MCP/bin/Release/net10.0/DataFactory.MCP.dll"
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           model: "gpt-4o"
