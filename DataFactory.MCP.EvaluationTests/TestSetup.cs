@@ -3,12 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using Azure;
-using Azure.AI.Inference;
 using Azure.AI.OpenAI;
-using Azure.Identity;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.AI.Evaluation;
-using OpenAI;
 
 namespace DataFactory.MCP.EvaluationTests;
 
@@ -52,50 +49,13 @@ public class TestSetup
         return s_chatConfiguration;
     }
 
-    private static ChatConfiguration GetAzureAIInferenceChatConfiguration()
-    {
-        /// Get an instance of Microsoft.Extensions.AI's <see cref="IChatClient"/> interface for the selected LLM
-        /// endpoint.
-        IChatClient client =
-            new ChatCompletionsClient(
-                new Uri(EnvironmentVariables.AzureAIInferenceEndpoint),
-                new AzureKeyCredential(EnvironmentVariables.AzureAIInferenceAPIKey))
-                    .AsIChatClient(modelId: EnvironmentVariables.AzureAIInferenceModel);
-
-        /// Enable function invocation support.
-        client = client.AsBuilder().UseFunctionInvocation().Build();
-
-        /// Create an instance of Microsoft.Extensions.AI.Evaluation's <see cref="ChatConfiguration"/>. All the
-        /// evaluations performed in the included examples will use this <see cref="ChatConfiguration"/> to communicate
-        /// with the LLM.
-        return new ChatConfiguration(client);
-    }
-
     private static ChatConfiguration GetAzureOpenAIChatConfiguration()
     {
         /// Get an instance of Microsoft.Extensions.AI's <see cref="IChatClient"/> interface for the selected LLM
         /// endpoint.
         IChatClient client =
-            new AzureOpenAIClient(new Uri(EnvironmentVariables.AzureOpenAIEndpoint), new DefaultAzureCredential())
+            new AzureOpenAIClient(new Uri(EnvironmentVariables.AzureOpenAIEndpoint), new AzureKeyCredential(EnvironmentVariables.AzureOpenAIAPIKey))
                 .GetChatClient(EnvironmentVariables.AzureOpenAIModel)
-                .AsIChatClient();
-
-        /// Enable function invocation support.
-        client = client.AsBuilder().UseFunctionInvocation().Build();
-
-        /// Create an instance of Microsoft.Extensions.AI.Evaluation's <see cref="ChatConfiguration"/>. All the
-        /// evaluations performed in the included examples will use this <see cref="ChatConfiguration"/> to communicate
-        /// with the LLM.
-        return new ChatConfiguration(client);
-    }
-
-    private static ChatConfiguration GetOpenAIChatConfiguration()
-    {
-        /// Get an instance of Microsoft.Extensions.AI's <see cref="IChatClient"/> interface for the selected LLM
-        /// endpoint.
-        IChatClient client =
-            new OpenAIClient(EnvironmentVariables.OpenAIAPIKey)
-                .GetChatClient(EnvironmentVariables.OpenAIModel)
                 .AsIChatClient();
 
         /// Enable function invocation support.
