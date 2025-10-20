@@ -6,8 +6,6 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/microsoft/DataFactory.MCP/blob/main/LICENSE.txt)
 
-[![PR Validation](https://github.com/microsoft/DataFactory.MCP/actions/workflows/pr-validation.yml/badge.svg)](https://github.com/microsoft/DataFactory.MCP/actions/workflows/pr-validation.yml)
-[![MCP Server Evaluations](https://github.com/microsoft/DataFactory.MCP/actions/workflows/mcp-evals.yml/badge.svg)](https://github.com/microsoft/DataFactory.MCP/actions/workflows/mcp-evals.yml)
 
 ## Features
 
