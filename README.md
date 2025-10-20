@@ -2,6 +2,11 @@
 
 A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery and information retrieval. This server provides tools for authentication and accessing Microsoft Fabric resources through a standardized MCP interface.
 
+[![NuGet Version](https://img.shields.io/nuget/v/Microsoft.DataFactory.MCP)](https://www.nuget.org/packages/Microsoft.DataFactory.MCP)
+[![.NET](https://img.shields.io/badge/.NET-10.0-blue)](https://dotnet.microsoft.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/microsoft/DataFactory.MCP/blob/main/LICENSE.txt)
+
+
 ## Features
 
 - 🔐 **Azure AD Authentication**: Interactive and service principal authentication
