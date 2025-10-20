@@ -1,0 +1,127 @@
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Diagnostics.CodeAnalysis;
+
+namespace DataFactory.MCP.EvaluationTests;
+
+public class EnvironmentVariables
+{
+    private static readonly IDictionary<string, string> s_environmentVariableCache = new Dictionary<string, string>();
+
+    private static string GetEnvironmentVariable(string variableName)
+    {
+        if (!s_environmentVariableCache.TryGetValue(variableName, out string? value))
+        {
+            value =
+                Environment.GetEnvironmentVariable(variableName) ??
+                throw new Exception($"Environment variable {variableName} not set.");
+
+            s_environmentVariableCache[variableName] = value;
+        }
+
+        return value;
+    }
+
+    private static bool TryGetEnvironmentVariable(string variableName, [NotNullWhen(true)] out string? value)
+    {
+        if (!s_environmentVariableCache.TryGetValue(variableName, out value))
+        {
+            value = Environment.GetEnvironmentVariable(variableName);
+
+            if (value is not null)
+            {
+                s_environmentVariableCache[variableName] = value;
+            }
+        }
+
+        return value is not null;
+    }
+
+    #region Azure AI Inference
+    public static string AzureAIInferenceEndpoint
+        => GetEnvironmentVariable("EVAL_SAMPLE_AZURE_AI_INFERENCE_ENDPOINT");
+
+    public static string AzureAIInferenceAPIKey
+        => GetEnvironmentVariable("EVAL_SAMPLE_AZURE_AI_INFERENCE_API_KEY");
+
+    public static string AzureAIInferenceModel
+        => GetEnvironmentVariable("EVAL_SAMPLE_AZURE_AI_INFERENCE_MODEL");
+    #endregion
+
+    #region Azure OpenAI
+    public static string AzureOpenAIEndpoint
+        => GetEnvironmentVariable("EVAL_SAMPLE_AZURE_OPENAI_ENDPOINT");
+
+    public static string AzureOpenAIModel
+        => GetEnvironmentVariable("EVAL_SAMPLE_AZURE_OPENAI_MODEL");
+    #endregion
+
+    #region Ollama
+    public static string OllamaEndpoint
+        => GetEnvironmentVariable("EVAL_SAMPLE_OLLAMA_ENDPOINT");
+
+    public static string OllamaModel
+        => GetEnvironmentVariable("EVAL_SAMPLE_OLLAMA_MODEL");
+    #endregion
+
+    #region OpenAI
+    public static string OpenAIAPIKey
+        => GetEnvironmentVariable("EVAL_SAMPLE_OPENAI_API_KEY");
+
+    public static string OpenAIModel
+        => GetEnvironmentVariable("EVAL_SAMPLE_OPENAI_MODEL");
+    #endregion
+
+    #region Azure AI Foundry (for content safety evaluation examples)
+    public const string AzureAIProjectEndpointVariableName = "EVAL_SAMPLE_AZURE_AI_PROJECT_ENDPOINT";
+    public static string? AzureAIProjectEndpoint =>
+        TryGetEnvironmentVariable(AzureAIProjectEndpointVariableName, out string? value)
+            ? value
+            : null;
+
+    public const string AzureSubscriptionIdVariableName = "EVAL_SAMPLE_AZURE_SUBSCRIPTION_ID";
+    public static string? AzureSubscriptionId =>
+        TryGetEnvironmentVariable(AzureSubscriptionIdVariableName, out string? value)
+            ? value
+            : null;
+
+    public const string AzureResourceGroupVariableName = "EVAL_SAMPLE_AZURE_RESOURCE_GROUP";
+    public static string? AzureResourceGroup =>
+        TryGetEnvironmentVariable(AzureResourceGroupVariableName, out string? value)
+            ? value
+            : null;
+
+    public const string AzureAIProjectVariableName = "EVAL_SAMPLE_AZURE_AI_PROJECT";
+    public static string? AzureAIProject =>
+        TryGetEnvironmentVariable(AzureAIProjectVariableName, out string? value)
+            ? value
+            : null;
+    #endregion
+
+    public static string StorageRootPath
+    {
+        get
+        {
+            string storageRootPath = GetEnvironmentVariable("EVAL_SAMPLE_STORAGE_ROOT_PATH");
+            storageRootPath = Path.GetFullPath(storageRootPath);
+            Directory.CreateDirectory(storageRootPath);
+            return storageRootPath;
+        }
+    }
+
+    #region Azure Storage
+    public const string AzureStorageAccountEndpointVariableName = "EVAL_SAMPLE_AZURE_STORAGE_ACCOUNT_ENDPOINT";
+    public static string? AzureStorageAccountEndpoint =>
+        TryGetEnvironmentVariable(AzureStorageAccountEndpointVariableName, out string? value)
+            ? value
+            : null;
+
+    public const string AzureStorageContainerVariableName = "EVAL_SAMPLE_AZURE_STORAGE_CONTAINER";
+    public static string? AzureStorageContainer =>
+        TryGetEnvironmentVariable(AzureStorageContainerVariableName, out string? value)
+            ? value
+            : null;
+    #endregion
+}
