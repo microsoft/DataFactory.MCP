@@ -26,12 +26,12 @@ public class EnvironmentVariables
 
     #region Azure OpenAI
     public static string AzureOpenAIEndpoint
-        => GetEnvironmentVariable("EVAL_SAMPLE_AZURE_OPENAI_ENDPOINT");
+        => GetEnvironmentVariable("EVAL_AZURE_OPENAI_ENDPOINT");
 
     public static string AzureOpenAIAPIKey
-        => GetEnvironmentVariable("EVAL_SAMPLE_AZURE_OPENAI_API_KEY");
+        => GetEnvironmentVariable("EVAL_AZURE_OPENAI_API_KEY");
 
     public static string AzureOpenAIModel
-        => GetEnvironmentVariable("EVAL_SAMPLE_AZURE_OPENAI_MODEL");
+        => GetEnvironmentVariable("EVAL_AZURE_OPENAI_MODEL");
     #endregion
 }
