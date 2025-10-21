@@ -25,10 +25,10 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies
-        run: dotnet restore DataFactory.MCP.sln
+        run: dotnet restore DataFactory.MCP.EvaluationTests/DataFactory.MCP.EvaluationTests.csproj
 
-      - name: Build solution
-        run: dotnet build DataFactory.MCP.sln --no-restore --configuration Release
+      - name: Build project
+        run: dotnet build DataFactory.MCP.EvaluationTests/DataFactory.MCP.EvaluationTests.csproj --no-restore --configuration Release
 
       - name: Run evaluation tests
         env:
