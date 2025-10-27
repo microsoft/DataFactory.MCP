@@ -98,37 +98,44 @@ namespace DataFactory.MCP.EvaluationTests
                 4. Completeness: Does the response adequately address the user's request?
                 5. Technical Correctness: Is any technical information provided accurate?
                 """;
-
             var evaluationMessages = new List<ChatMessage>
             {
                 new ChatMessage(ChatRole.System,
                     $"""
                     You are an expert evaluator comparing AI assistant responses against expected patterns.
 
-                    Evaluate how well the actual response matches the expected behavior pattern based on these criteria:
+                    # Definitions
+                    Rate the match quality on a scale of 1-5 based on these criteria:
                     {evaluationCriteria ?? defaultCriteria}
 
-                    Rate the match quality on a scale of 1-5:
-                    - 5: Excellent match - meets or exceeds expected behavior
-                    - 4: Good match - minor differences but meets expectations  
-                    - 3: Acceptable match - adequate handling of the scenario
-                    - 2: Poor match - significant gaps in expected behavior
-                    - 1: Very poor match - fails to meet basic expectations
+                    ## Scoring Scale:
+                    - **5**: Excellent match - meets or exceeds expected behavior across all criteria
+                    - **4**: Good match - minor differences but meets expectations in most areas
+                    - **3**: Acceptable match - adequate handling of the scenario with some gaps
+                    - **2**: Poor match - significant gaps in expected behavior or missing key elements
+                    - **1**: Very poor match - fails to meet basic expectations or completely off-topic
 
-                    Respond with just the number (1-5), followed by a brief explanation of the match quality.
+                    # Tasks
+                    ## Please provide your assessment Score for the AI RESPONSE in relation to the EXPECTED PATTERN based on the Definitions above. Your output should include the following information:
+                    - **ThoughtChain**: To improve the reasoning process, think step by step and include a step-by-step explanation of your thought process as you analyze the response based on the definitions. Keep it brief and start your ThoughtChain with "Let's think step by step:".
+                    - **Explanation**: a very short explanation of why you think the response should get that Score.
+                    - **Score**: based on your previous analysis, provide your Score. The Score you give MUST be an integer score (i.e., "1", "2", "3", "4", "5") based on the levels of the definitions.
+
+                    ## Please provide your answers between the tags: <S0>your chain of thoughts</S0>, <S1>your explanation</S1>, <S2>your Score</S2>.
                     """),
                 new ChatMessage(ChatRole.User,
                     $"""
-                    User's Original Request: "{originalMessages.LastOrDefault()?.Text ?? "No request"}"
+                    # Context
+                    **User's Original Request**: "{originalMessages.LastOrDefault()?.Text ?? "No request"}"
                     
-                    Expected Response Pattern: "{expectedResponsePattern}"
+                    **Expected Response Pattern**: "{expectedResponsePattern}"
                     
-                    Actual AI Response: "{actualResponse}"
+                    **Actual AI Response**: {actualResponse}
                     
-                    How well does the actual response match the expected pattern (1-5 scale)?
+                    # Task
+                    Evaluate how well the actual AI response matches the expected response pattern using the structured format specified in the system prompt.
                     """)
             };
-
 
             var evaluationResponse = await s_chatConfiguration!.ChatClient.GetResponseAsync(
                 evaluationMessages,
@@ -136,17 +143,34 @@ namespace DataFactory.MCP.EvaluationTests
 
             var evaluationText = evaluationResponse.ToString();
 
-            // Try to extract the numeric score
+            // Extract the structured score from the S2 tags
+            var scoreMatch = System.Text.RegularExpressions.Regex.Match(evaluationText, @"<S2>(\d+)</S2>");
+            if (scoreMatch.Success && int.TryParse(scoreMatch.Groups[1].Value, out var score) && score >= 1 && score <= 5)
+            {
+                // Extract thought chain and explanation for better debugging/logging
+                var thoughtChainMatch = System.Text.RegularExpressions.Regex.Match(evaluationText, @"<S0>(.*?)</S0>", System.Text.RegularExpressions.RegexOptions.Singleline);
+                var explanationMatch = System.Text.RegularExpressions.Regex.Match(evaluationText, @"<S1>(.*?)</S1>", System.Text.RegularExpressions.RegexOptions.Singleline);
+
+                var thoughtChain = thoughtChainMatch.Success ? thoughtChainMatch.Groups[1].Value.Trim() : "No thought chain provided";
+                var explanation = explanationMatch.Success ? explanationMatch.Groups[1].Value.Trim() : "No explanation provided";
+
+                /// Assert that the response meets minimum expectations
+                Assert.IsGreaterThanOrEqualTo(minimumAcceptableScore, score,
+                    $"{scenarioName} should meet basic expectations. Got score: {score}. Explanation: {explanation}");
+
+                return score;
+            }
+
+            // Fallback: try to extract score from the beginning of the response (legacy format)
             if (!string.IsNullOrWhiteSpace(evaluationText) && char.IsDigit(evaluationText.FirstOrDefault()))
             {
                 var scoreChar = evaluationText.First();
-                if (int.TryParse(scoreChar.ToString(), out var score) && score >= 1 && score <= 5)
+                if (int.TryParse(scoreChar.ToString(), out var fallbackScore) && fallbackScore >= 1 && fallbackScore <= 5)
                 {
-                    /// Assert that the response meets minimum expectations
-                    Assert.IsGreaterThanOrEqualTo(minimumAcceptableScore, score,
-                        $"{scenarioName} should meet basic expectations. Got score: {score}");
+                    Assert.IsGreaterThanOrEqualTo(minimumAcceptableScore, fallbackScore,
+                        $"{scenarioName} should meet basic expectations. Got score: {fallbackScore}");
 
-                    return score;
+                    return fallbackScore;
                 }
             }
             return null;
