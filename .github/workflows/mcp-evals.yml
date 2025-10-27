@@ -1,0 +1,69 @@
+name: MCP Server Evaluations
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+on:
+  push:
+    branches: [main, dev/**]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: "9.0.x"
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore DataFactory.MCP.EvaluationTests/DataFactory.MCP.EvaluationTests.csproj --configfile nuget.public.config
+
+      - name: Build project
+        run: dotnet build DataFactory.MCP.EvaluationTests/DataFactory.MCP.EvaluationTests.csproj --no-restore --configuration Release
+
+      - name: Install code coverage tools
+        run: dotnet tool install -g dotnet-coverage --configfile nuget.public.config
+
+      - name: Run evaluation tests
+        env:
+          EVAL_AZURE_OPENAI_ENDPOINT: ${{ secrets.EVAL_AZURE_OPENAI_ENDPOINT }}
+          EVAL_AZURE_OPENAI_API_KEY: ${{ secrets.EVAL_AZURE_OPENAI_API_KEY }}
+          EVAL_AZURE_OPENAI_MODEL: ${{ secrets.EVAL_AZURE_OPENAI_MODEL }}
+        run: |
+          dotnet test DataFactory.MCP.EvaluationTests/DataFactory.MCP.EvaluationTests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=evaluation-results.trx" \
+            --logger "console;verbosity=detailed" \
+            --collect:"Code Coverage" \
+            --results-directory ./TestResults
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Evaluation Test Results
+          path: "./TestResults/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evaluation-test-results
+          path: ./TestResults/
+          retention-days: 30
