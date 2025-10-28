@@ -20,4 +20,11 @@ public interface IFabricGatewayService
     /// <param name="gatewayId">The ID of the gateway</param>
     /// <returns>Gateway details if found</returns>
     Task<Gateway?> GetGatewayAsync(string gatewayId);
+
+    /// <summary>
+    /// Creates a new VNet gateway
+    /// </summary>
+    /// <param name="request">VNet gateway creation request</param>
+    /// <returns>Created gateway details</returns>
+    Task<CreateVNetGatewayResponse> CreateVNetGatewayAsync(CreateVNetGatewayRequest request);
 }

@@ -18,6 +18,7 @@ builder.Services
     .AddSingleton<IFabricWorkspaceService, FabricWorkspaceService>()
     .AddSingleton<IFabricDataflowService, FabricDataflowService>()
     .AddSingleton<IFabricCapacityService, FabricCapacityService>()
+    .AddSingleton<IAzureResourceDiscoveryService, AzureResourceDiscoveryService>()
     .AddMcpServer()
     .WithStdioServerTransport()
     .WithTools<AuthenticationTool>()
@@ -25,6 +26,7 @@ builder.Services
     .WithTools<ConnectionsTool>()
     .WithTools<WorkspacesTool>()
     .WithTools<DataflowTool>()
-    .WithTools<CapacityTool>();
+    .WithTools<CapacityTool>()
+    .WithTools<AzureResourceDiscoveryTool>();
 
 await builder.Build().RunAsync();
