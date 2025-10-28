@@ -10,7 +10,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 ## Features
 
 - **Azure AD Authentication**: Interactive and service principal authentication
-- **Gateway Management**: List and retrieve Microsoft Fabric gateways
+- **Gateway Management**: List, retrieve, and create Microsoft Fabric gateways (including VNet gateways)
 - **Connection Management**: List and retrieve details for Microsoft Fabric connections
 - **Workspace Management**: List and retrieve Microsoft Fabric workspaces
 - **Dataflow Management**: List and retrieve Microsoft Fabric dataflows
@@ -22,7 +22,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 ## Available Tools
 
 - **Authentication**: `authenticate_interactive`, `authenticate_service_principal`, `get_authentication_status`, `get_access_token`, `sign_out`
-- **Gateway Management**: `list_gateways`, `get_gateway`
+- **Gateway Management**: `list_gateways`, `get_gateway`, `create_v_net_gateway`
 - **Connection Management**: `list_connections`, `get_connection`
 - **Workspace Management**: `list_workspaces`
 - **Dataflow Management**: `list_dataflows`
