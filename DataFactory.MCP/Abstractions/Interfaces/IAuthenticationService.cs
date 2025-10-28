@@ -31,4 +31,9 @@ public interface IAuthenticationService
     /// Get current access token for authenticated user
     /// </summary>
     Task<string> GetAccessTokenAsync();
+
+    /// <summary>
+    /// Get access token for specific scopes
+    /// </summary>
+    Task<string> GetAccessTokenAsync(string[] scopes);
 }

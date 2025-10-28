@@ -22,9 +22,14 @@ public static class AzureAdConfiguration
     public const string Authority = "https://login.microsoftonline.com/organizations";
 
     /// <summary>
-    /// Default scopes for authentication
+    /// Power BI specific scopes
     /// </summary>
-    public static readonly string[] DefaultScopes = new[] { "https://analysis.windows.net/powerbi/api/.default" };
+    public static readonly string[] PowerBIScopes = new[] { "https://analysis.windows.net/powerbi/api/.default" };
+
+    /// <summary>
+    /// Azure Resource Manager specific scopes
+    /// </summary>
+    public static readonly string[] AzureResourceManagerScopes = new[] { "https://management.azure.com/.default" };
 
     /// <summary>
     /// Redirect URI for interactive authentication

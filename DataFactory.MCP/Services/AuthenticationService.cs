@@ -52,7 +52,7 @@ public class AuthenticationService : IAuthenticationService
             _logger.LogInformation(Messages.StartingInteractiveAuthentication);
 
             var result = await _publicClientApp
-                .AcquireTokenInteractive(AzureAdConfiguration.DefaultScopes)
+                .AcquireTokenInteractive(AzureAdConfiguration.PowerBIScopes)
                 .ExecuteAsync();
 
             _currentAuth = McpAuthenticationResult.Success(
@@ -95,7 +95,7 @@ public class AuthenticationService : IAuthenticationService
                 .Build();
 
             var result = await confidentialClient
-                .AcquireTokenForClient(AzureAdConfiguration.DefaultScopes)
+                .AcquireTokenForClient(AzureAdConfiguration.PowerBIScopes)
                 .ExecuteAsync();
 
             _currentAuth = McpAuthenticationResult.Success(
@@ -195,7 +195,7 @@ public class AuthenticationService : IAuthenticationService
                         try
                         {
                             var result = await _publicClientApp
-                                .AcquireTokenSilent(AzureAdConfiguration.DefaultScopes, accounts.First())
+                                .AcquireTokenSilent(AzureAdConfiguration.PowerBIScopes, accounts.First())
                                 .ExecuteAsync();
 
                             _currentAuth = McpAuthenticationResult.Success(
@@ -223,6 +223,56 @@ public class AuthenticationService : IAuthenticationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving access token");
+            return string.Format(Messages.ErrorRetrievingAccessTokenTemplate, ex.Message);
+        }
+    }
+
+    public async Task<string> GetAccessTokenAsync(string[] scopes)
+    {
+        try
+        {
+            if (_publicClientApp == null)
+            {
+                return Messages.PublicClientNotInitialized;
+            }
+
+            _logger.LogInformation("Acquiring token for scopes: {Scopes}", string.Join(", ", scopes));
+
+            // Try to get token silently first if we have an authenticated account
+            var accounts = await _publicClientApp.GetAccountsAsync();
+            if (accounts.Any())
+            {
+                try
+                {
+                    var result = await _publicClientApp
+                        .AcquireTokenSilent(scopes, accounts.First())
+                        .ExecuteAsync();
+
+                    _logger.LogInformation("Token acquired silently for scopes: {Scopes}", string.Join(", ", result.Scopes));
+                    return result.AccessToken;
+                }
+                catch (MsalUiRequiredException)
+                {
+                    _logger.LogInformation("Silent token acquisition failed, falling back to interactive");
+                }
+            }
+
+            // If silent acquisition fails, try interactive
+            var interactiveResult = await _publicClientApp
+                .AcquireTokenInteractive(scopes)
+                .ExecuteAsync();
+
+            _logger.LogInformation("Token acquired interactively for scopes: {Scopes}", string.Join(", ", interactiveResult.Scopes));
+            return interactiveResult.AccessToken;
+        }
+        catch (MsalException msalEx)
+        {
+            _logger.LogError(msalEx, "MSAL token acquisition failed for scopes: {Scopes}", string.Join(", ", scopes));
+            return string.Format(Messages.AuthenticationFailedTemplate, msalEx.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Token acquisition failed for scopes: {Scopes}", string.Join(", ", scopes));
             return string.Format(Messages.ErrorRetrievingAccessTokenTemplate, ex.Message);
         }
     }

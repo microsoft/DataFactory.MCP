@@ -109,4 +109,21 @@ public class AuthenticationTool
             return string.Format(Messages.ErrorRetrievingAccessTokenTemplate, ex.Message);
         }
     }
+
+    [McpServerTool, Description(@"Get access token for Azure Resource Manager to access Azure subscriptions, resource groups, and virtual networks")]
+    public async Task<string> GetAzureResourceManagerTokenAsync()
+    {
+        try
+        {
+            return await _authService.GetAccessTokenAsync(AzureAdConfiguration.AzureResourceManagerScopes);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains(Messages.ServiceProviderNotInitialized))
+        {
+            return Messages.AuthServiceNotAvailable;
+        }
+        catch (Exception ex)
+        {
+            return string.Format(Messages.ErrorRetrievingAccessTokenTemplate, ex.Message);
+        }
+    }
 }

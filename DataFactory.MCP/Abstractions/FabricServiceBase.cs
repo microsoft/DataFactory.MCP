@@ -88,6 +88,30 @@ public abstract class FabricServiceBase : IDisposable
         }
     }
 
+    protected async Task<T?> PostAsync<T>(string endpoint, HttpContent content) where T : class
+    {
+        await EnsureAuthenticationAsync();
+
+        var url = $"{BaseUrl}/{endpoint}";
+        Logger.LogInformation("Posting to: {Url}", url);
+
+        var response = await HttpClient.PostAsync(url, content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var responseContent = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<T>(responseContent, JsonOptions);
+        }
+        else
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Logger.LogError("API POST request failed. Status: {StatusCode}, Content: {Content}",
+                response.StatusCode, errorContent);
+
+            throw new HttpRequestException($"API POST request failed: {response.StatusCode} - {errorContent}");
+        }
+    }
+
     public void Dispose()
     {
         HttpClient?.Dispose();

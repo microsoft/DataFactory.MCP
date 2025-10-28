@@ -3,6 +3,9 @@ using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models;
 using DataFactory.MCP.Models.Gateway;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 
 namespace DataFactory.MCP.Services;
 
@@ -45,6 +48,34 @@ public class FabricGatewayService : FabricServiceBase, IFabricGatewayService
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error fetching gateway {GatewayId}", gatewayId);
+            throw;
+        }
+    }
+
+    public async Task<CreateVNetGatewayResponse> CreateVNetGatewayAsync(CreateVNetGatewayRequest request)
+    {
+        try
+        {
+            Logger.LogInformation("Creating VNet gateway '{DisplayName}' in capacity '{CapacityId}'",
+                request.DisplayName, request.CapacityId);
+
+            var json = JsonSerializer.Serialize(request, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await PostAsync<CreateVNetGatewayResponse>("gateways", content);
+
+            Logger.LogInformation("Successfully created VNet gateway '{DisplayName}' with ID '{Id}'",
+                response?.DisplayName, response?.Id);
+
+            return response ?? new CreateVNetGatewayResponse();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating VNet gateway '{DisplayName}'", request.DisplayName);
             throw;
         }
     }
