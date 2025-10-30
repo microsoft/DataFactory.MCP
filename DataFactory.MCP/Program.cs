@@ -12,6 +12,7 @@ builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
 
 // Add the MCP services: the transport to use (stdio) and the tools to register.
 builder.Services
+    .AddSingleton<IValidationService, ValidationService>()
     .AddSingleton<IAuthenticationService, AuthenticationService>()
     .AddSingleton<IFabricGatewayService, FabricGatewayService>()
     .AddSingleton<IFabricConnectionService, FabricConnectionService>()

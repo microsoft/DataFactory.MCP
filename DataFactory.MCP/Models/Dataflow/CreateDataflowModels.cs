@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace DataFactory.MCP.Models.Dataflow;
@@ -11,12 +12,15 @@ public class CreateDataflowRequest
     /// The Dataflow display name. The display name must follow naming rules according to item type.
     /// </summary>
     [JsonPropertyName("displayName")]
+    [Required(ErrorMessage = "Display name is required")]
+    [StringLength(256, ErrorMessage = "Display name cannot exceed 256 characters")]
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
     /// The Dataflow description. Maximum length is 256 characters.
     /// </summary>
     [JsonPropertyName("description")]
+    [StringLength(256, ErrorMessage = "Description cannot exceed 256 characters")]
     public string? Description { get; set; }
 
     /// <summary>
@@ -41,6 +45,7 @@ public class DataflowDefinition
     /// A list of definition parts
     /// </summary>
     [JsonPropertyName("parts")]
+    [Required(ErrorMessage = "Definition parts are required")]
     public List<DataflowDefinitionPart> Parts { get; set; } = new();
 }
 
@@ -53,12 +58,14 @@ public class DataflowDefinitionPart
     /// The Dataflow public definition part path
     /// </summary>
     [JsonPropertyName("path")]
+    [Required(ErrorMessage = "Path is required")]
     public string Path { get; set; } = string.Empty;
 
     /// <summary>
     /// The Dataflow public definition part payload
     /// </summary>
     [JsonPropertyName("payload")]
+    [Required(ErrorMessage = "Payload is required")]
     public string Payload { get; set; } = string.Empty;
 
     /// <summary>

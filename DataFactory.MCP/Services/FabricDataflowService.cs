@@ -12,11 +12,15 @@ namespace DataFactory.MCP.Services;
 /// </summary>
 public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
 {
+    private readonly IValidationService _validationService;
+
     public FabricDataflowService(
         ILogger<FabricDataflowService> logger,
-        IAuthenticationService authService)
+        IAuthenticationService authService,
+        IValidationService validationService)
         : base(logger, authService)
     {
+        _validationService = validationService;
     }
 
     public async Task<ListDataflowsResponse> ListDataflowsAsync(
@@ -25,10 +29,7 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
     {
         try
         {
-            if (string.IsNullOrEmpty(workspaceId))
-            {
-                throw new ArgumentException("Workspace ID is required", nameof(workspaceId));
-            }
+            _validationService.ValidateGuid(workspaceId, nameof(workspaceId));
 
             await EnsureAuthenticationAsync();
 
@@ -69,20 +70,8 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
     {
         try
         {
-            if (string.IsNullOrEmpty(workspaceId))
-            {
-                throw new ArgumentException("Workspace ID is required", nameof(workspaceId));
-            }
-
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            if (string.IsNullOrEmpty(request.DisplayName))
-            {
-                throw new ArgumentException("Display name is required", nameof(request.DisplayName));
-            }
+            _validationService.ValidateGuid(workspaceId, nameof(workspaceId));
+            _validationService.ValidateAndThrow(request, nameof(request));
 
             await EnsureAuthenticationAsync();
 

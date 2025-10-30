@@ -80,21 +80,6 @@ public class DataflowTool
     {
         try
         {
-            if (string.IsNullOrEmpty(workspaceId))
-            {
-                return "Error: Workspace ID is required.";
-            }
-
-            if (string.IsNullOrEmpty(displayName))
-            {
-                return "Error: Display name is required.";
-            }
-
-            if (!string.IsNullOrEmpty(description) && description.Length > 256)
-            {
-                return "Error: Description cannot exceed 256 characters.";
-            }
-
             var request = new CreateDataflowRequest
             {
                 DisplayName = displayName,
