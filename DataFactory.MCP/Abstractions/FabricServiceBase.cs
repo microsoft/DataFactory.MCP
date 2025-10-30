@@ -16,15 +16,18 @@ public abstract class FabricServiceBase : IDisposable
     protected readonly HttpClient HttpClient;
     protected readonly ILogger Logger;
     protected readonly IAuthenticationService AuthService;
+    protected readonly IValidationService ValidationService;
     protected readonly JsonSerializerOptions JsonOptions;
 
     protected FabricServiceBase(
         ILogger logger,
-        IAuthenticationService authService)
+        IAuthenticationService authService,
+        IValidationService validationService)
     {
         HttpClient = new HttpClient();
         Logger = logger;
         AuthService = authService;
+        ValidationService = validationService;
 
         JsonOptions = new JsonSerializerOptions
         {

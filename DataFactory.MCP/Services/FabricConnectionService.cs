@@ -13,8 +13,9 @@ public class FabricConnectionService : FabricServiceBase, IFabricConnectionServi
 {
     public FabricConnectionService(
         ILogger<FabricConnectionService> logger,
-        IAuthenticationService authService)
-        : base(logger, authService)
+        IAuthenticationService authService,
+        IValidationService validationService)
+        : base(logger, authService, validationService)
     {
         // Add the custom connection converter to handle polymorphic deserialization
         JsonOptions.Converters.Add(new ConnectionJsonConverter());
@@ -39,6 +40,9 @@ public class FabricConnectionService : FabricServiceBase, IFabricConnectionServi
     {
         try
         {
+            // Validate parameters
+            ValidationService.ValidateRequiredString(connectionId, nameof(connectionId));
+
             // The Fabric API doesn't have a direct get connection by ID endpoint,
             // so we'll list all connections and find the specific one
             var allConnections = await ListConnectionsAsync();

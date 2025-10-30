@@ -13,8 +13,9 @@ public class FabricCapacityService : FabricServiceBase, IFabricCapacityService
 {
     public FabricCapacityService(
         ILogger<FabricCapacityService> logger,
-        IAuthenticationService authService)
-        : base(logger, authService)
+        IAuthenticationService authService,
+        IValidationService validationService)
+        : base(logger, authService, validationService)
     {
     }
 

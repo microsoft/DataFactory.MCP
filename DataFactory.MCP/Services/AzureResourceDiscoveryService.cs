@@ -12,17 +12,20 @@ namespace DataFactory.MCP.Services;
 public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDisposable
 {
     private readonly IAuthenticationService _authService;
+    private readonly IValidationService _validationService;
     private readonly HttpClient _httpClient;
     private readonly ILogger<AzureResourceDiscoveryService> _logger;
     private const string AzureResourceManagerBaseUrl = "https://management.azure.com";
 
     public AzureResourceDiscoveryService(
         IAuthenticationService authService,
-        ILogger<AzureResourceDiscoveryService> logger)
+        ILogger<AzureResourceDiscoveryService> logger,
+        IValidationService validationService)
     {
         _authService = authService;
-        _httpClient = new HttpClient();
         _logger = logger;
+        _validationService = validationService;
+        _httpClient = new HttpClient();
     }
 
     public async Task<List<AzureSubscription>> GetSubscriptionsAsync()
@@ -70,6 +73,9 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
     {
         try
         {
+            // Validate parameters
+            _validationService.ValidateGuid(subscriptionId, nameof(subscriptionId));
+
             _logger.LogInformation("Getting resource groups for subscription {SubscriptionId}", subscriptionId);
 
             var token = await _authService.GetAccessTokenAsync(AzureAdConfiguration.AzureResourceManagerScopes);
@@ -111,6 +117,9 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
     {
         try
         {
+            // Validate parameters
+            _validationService.ValidateGuid(subscriptionId, nameof(subscriptionId));
+
             _logger.LogInformation("Getting virtual networks for subscription {SubscriptionId}, resource group {ResourceGroupName}",
                 subscriptionId, resourceGroupName ?? "all");
 
@@ -162,6 +171,11 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
     {
         try
         {
+            // Validate parameters
+            _validationService.ValidateGuid(subscriptionId, nameof(subscriptionId));
+            _validationService.ValidateRequiredString(resourceGroupName, nameof(resourceGroupName));
+            _validationService.ValidateRequiredString(virtualNetworkName, nameof(virtualNetworkName));
+
             _logger.LogInformation("Getting subnets for VNet {VirtualNetworkName} in resource group {ResourceGroupName}",
                 virtualNetworkName, resourceGroupName);
 

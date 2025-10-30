@@ -65,11 +65,6 @@ public class GatewayTool
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(gatewayId))
-            {
-                return Messages.GatewayIdRequired;
-            }
-
             var gateway = await _gatewayService.GetGatewayAsync(gatewayId);
 
             if (gateway == null)
@@ -83,6 +78,10 @@ public class GatewayTool
                 WriteIndented = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
+        }
+        catch (ArgumentException ex)
+        {
+            return $"Invalid parameter: {ex.Message}";
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -107,43 +106,6 @@ public class GatewayTool
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(displayName))
-            {
-                return "Error: displayName parameter is required.";
-            }
-
-            if (string.IsNullOrWhiteSpace(capacityId))
-            {
-                return "Error: capacityId parameter is required.";
-            }
-
-            if (string.IsNullOrWhiteSpace(subscriptionId))
-            {
-                return "Error: subscriptionId parameter is required.";
-            }
-
-            if (string.IsNullOrWhiteSpace(resourceGroupName))
-            {
-                return "Error: resourceGroupName parameter is required.";
-            }
-
-            if (string.IsNullOrWhiteSpace(virtualNetworkName))
-            {
-                return "Error: virtualNetworkName parameter is required.";
-            }
-
-            if (string.IsNullOrWhiteSpace(subnetName))
-            {
-                return "Error: subnetName parameter is required.";
-            }
-
-            // Validate inactivityMinutesBeforeSleep
-            var validValues = new[] { 30, 60, 90, 120, 150, 240, 360, 480, 720, 1440 };
-            if (!validValues.Contains(inactivityMinutesBeforeSleep))
-            {
-                return $"Error: inactivityMinutesBeforeSleep must be one of: {string.Join(", ", validValues)}";
-            }
-
             var request = new CreateVNetGatewayRequest
             {
                 Type = "VirtualNetwork",
@@ -189,6 +151,10 @@ public class GatewayTool
                 WriteIndented = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
+        }
+        catch (ArgumentException ex)
+        {
+            return $"Invalid parameter: {ex.Message}";
         }
         catch (UnauthorizedAccessException ex)
         {

@@ -13,8 +13,9 @@ public class FabricWorkspaceService : FabricServiceBase, IFabricWorkspaceService
 {
     public FabricWorkspaceService(
         ILogger<FabricWorkspaceService> logger,
-        IAuthenticationService authService)
-        : base(logger, authService)
+        IAuthenticationService authService,
+        IValidationService validationService)
+        : base(logger, authService, validationService)
     {
     }
 

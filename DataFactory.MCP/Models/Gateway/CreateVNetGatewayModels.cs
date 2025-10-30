@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace DataFactory.MCP.Models.Gateway;
@@ -17,18 +18,24 @@ public class CreateVNetGatewayRequest
     /// Display name for the gateway
     /// </summary>
     [JsonPropertyName("displayName")]
+    [Required(ErrorMessage = "Display name is required")]
+    [StringLength(100, MinimumLength = 1, ErrorMessage = "Display name must be between 1 and 100 characters")]
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
     /// The capacity ID where the gateway will be created
     /// </summary>
     [JsonPropertyName("capacityId")]
+    [Required(ErrorMessage = "Capacity ID is required")]
+    [RegularExpression(@"^[{(]?[0-9A-Fa-f]{8}[-]?([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$",
+        ErrorMessage = "Capacity ID must be a valid GUID")]
     public string CapacityId { get; set; } = string.Empty;
 
     /// <summary>
     /// Azure virtual network resource configuration
     /// </summary>
     [JsonPropertyName("virtualNetworkAzureResource")]
+    [Required(ErrorMessage = "Virtual network Azure resource configuration is required")]
     public VirtualNetworkAzureResource VirtualNetworkAzureResource { get; set; } = new();
 
     /// <summary>
@@ -36,13 +43,38 @@ public class CreateVNetGatewayRequest
     /// Must be one of: 30, 60, 90, 120, 150, 240, 360, 480, 720, 1440
     /// </summary>
     [JsonPropertyName("inactivityMinutesBeforeSleep")]
+    [Range(30, 1440, ErrorMessage = "Inactivity minutes must be between 30 and 1440")]
+    [InactivityValidation]
     public int InactivityMinutesBeforeSleep { get; set; } = 120;
 
     /// <summary>
     /// Number of member gateways
     /// </summary>
     [JsonPropertyName("numberOfMemberGateways")]
+    [Range(1, 10, ErrorMessage = "Number of member gateways must be between 1 and 10")]
     public int NumberOfMemberGateways { get; set; } = 1;
+}
+
+/// <summary>
+/// Custom validation attribute for inactivity minutes
+/// </summary>
+public class InactivityValidationAttribute : ValidationAttribute
+{
+    private static readonly int[] ValidValues = { 30, 60, 90, 120, 150, 240, 360, 480, 720, 1440 };
+
+    public override bool IsValid(object? value)
+    {
+        if (value is int intValue)
+        {
+            return ValidValues.Contains(intValue);
+        }
+        return false;
+    }
+
+    public override string FormatErrorMessage(string name)
+    {
+        return $"{name} must be one of: {string.Join(", ", ValidValues)}";
+    }
 }
 
 /// <summary>

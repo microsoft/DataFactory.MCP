@@ -11,12 +11,14 @@ namespace DataFactory.MCP.Services;
 public class AuthenticationService : IAuthenticationService
 {
     private readonly ILogger<AuthenticationService> _logger;
+    private readonly IValidationService _validationService;
     private McpAuthenticationResult? _currentAuth;
     private IPublicClientApplication? _publicClientApp;
 
-    public AuthenticationService(ILogger<AuthenticationService> logger)
+    public AuthenticationService(ILogger<AuthenticationService> logger, IValidationService validationService)
     {
         _logger = logger;
+        _validationService = validationService;
         InitializeClientApplications();
     }
 
@@ -84,6 +86,10 @@ public class AuthenticationService : IAuthenticationService
     {
         try
         {
+            // Validate parameters
+            _validationService.ValidateRequiredString(applicationId, nameof(applicationId));
+            _validationService.ValidateRequiredString(clientSecret, nameof(clientSecret));
+
             _logger.LogInformation("Starting service principal authentication for app: {ApplicationId}", applicationId);
 
             // Create a confidential client application for this specific authentication

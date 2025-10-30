@@ -12,15 +12,12 @@ namespace DataFactory.MCP.Services;
 /// </summary>
 public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
 {
-    private readonly IValidationService _validationService;
-
     public FabricDataflowService(
         ILogger<FabricDataflowService> logger,
         IAuthenticationService authService,
         IValidationService validationService)
-        : base(logger, authService)
+        : base(logger, authService, validationService)
     {
-        _validationService = validationService;
     }
 
     public async Task<ListDataflowsResponse> ListDataflowsAsync(
@@ -29,7 +26,7 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
     {
         try
         {
-            _validationService.ValidateGuid(workspaceId, nameof(workspaceId));
+            ValidationService.ValidateGuid(workspaceId, nameof(workspaceId));
 
             await EnsureAuthenticationAsync();
 
@@ -70,8 +67,8 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
     {
         try
         {
-            _validationService.ValidateGuid(workspaceId, nameof(workspaceId));
-            _validationService.ValidateAndThrow(request, nameof(request));
+            ValidationService.ValidateGuid(workspaceId, nameof(workspaceId));
+            ValidationService.ValidateAndThrow(request, nameof(request));
 
             await EnsureAuthenticationAsync();
 

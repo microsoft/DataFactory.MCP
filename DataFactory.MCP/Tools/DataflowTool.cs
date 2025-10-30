@@ -25,11 +25,6 @@ public class DataflowTool
     {
         try
         {
-            if (string.IsNullOrEmpty(workspaceId))
-            {
-                return "Error: Workspace ID is required.";
-            }
-
             var response = await _dataflowService.ListDataflowsAsync(workspaceId, continuationToken);
 
             if (!response.Value.Any())
@@ -55,7 +50,7 @@ public class DataflowTool
         }
         catch (ArgumentException ex)
         {
-            return $"Error: {ex.Message}";
+            return $"Invalid parameter: {ex.Message}";
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -110,7 +105,7 @@ public class DataflowTool
         }
         catch (ArgumentException ex)
         {
-            return $"Error: {ex.Message}";
+            return $"Invalid parameter: {ex.Message}";
         }
         catch (UnauthorizedAccessException ex)
         {

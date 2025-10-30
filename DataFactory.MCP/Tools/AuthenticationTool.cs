@@ -40,14 +40,11 @@ public class AuthenticationTool
     {
         try
         {
-            // Validate parameters
-            if (string.IsNullOrWhiteSpace(applicationId))
-                return Messages.InvalidParameterApplicationIdEmpty;
-
-            if (string.IsNullOrWhiteSpace(clientSecret))
-                return Messages.InvalidParameterClientSecretEmpty;
-
             return await _authService.AuthenticateServicePrincipalAsync(applicationId, clientSecret, tenantId);
+        }
+        catch (ArgumentException ex)
+        {
+            return $"Invalid parameter: {ex.Message}";
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains(Messages.ServiceProviderNotInitialized))
         {

@@ -16,8 +16,9 @@ public class FabricGatewayService : FabricServiceBase, IFabricGatewayService
 {
     public FabricGatewayService(
         ILogger<FabricGatewayService> logger,
-        IAuthenticationService authService)
-        : base(logger, authService)
+        IAuthenticationService authService,
+        IValidationService validationService)
+        : base(logger, authService, validationService)
     {
     }
 
@@ -40,6 +41,9 @@ public class FabricGatewayService : FabricServiceBase, IFabricGatewayService
     {
         try
         {
+            // Validate parameters
+            ValidationService.ValidateRequiredString(gatewayId, nameof(gatewayId));
+
             // The Fabric API doesn't have a direct get gateway by ID endpoint,
             // so we'll list all gateways and find the specific one
             var allGateways = await ListGatewaysAsync();
@@ -56,6 +60,9 @@ public class FabricGatewayService : FabricServiceBase, IFabricGatewayService
     {
         try
         {
+            // Validate the request object using ValidationService - all validation rules are now in the model
+            ValidationService.ValidateAndThrow(request, nameof(request));
+
             Logger.LogInformation("Creating VNet gateway '{DisplayName}' in capacity '{CapacityId}'",
                 request.DisplayName, request.CapacityId);
 

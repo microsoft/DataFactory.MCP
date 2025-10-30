@@ -64,11 +64,6 @@ public class ConnectionsTool
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(connectionId))
-            {
-                return Messages.ConnectionIdRequired;
-            }
-
             var connection = await _connectionService.GetConnectionAsync(connectionId);
 
             if (connection == null)
@@ -82,6 +77,10 @@ public class ConnectionsTool
                 WriteIndented = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
+        }
+        catch (ArgumentException ex)
+        {
+            return $"Invalid parameter: {ex.Message}";
         }
         catch (UnauthorizedAccessException ex)
         {

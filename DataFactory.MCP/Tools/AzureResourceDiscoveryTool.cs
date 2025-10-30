@@ -52,11 +52,6 @@ public class AzureResourceDiscoveryTool
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(subscriptionId))
-            {
-                return "Error: subscriptionId parameter is required.";
-            }
-
             var resourceGroups = await _azureResourceService.GetResourceGroupsAsync(subscriptionId);
 
             if (!resourceGroups.Any())
@@ -79,6 +74,10 @@ public class AzureResourceDiscoveryTool
 
             return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
         }
+        catch (ArgumentException ex)
+        {
+            return $"Invalid parameter: {ex.Message}";
+        }
         catch (Exception ex)
         {
             return $"Error retrieving resource groups for subscription {subscriptionId}: {ex.Message}";
@@ -90,11 +89,6 @@ public class AzureResourceDiscoveryTool
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(subscriptionId))
-            {
-                return "Error: subscriptionId parameter is required.";
-            }
-
             var virtualNetworks = await _azureResourceService.GetVirtualNetworksAsync(subscriptionId, resourceGroupName);
 
             if (!virtualNetworks.Any())
@@ -121,6 +115,10 @@ public class AzureResourceDiscoveryTool
 
             return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
         }
+        catch (ArgumentException ex)
+        {
+            return $"Invalid parameter: {ex.Message}";
+        }
         catch (Exception ex)
         {
             return $"Error retrieving virtual networks for subscription {subscriptionId}: {ex.Message}";
@@ -132,21 +130,6 @@ public class AzureResourceDiscoveryTool
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(subscriptionId))
-            {
-                return "Error: subscriptionId parameter is required.";
-            }
-
-            if (string.IsNullOrWhiteSpace(resourceGroupName))
-            {
-                return "Error: resourceGroupName parameter is required.";
-            }
-
-            if (string.IsNullOrWhiteSpace(virtualNetworkName))
-            {
-                return "Error: virtualNetworkName parameter is required.";
-            }
-
             var subnets = await _azureResourceService.GetSubnetsAsync(subscriptionId, resourceGroupName, virtualNetworkName);
 
             if (!subnets.Any())
@@ -175,6 +158,10 @@ public class AzureResourceDiscoveryTool
             };
 
             return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (ArgumentException ex)
+        {
+            return $"Invalid parameter: {ex.Message}";
         }
         catch (Exception ex)
         {
