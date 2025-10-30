@@ -13,7 +13,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 - **Gateway Management**: List, retrieve, and create Microsoft Fabric gateways (including VNet gateways)
 - **Connection Management**: List and retrieve details for Microsoft Fabric connections
 - **Workspace Management**: List and retrieve Microsoft Fabric workspaces
-- **Dataflow Management**: List and retrieve Microsoft Fabric dataflows
+- **Dataflow Management**: List, create, and retrieve Microsoft Fabric dataflows
 - **Capacity Management**: List and retrieve Microsoft Fabric capacities
 - **Microsoft Fabric Integration**: Support for on-premises, personal, and virtual network gateways
 - 📦 **NuGet Distribution**: Available as a NuGet package for easy integration
@@ -25,7 +25,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 - **Gateway Management**: `list_gateways`, `get_gateway`, `create_v_net_gateway`
 - **Connection Management**: `list_connections`, `get_connection`
 - **Workspace Management**: `list_workspaces`
-- **Dataflow Management**: `list_dataflows`
+- **Dataflow Management**: `list_dataflows`, `create_dataflow`
 - **Capacity Management**: `list_capacities`
 
 ## Quick Start
