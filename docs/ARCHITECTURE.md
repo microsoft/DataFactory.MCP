@@ -148,6 +148,7 @@ MCP Tools are the public interface that AI assistants interact with. They handle
 #### GatewayTool  
 - `ListGatewaysAsync()`: List accessible gateways
 - `GetGatewayAsync()`: Get gateway details by ID
+- `CreateVNetGatewayAsync()`: Create a new virtual network gateway
 
 #### ConnectionsTool
 - `ListConnectionsAsync()`: List accessible connections
@@ -158,6 +159,16 @@ MCP Tools are the public interface that AI assistants interact with. They handle
 
 #### DataflowTool
 - `ListDataflowsAsync()`: List dataflows in a workspace
+- `CreateDataflowAsync()`: Create a new dataflow in a workspace
+
+#### CapacityTool
+- `ListCapacitiesAsync()`: List accessible capacities
+
+#### AzureResourceDiscoveryTool
+- `GetAzureSubscriptionsAsync()`: List Azure subscriptions
+- `GetAzureResourceGroupsAsync()`: List resource groups in a subscription
+- `GetAzureVirtualNetworksAsync()`: List virtual networks in a subscription
+- `GetAzureSubnetsAsync()`: List subnets in a virtual network
 
 ### 3. Core Services Layer
 
@@ -251,7 +262,7 @@ Defines interfaces and base classes that enable testability and extensibility.
 
 **Location**: `Models/`
 
-Data Transfer Objects (DTOs) and configuration models:
+Data Transfer Objects (DTOs) and configuration models with built-in validation:
 
 #### Authentication Models
 - `AuthenticationResult`: Authentication status and user info
@@ -262,6 +273,8 @@ Data Transfer Objects (DTOs) and configuration models:
 - `OnPremisesGateway`: On-premises gateway specific data
 - `OnPremisesGatewayPersonal`: Personal gateway data
 - `VirtualNetworkGateway`: Virtual network gateway data
+- `CreateVNetGatewayRequest`: Request model with validation attributes
+- `VirtualNetworkAzureResource`: Azure resource configuration with validation
 - `GatewayResponse`: API response wrapper with pagination
 
 #### Connection Models
@@ -276,10 +289,161 @@ Data Transfer Objects (DTOs) and configuration models:
 #### Dataflow Models
 - `Dataflow`: Dataflow information and properties
 - `DataflowProperties`: Dataflow-specific metadata
+- `CreateDataflowRequest`: Request model with validation attributes
 - `ListDataflowsResponse`: API response wrapper with pagination
 - `ItemTag`: Tagging and categorization metadata
 
-### 6. Extensions Layer
+#### Capacity Models
+- `Capacity`: Capacity information and metadata
+- `CapacityResponse`: API response wrapper with pagination
+
+#### Azure Resource Models
+- `AzureSubscription`: Azure subscription information
+- `AzureResourceGroup`: Resource group information
+- `AzureVirtualNetwork`: Virtual network information
+- `AzureSubnet`: Subnet information
+
+#### Validation Attributes
+Models use Data Annotations for validation:
+- `[Required]`: Required fields
+- `[StringLength]`: String length constraints
+- `[RegularExpression]`: Pattern validation (GUIDs, etc.)
+- `[Range]`: Numeric range validation
+- Custom attributes for business rules (e.g., `[InactivityValidation]`)
+
+### 6. Validation Architecture
+
+**Location**: `Services/ValidationService.cs`, Model Attributes
+
+The validation system implements a multi-layered approach with model-based validation as the primary mechanism.
+
+#### Validation Service
+The `ValidationService` implements `IValidationService` and provides centralized validation capabilities:
+
+```csharp
+public interface IValidationService
+{
+    void ValidateAndThrow<T>(T obj, string parameterName) where T : class;
+    IList<ValidationResult> Validate<T>(T obj) where T : class;
+    void ValidateRequiredString(string value, string parameterName, int? maxLength = null);
+    void ValidateGuid(string value, string parameterName);
+}
+```
+
+#### Base Service Integration
+All Fabric services inherit from `FabricServiceBase`, which includes `ValidationService` as a protected property:
+
+```csharp
+public abstract class FabricServiceBase : IDisposable
+{
+    protected readonly ILogger Logger;
+    protected readonly IAuthenticationService AuthService;
+    protected readonly IValidationService ValidationService; // Available to all services
+    
+    protected FabricServiceBase(
+        ILogger logger,
+        IAuthenticationService authService,
+        IValidationService validationService)
+    {
+        Logger = logger;
+        AuthService = authService;
+        ValidationService = validationService;
+    }
+}
+```
+
+#### Model-Based Validation
+Primary validation is performed using Data Annotations on model properties:
+
+```csharp
+public class CreateVNetGatewayRequest
+{
+    [Required(ErrorMessage = "Display name is required")]
+    [StringLength(100, MinimumLength = 1, ErrorMessage = "Display name must be between 1 and 100 characters")]
+    public string DisplayName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Capacity ID is required")]
+    [RegularExpression(@"^[{(]?[0-9A-Fa-f]{8}[-]?([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$", 
+        ErrorMessage = "Capacity ID must be a valid GUID")]
+    public string CapacityId { get; set; } = string.Empty;
+
+    [InactivityValidation] // Custom validation attribute
+    public int InactivityMinutesBeforeSleep { get; set; } = 120;
+}
+```
+
+#### Custom Validation Attributes
+For complex business rules, custom validation attributes are implemented:
+
+```csharp
+public class InactivityValidationAttribute : ValidationAttribute
+{
+    private static readonly int[] ValidValues = { 30, 60, 90, 120, 150, 240, 360, 480, 720, 1440 };
+
+    public override bool IsValid(object? value)
+    {
+        if (value is int intValue)
+        {
+            return ValidValues.Contains(intValue);
+        }
+        return false;
+    }
+
+    public override string FormatErrorMessage(string name)
+    {
+        return $"{name} must be one of: {string.Join(", ", ValidValues)}";
+    }
+}
+```
+
+#### Validation Flow
+```
+┌─────────────────┐
+│     Tools       │ ← Handle ArgumentException from validation
+├─────────────────┤
+│   Services      │ ← Call ValidationService.ValidateAndThrow(model)
+├─────────────────┤
+│ ValidationService│ ← Uses Data Annotations to validate models
+├─────────────────┤
+│    Models       │ ← Define validation rules with attributes
+└─────────────────┘
+```
+
+#### Service Implementation Example
+```csharp
+public async Task<CreateVNetGatewayResponse> CreateVNetGatewayAsync(CreateVNetGatewayRequest request)
+{
+    try
+    {
+        // Single validation call handles all model validation rules
+        ValidationService.ValidateAndThrow(request, nameof(request));
+        
+        // Business logic continues...
+    }
+    catch (Exception ex)
+    {
+        Logger.LogError(ex, "Error creating VNet gateway");
+        throw;
+    }
+}
+```
+
+#### Tool Exception Handling
+Tools catch validation exceptions and return user-friendly error messages:
+
+```csharp
+try
+{
+    var response = await _gatewayService.CreateVNetGatewayAsync(request);
+    return SerializeResponse(response);
+}
+catch (ArgumentException ex)
+{
+    return $"Invalid parameter: {ex.Message}";
+}
+```
+
+### 7. Extensions Layer
 
 **Location**: `Extensions/`
 
@@ -298,8 +462,12 @@ Extension methods and utility functions:
 #### DataflowExtensions
 - `ToFormattedInfo()`: Format dataflow data for display
 
+#### CapacityExtensions
+- `ToFormattedList()`: Format capacity data for display
+
 #### JSON Converters
 - `GatewayJsonConverter`: Handle polymorphic gateway deserialization
+- `ConnectionJsonConverter`: Handle polymorphic connection deserialization
 
 ## Data Flow
 
@@ -321,11 +489,12 @@ Extension methods and utility functions:
 1. AI Assistant → GatewayTool
 2. GatewayTool → Validates authentication
 3. GatewayTool → FabricGatewayService
-4. FabricGatewayService → Microsoft Graph API
-5. Microsoft Graph API → Returns gateway data
-6. FabricGatewayService → Processes and formats data
-7. FabricGatewayService → GatewayTool
-8. GatewayTool → AI Assistant (formatted response)
+4. FabricGatewayService → Validates request model using ValidationService
+5. FabricGatewayService → Microsoft Graph API
+6. Microsoft Graph API → Returns gateway data
+7. FabricGatewayService → Processes and formats data
+8. FabricGatewayService → GatewayTool
+9. GatewayTool → AI Assistant (formatted response)
 ```
 
 ### Dataflow Operations Flow
@@ -334,21 +503,35 @@ Extension methods and utility functions:
 1. AI Assistant → DataflowTool
 2. DataflowTool → Validates authentication
 3. DataflowTool → FabricDataflowService
-4. FabricDataflowService → Microsoft Fabric API
-5. Microsoft Fabric API → Returns dataflow data
-6. FabricDataflowService → Processes and formats data
-7. FabricDataflowService → DataflowTool
-8. DataflowTool → AI Assistant (formatted response)
+4. FabricDataflowService → Validates request model using ValidationService
+5. FabricDataflowService → Microsoft Fabric API
+6. Microsoft Fabric API → Returns dataflow data
+7. FabricDataflowService → Processes and formats data
+8. FabricDataflowService → DataflowTool
+9. DataflowTool → AI Assistant (formatted response)
+```
+
+### Validation Flow
+
+```
+1. Tool → Creates request model with user parameters
+2. Tool → Service.MethodAsync(model)
+3. Service → ValidationService.ValidateAndThrow(model)
+4. ValidationService → Validates using Data Annotations on model
+5. ValidationService → Throws ArgumentException if invalid
+6. Tool → Catches ArgumentException
+7. Tool → Returns user-friendly error message
 ```
 
 ### Error Flow
 
 ```
-1. Service encounters error
+1. Service encounters error (validation, API, business logic)
 2. Service logs error details
-3. Service transforms technical error to user-friendly message
-4. Tool receives processed error message
-5. Tool returns formatted error to AI Assistant
+3. Service throws appropriate exception (ArgumentException for validation)
+4. Tool catches specific exception types
+5. Tool transforms to user-friendly message
+6. Tool returns formatted error to AI Assistant
 ```
 
 ## Security Architecture
@@ -432,3 +615,20 @@ builder.Services.AddTransient<INewService, NewService>();
 ### Repository Pattern (Implicit)
 - Services act as repositories for external data
 - Abstracted data access through interfaces
+
+### Validation Pattern
+- **Model-Based Validation**: Primary validation using Data Annotations
+- **Centralized Validation Service**: Single service handles all validation logic
+- **Fail-Fast Validation**: Validate inputs early in the request pipeline
+- **Custom Validation Attributes**: Business-specific validation rules
+- **Layered Error Handling**: Services throw exceptions, tools format user messages
+
+### Base Class Pattern
+- `FabricServiceBase`: Common functionality for all Fabric services
+- Shared dependencies (Logger, AuthService, ValidationService)
+- Consistent HTTP client configuration and JSON serialization
+
+### Extension Method Pattern
+- Type-specific formatting methods
+- Consistent data presentation across tools
+- Separation of display logic from business logic
