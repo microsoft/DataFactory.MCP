@@ -3,13 +3,13 @@ using DataFactory.MCP.Abstractions.Interfaces;
 namespace DataFactory.MCP.Models.Connection;
 
 /// <summary>
-/// Helper class for validating connection tool parameters
+/// Helper class for validating Microsoft Fabric data source connection parameters
 /// </summary>
-public class ConnectionParameterValidator
+public class FabricConnectionParameterValidator
 {
     private readonly IValidationService _validationService;
 
-    public ConnectionParameterValidator(IValidationService validationService)
+    public FabricConnectionParameterValidator(IValidationService validationService)
     {
         _validationService = validationService;
     }

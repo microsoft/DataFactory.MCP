@@ -21,7 +21,7 @@ builder.Services
     .AddSingleton<IFabricDataflowService, FabricDataflowService>()
     .AddSingleton<IFabricCapacityService, FabricCapacityService>()
     .AddSingleton<IAzureResourceDiscoveryService, AzureResourceDiscoveryService>()
-    .AddSingleton<ConnectionFactory>()
+    .AddSingleton<FabricDataSourceConnectionFactory>()
     .AddMcpServer()
     .WithStdioServerTransport()
     .WithTools<AuthenticationTool>()

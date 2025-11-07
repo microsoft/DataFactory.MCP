@@ -4,9 +4,9 @@ using DataFactory.MCP.Models;
 namespace DataFactory.MCP.Models.Connection;
 
 /// <summary>
-/// Helper class for formatting connection tool results consistently
+/// Helper class for formatting Microsoft Fabric data source connection results consistently
 /// </summary>
-public static class ConnectionResultFormatter
+public static class FabricConnectionResultFormatter
 {
     /// <summary>
     /// Formats a successful connection creation result

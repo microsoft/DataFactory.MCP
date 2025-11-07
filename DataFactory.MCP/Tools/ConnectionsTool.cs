@@ -12,11 +12,11 @@ namespace DataFactory.MCP.Tools;
 public class ConnectionsTool
 {
     private readonly IFabricConnectionService _connectionService;
-    private readonly ConnectionFactory _connectionFactory;
+    private readonly FabricDataSourceConnectionFactory _connectionFactory;
 
     public ConnectionsTool(
         IFabricConnectionService connectionService,
-        ConnectionFactory connectionFactory,
+        FabricDataSourceConnectionFactory connectionFactory,
         IValidationService validationService)
     {
         _connectionService = connectionService;
@@ -112,11 +112,11 @@ public class ConnectionsTool
             var connection = await _connectionFactory.CreateCloudSqlBasicAsync(
                 displayName, serverName, databaseName, username, password);
 
-            return ConnectionResultFormatter.FormatConnectionResult(connection, "Cloud SQL connection with basic authentication created successfully");
+            return FabricConnectionResultFormatter.FormatConnectionResult(connection, "Cloud SQL connection with basic authentication created successfully");
         }
         catch (Exception ex)
         {
-            return ConnectionResultFormatter.FormatErrorResult(ex);
+            return FabricConnectionResultFormatter.FormatErrorResult(ex);
         }
     }
 
@@ -131,11 +131,11 @@ public class ConnectionsTool
             var connection = await _connectionFactory.CreateCloudSqlWorkspaceIdentityAsync(
                 displayName, serverName, databaseName);
 
-            return ConnectionResultFormatter.FormatConnectionResult(connection, "Cloud SQL connection with workspace identity created successfully");
+            return FabricConnectionResultFormatter.FormatConnectionResult(connection, "Cloud SQL connection with workspace identity created successfully");
         }
         catch (Exception ex)
         {
-            return ConnectionResultFormatter.FormatErrorResult(ex);
+            return FabricConnectionResultFormatter.FormatErrorResult(ex);
         }
     }
 
@@ -148,11 +148,11 @@ public class ConnectionsTool
         {
             var connection = await _connectionFactory.CreateCloudWebAnonymousAsync(displayName, url);
 
-            return ConnectionResultFormatter.FormatConnectionResult(connection, "Cloud web connection with anonymous authentication created successfully");
+            return FabricConnectionResultFormatter.FormatConnectionResult(connection, "Cloud web connection with anonymous authentication created successfully");
         }
         catch (Exception ex)
         {
-            return ConnectionResultFormatter.FormatErrorResult(ex);
+            return FabricConnectionResultFormatter.FormatErrorResult(ex);
         }
     }
 
@@ -168,11 +168,11 @@ public class ConnectionsTool
             var connection = await _connectionFactory.CreateCloudWebBasicAsync(
                 displayName, url, username, password);
 
-            return ConnectionResultFormatter.FormatConnectionResult(connection, "Cloud web connection with basic authentication created successfully");
+            return FabricConnectionResultFormatter.FormatConnectionResult(connection, "Cloud web connection with basic authentication created successfully");
         }
         catch (Exception ex)
         {
-            return ConnectionResultFormatter.FormatErrorResult(ex);
+            return FabricConnectionResultFormatter.FormatErrorResult(ex);
         }
     }
 
@@ -190,11 +190,11 @@ public class ConnectionsTool
             var connection = await _connectionFactory.CreateVNetSqlBasicAsync(
                 displayName, gatewayId, serverName, databaseName, username, password);
 
-            return ConnectionResultFormatter.FormatConnectionResult(connection, "VNet gateway SQL connection with basic authentication created successfully");
+            return FabricConnectionResultFormatter.FormatConnectionResult(connection, "VNet gateway SQL connection with basic authentication created successfully");
         }
         catch (Exception ex)
         {
-            return ConnectionResultFormatter.FormatErrorResult(ex);
+            return FabricConnectionResultFormatter.FormatErrorResult(ex);
         }
     }
 
@@ -210,11 +210,11 @@ public class ConnectionsTool
             var connection = await _connectionFactory.CreateVNetSqlWorkspaceIdentityAsync(
                 displayName, gatewayId, serverName, databaseName);
 
-            return ConnectionResultFormatter.FormatConnectionResult(connection, "VNet gateway SQL connection with workspace identity created successfully");
+            return FabricConnectionResultFormatter.FormatConnectionResult(connection, "VNet gateway SQL connection with workspace identity created successfully");
         }
         catch (Exception ex)
         {
-            return ConnectionResultFormatter.FormatErrorResult(ex);
+            return FabricConnectionResultFormatter.FormatErrorResult(ex);
         }
     }
 }

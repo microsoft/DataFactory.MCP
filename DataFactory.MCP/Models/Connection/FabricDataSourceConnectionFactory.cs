@@ -6,18 +6,18 @@ using Microsoft.Extensions.Logging;
 namespace DataFactory.MCP.Models.Connection;
 
 /// <summary>
-/// Factory for creating connections with minimal code duplication
+/// Factory for creating Microsoft Fabric data source connections with minimal code duplication
 /// </summary>
-public class ConnectionFactory
+public class FabricDataSourceConnectionFactory
 {
     private readonly IFabricConnectionService _connectionService;
     private readonly IValidationService _validationService;
-    private readonly ILogger<ConnectionFactory> _logger;
+    private readonly ILogger<FabricDataSourceConnectionFactory> _logger;
 
-    public ConnectionFactory(
+    public FabricDataSourceConnectionFactory(
         IFabricConnectionService connectionService,
         IValidationService validationService,
-        ILogger<ConnectionFactory> logger)
+        ILogger<FabricDataSourceConnectionFactory> logger)
     {
         _connectionService = connectionService;
         _validationService = validationService;
@@ -114,7 +114,7 @@ public class ConnectionFactory
         string password)
     {
         // Validate parameters using the validation service
-        var validator = new ConnectionParameterValidator(_validationService);
+        var validator = new FabricConnectionParameterValidator(_validationService);
         validator.ValidateSqlConnectionParameters(displayName, serverName, databaseName, username, password);
 
         return await CreateConnectionCoreAsync<Connection>(
@@ -134,7 +134,7 @@ public class ConnectionFactory
         string databaseName)
     {
         // Validate parameters using the validation service  
-        var validator = new ConnectionParameterValidator(_validationService);
+        var validator = new FabricConnectionParameterValidator(_validationService);
         validator.ValidateSqlConnectionParameters(displayName, serverName, databaseName);
 
         return await CreateConnectionCoreAsync<Connection>(
@@ -157,7 +157,7 @@ public class ConnectionFactory
         string url)
     {
         // Validate parameters using the validation service
-        var validator = new ConnectionParameterValidator(_validationService);
+        var validator = new FabricConnectionParameterValidator(_validationService);
         validator.ValidateWebConnectionParameters(displayName, url);
 
         return await CreateConnectionCoreAsync<Connection>(
@@ -178,7 +178,7 @@ public class ConnectionFactory
         string password)
     {
         // Validate parameters using the validation service
-        var validator = new ConnectionParameterValidator(_validationService);
+        var validator = new FabricConnectionParameterValidator(_validationService);
         validator.ValidateWebConnectionParameters(displayName, url, username, password);
 
         return await CreateConnectionCoreAsync<Connection>(
@@ -205,7 +205,7 @@ public class ConnectionFactory
         string password)
     {
         // Validate parameters using the validation service
-        var validator = new ConnectionParameterValidator(_validationService);
+        var validator = new FabricConnectionParameterValidator(_validationService);
         validator.ValidateVNetGatewayConnectionParameters(displayName, gatewayId, serverName, databaseName, username, password);
 
         return await CreateConnectionCoreAsync<Connection>(
@@ -227,7 +227,7 @@ public class ConnectionFactory
         string databaseName)
     {
         // Validate parameters using the validation service
-        var validator = new ConnectionParameterValidator(_validationService);
+        var validator = new FabricConnectionParameterValidator(_validationService);
         validator.ValidateVNetGatewayConnectionParameters(displayName, gatewayId, serverName, databaseName);
 
         return await CreateConnectionCoreAsync<Connection>(
