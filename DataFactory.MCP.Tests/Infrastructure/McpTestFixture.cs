@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Services;
 using DataFactory.MCP.Tools;
-using DataFactory.MCP.Models;
+using DataFactory.MCP.Models.Connection.Factories;
 
 namespace DataFactory.MCP.Tests.Infrastructure;
 
@@ -55,6 +55,7 @@ public class McpTestFixture : IDisposable
                 services.AddScoped<IFabricWorkspaceService, FabricWorkspaceService>();
                 services.AddScoped<IFabricDataflowService, FabricDataflowService>();
                 services.AddScoped<IFabricCapacityService, FabricCapacityService>();
+                services.AddScoped<FabricDataSourceConnectionFactory>();
 
                 // Register tools
                 services.AddScoped<AuthenticationTool>();

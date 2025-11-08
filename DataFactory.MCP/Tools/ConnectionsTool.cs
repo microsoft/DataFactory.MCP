@@ -1,9 +1,12 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
+using System.Text.Json;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Models;
-using System.Text.Json;
+using DataFactory.MCP.Models.Connection;
+using DataFactory.MCP.Models.Connection.Factories;
+using DataFactory.MCP.Models.Connection.Formatters;
 
 namespace DataFactory.MCP.Tools;
 
@@ -11,10 +14,15 @@ namespace DataFactory.MCP.Tools;
 public class ConnectionsTool
 {
     private readonly IFabricConnectionService _connectionService;
+    private readonly FabricDataSourceConnectionFactory _connectionFactory;
 
-    public ConnectionsTool(IFabricConnectionService connectionService)
+    public ConnectionsTool(
+        IFabricConnectionService connectionService,
+        FabricDataSourceConnectionFactory connectionFactory,
+        IValidationService validationService)
     {
         _connectionService = connectionService;
+        _connectionFactory = connectionFactory;
     }
 
     [McpServerTool, Description(@"Lists all connections the user has permission for, including on-premises, virtual network and cloud connections")]
@@ -90,6 +98,125 @@ public class ConnectionsTool
         catch (Exception ex)
         {
             return string.Format(Messages.ErrorRetrievingConnectionTemplate, ex.Message);
+        }
+    }
+
+    [McpServerTool, Description(@"Creates a cloud SQL connection with basic authentication - simplified interface")]
+    public async Task<string> CreateCloudSqlBasicAsync(
+        [Description("The display name of the connection")] string displayName,
+        [Description("The SQL Server name (e.g., server.database.windows.net)")] string serverName,
+        [Description("The database name")] string databaseName,
+        [Description("The username for authentication")] string username,
+        [Description("The password for authentication")] string password)
+    {
+        try
+        {
+            var connection = await _connectionFactory.CreateCloudSqlBasicAsync(
+                displayName, serverName, databaseName, username, password);
+
+            return FabricConnectionResultFormatter.FormatConnectionResult(connection, "Cloud SQL connection with basic authentication created successfully");
+        }
+        catch (Exception ex)
+        {
+            return FabricConnectionResultFormatter.FormatErrorResult(ex);
+        }
+    }
+
+    [McpServerTool, Description(@"Creates a cloud SQL connection with workspace identity authentication")]
+    public async Task<string> CreateCloudSqlWorkspaceIdentityAsync(
+        [Description("The display name of the connection")] string displayName,
+        [Description("The SQL Server name (e.g., server.database.windows.net)")] string serverName,
+        [Description("The database name")] string databaseName)
+    {
+        try
+        {
+            var connection = await _connectionFactory.CreateCloudSqlWorkspaceIdentityAsync(
+                displayName, serverName, databaseName);
+
+            return FabricConnectionResultFormatter.FormatConnectionResult(connection, "Cloud SQL connection with workspace identity created successfully");
+        }
+        catch (Exception ex)
+        {
+            return FabricConnectionResultFormatter.FormatErrorResult(ex);
+        }
+    }
+
+    [McpServerTool, Description(@"Creates a cloud web connection with anonymous authentication")]
+    public async Task<string> CreateCloudWebAnonymousAsync(
+        [Description("The display name of the connection")] string displayName,
+        [Description("The web URL to connect to")] string url)
+    {
+        try
+        {
+            var connection = await _connectionFactory.CreateCloudWebAnonymousAsync(displayName, url);
+
+            return FabricConnectionResultFormatter.FormatConnectionResult(connection, "Cloud web connection with anonymous authentication created successfully");
+        }
+        catch (Exception ex)
+        {
+            return FabricConnectionResultFormatter.FormatErrorResult(ex);
+        }
+    }
+
+    [McpServerTool, Description(@"Creates a cloud web connection with basic authentication")]
+    public async Task<string> CreateCloudWebBasicAsync(
+        [Description("The display name of the connection")] string displayName,
+        [Description("The web URL to connect to")] string url,
+        [Description("The username for authentication")] string username,
+        [Description("The password for authentication")] string password)
+    {
+        try
+        {
+            var connection = await _connectionFactory.CreateCloudWebBasicAsync(
+                displayName, url, username, password);
+
+            return FabricConnectionResultFormatter.FormatConnectionResult(connection, "Cloud web connection with basic authentication created successfully");
+        }
+        catch (Exception ex)
+        {
+            return FabricConnectionResultFormatter.FormatErrorResult(ex);
+        }
+    }
+
+    [McpServerTool, Description(@"Creates a VNet gateway SQL connection with basic authentication")]
+    public async Task<string> CreateVNetSqlBasicAsync(
+        [Description("The display name of the connection")] string displayName,
+        [Description("The virtual network gateway ID (UUID)")] string gatewayId,
+        [Description("The SQL Server name (e.g., server.database.windows.net)")] string serverName,
+        [Description("The database name")] string databaseName,
+        [Description("The username for authentication")] string username,
+        [Description("The password for authentication")] string password)
+    {
+        try
+        {
+            var connection = await _connectionFactory.CreateVNetSqlBasicAsync(
+                displayName, gatewayId, serverName, databaseName, username, password);
+
+            return FabricConnectionResultFormatter.FormatConnectionResult(connection, "VNet gateway SQL connection with basic authentication created successfully");
+        }
+        catch (Exception ex)
+        {
+            return FabricConnectionResultFormatter.FormatErrorResult(ex);
+        }
+    }
+
+    [McpServerTool, Description(@"Creates a VNet gateway SQL connection with workspace identity authentication")]
+    public async Task<string> CreateVNetSqlWorkspaceIdentityAsync(
+        [Description("The display name of the connection")] string displayName,
+        [Description("The virtual network gateway ID (UUID)")] string gatewayId,
+        [Description("The SQL Server name (e.g., server.database.windows.net)")] string serverName,
+        [Description("The database name")] string databaseName)
+    {
+        try
+        {
+            var connection = await _connectionFactory.CreateVNetSqlWorkspaceIdentityAsync(
+                displayName, gatewayId, serverName, databaseName);
+
+            return FabricConnectionResultFormatter.FormatConnectionResult(connection, "VNet gateway SQL connection with workspace identity created successfully");
+        }
+        catch (Exception ex)
+        {
+            return FabricConnectionResultFormatter.FormatErrorResult(ex);
         }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using DataFactory.MCP.Tools;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Services;
+using DataFactory.MCP.Models.Connection.Factories;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -20,6 +21,7 @@ builder.Services
     .AddSingleton<IFabricDataflowService, FabricDataflowService>()
     .AddSingleton<IFabricCapacityService, FabricCapacityService>()
     .AddSingleton<IAzureResourceDiscoveryService, AzureResourceDiscoveryService>()
+    .AddSingleton<FabricDataSourceConnectionFactory>()
     .AddMcpServer()
     .WithStdioServerTransport()
     .WithTools<AuthenticationTool>()

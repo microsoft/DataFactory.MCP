@@ -3,6 +3,7 @@ using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models.Connection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using System.Text;
 
 namespace DataFactory.MCP.Services;
 
@@ -18,6 +19,10 @@ public class FabricConnectionService : FabricServiceBase, IFabricConnectionServi
     {
         // Add the custom connection converter to handle polymorphic deserialization
         JsonOptions.Converters.Add(new ConnectionJsonConverter());
+        // Add the credentials converter for create requests
+        JsonOptions.Converters.Add(new CredentialsJsonConverter());
+        // Add the connection details parameter converter
+        JsonOptions.Converters.Add(new ConnectionDetailsParameterJsonConverter());
     }
 
     public async Task<ListConnectionsResponse> ListConnectionsAsync(string? continuationToken = null)
@@ -47,6 +52,59 @@ public class FabricConnectionService : FabricServiceBase, IFabricConnectionServi
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error fetching connection {ConnectionId}", connectionId);
+            throw;
+        }
+    }
+
+    public async Task<ShareableCloudConnection> CreateCloudConnectionAsync(CreateCloudConnectionRequest request)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(request, JsonOptions);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            Logger.LogInformation("Creating cloud connection: {DisplayName}", request.DisplayName);
+            Logger.LogDebug("Request JSON: {Json}", json);
+
+            var response = await PostAsync<ShareableCloudConnection>("connections", content);
+
+            if (response == null)
+            {
+                throw new InvalidOperationException("Failed to create cloud connection - no response received");
+            }
+
+            Logger.LogInformation("Successfully created cloud connection {ConnectionId}", response.Id);
+            return response;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating cloud connection {DisplayName}", request.DisplayName);
+            throw;
+        }
+    }
+
+    public async Task<VirtualNetworkGatewayConnection> CreateVirtualNetworkGatewayConnectionAsync(CreateVirtualNetworkGatewayConnectionRequest request)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(request, JsonOptions);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            Logger.LogInformation("Creating virtual network gateway connection: {DisplayName}", request.DisplayName);
+
+            var response = await PostAsync<VirtualNetworkGatewayConnection>("connections", content);
+
+            if (response == null)
+            {
+                throw new InvalidOperationException("Failed to create virtual network gateway connection - no response received");
+            }
+
+            Logger.LogInformation("Successfully created virtual network gateway connection {ConnectionId}", response.Id);
+            return response;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating virtual network gateway connection {DisplayName}", request.DisplayName);
             throw;
         }
     }
