@@ -130,12 +130,14 @@ public class DataflowTool
         }
     }
 
-    [McpServerTool, Description(@"Executes a query against a dataflow and returns the complete results (all data) in Apache Arrow format. This allows you to run M (Power Query) language queries against data sources connected through the dataflow and get the full dataset.")]
+    [McpServerTool, Description(@"Executes a query against a dataflow and returns the complete results (all data) in Apache Arrow format. This allows you to run M (Power Query) language queries against data sources connected through the dataflow and get the full dataset.
+
+FORMATTING INSTRUCTION: When displaying results to users, please format the 'table.rows' data as a markdown table using the column names from 'table.columns'. This provides immediate visual representation of the query results.")]
     public async Task<string> ExecuteQueryAsync(
         [Description("The workspace ID containing the dataflow (required)")] string workspaceId,
         [Description("The dataflow ID to execute the query against (required)")] string dataflowId,
         [Description("The name of the query to execute (required)")] string queryName,
-        [Description("The M (Power Query) language query to execute. Can be either a raw M expression (which will be auto-wrapped) or a complete section document.")] string customMashupDocument)
+        [Description("The M (Power Query) language query to execute. Can be either a raw M expression (which will be auto-wrapped) or a complete section document. Results will be returned as structured data - format the table.rows as a markdown table for user display.")] string customMashupDocument)
     {
         try
         {
