@@ -130,7 +130,7 @@ public class DataflowTool
         }
     }
 
-    [McpServerTool, Description(@"Executes a query against a dataflow and returns the results in Apache Arrow format. This allows you to run M (Power Query) language queries against data sources connected through the dataflow.")]
+    [McpServerTool, Description(@"Executes a query against a dataflow and returns the complete results (all data) in Apache Arrow format. This allows you to run M (Power Query) language queries against data sources connected through the dataflow and get the full dataset.")]
     public async Task<string> ExecuteQueryAsync(
         [Description("The workspace ID containing the dataflow (required)")] string workspaceId,
         [Description("The dataflow ID to execute the query against (required)")] string dataflowId,
@@ -149,18 +149,8 @@ public class DataflowTool
 
             if (response.Success)
             {
-                var result = new
-                {
-                    Success = true,
-                    Message = $"Query '{queryName}' executed successfully on dataflow {dataflowId}",
-                    DataFormat = "Apache Arrow Binary",
-                    ContentType = response.ContentType,
-                    ContentLength = response.ContentLength,
-                    Summary = response.Summary,
-                    Metadata = response.Metadata,
-                    ExecutedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-                    Note = "The response contains Apache Arrow binary data. Use appropriate tools (like Apache Arrow libraries, Power BI, or data analysis tools) to parse and analyze the structured results."
-                };
+                // Create comprehensive Arrow data report
+                var result = response.CreateArrowDataReport();
 
                 return JsonSerializer.Serialize(result, new JsonSerializerOptions
                 {
@@ -204,4 +194,6 @@ public class DataflowTool
             return $"Error executing dataflow query: {ex.Message}";
         }
     }
+
+
 }

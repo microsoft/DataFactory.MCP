@@ -38,4 +38,6 @@ public interface IFabricDataflowService
         string workspaceId,
         string dataflowId,
         ExecuteDataflowQueryRequest request);
+
+
 }

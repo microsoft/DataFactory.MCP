@@ -162,7 +162,7 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
                 Logger.LogInformation("Successfully executed query '{QueryName}' on dataflow {DataflowId}. Response: {ContentLength} bytes, Content-Type: {ContentType}",
                     request.QueryName, dataflowId, contentLength, contentType);
 
-                // Extract summary information from the Arrow data
+                // Extract summary information from the Arrow data using the enhanced reader
                 var summary = ExtractArrowDataSummary(responseData);
 
                 return new ExecuteDataflowQueryResponse
@@ -209,7 +209,66 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
         }
     }
 
+
+
     private static QueryResultSummary ExtractArrowDataSummary(byte[] arrowData)
+    {
+        // Use the enhanced Arrow reader service with full data retrieval
+        var arrowInfo = ArrowDataReaderService.ReadArrowStream(arrowData, returnAllData: true);
+
+        var summary = new QueryResultSummary
+        {
+            ArrowParsingSuccess = arrowInfo.Success,
+            ArrowParsingError = arrowInfo.Error,
+            EstimatedRowCount = arrowInfo.TotalRows,
+            BatchCount = arrowInfo.BatchCount
+        };
+
+        if (arrowInfo.Schema != null)
+        {
+            summary.Columns = arrowInfo.Schema.Columns?.Select(c => c.Name).ToList() ?? new List<string>();
+
+            summary.ArrowSchema = new ArrowSchemaDetails
+            {
+                FieldCount = arrowInfo.Schema.FieldCount,
+                Columns = arrowInfo.Schema.Columns?.Select(c => new ArrowColumnDetails
+                {
+                    Name = c.Name,
+                    DataType = c.DataType,
+                    IsNullable = c.IsNullable,
+                    Metadata = c.Metadata
+                }).ToList()
+            };
+        }
+
+        // Use AllData if available (when returnAllData=true), otherwise use SampleData
+        var dataToUse = arrowInfo.AllData ?? arrowInfo.SampleData;
+
+        if (dataToUse != null)
+        {
+            // Convert structured data to string format for backward compatibility
+            summary.SampleData = dataToUse.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.Select(v => v?.ToString() ?? "null").ToList()
+            );
+
+            // Also provide the structured data
+            summary.StructuredSampleData = dataToUse;
+        }
+
+        // If Arrow parsing failed, fall back to basic text extraction
+        if (!arrowInfo.Success)
+        {
+            var fallbackSummary = ExtractBasicTextSummary(arrowData);
+            summary.Columns = fallbackSummary.Columns ?? new List<string>();
+            summary.SampleData = fallbackSummary.SampleData ?? new Dictionary<string, List<string>>();
+            summary.EstimatedRowCount = fallbackSummary.EstimatedRowCount;
+        }
+
+        return summary;
+    }
+
+    private static QueryResultSummary ExtractBasicTextSummary(byte[] arrowData)
     {
         var summary = new QueryResultSummary();
 

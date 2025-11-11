@@ -99,4 +99,82 @@ public class QueryResultSummary
     /// </summary>
     [JsonPropertyName("format")]
     public string Format { get; set; } = "Apache Arrow";
+
+    /// <summary>
+    /// Enhanced Arrow schema information
+    /// </summary>
+    [JsonPropertyName("arrowSchema")]
+    public ArrowSchemaDetails? ArrowSchema { get; set; }
+
+    /// <summary>
+    /// Structured sample data from Arrow format
+    /// </summary>
+    [JsonPropertyName("structuredSampleData")]
+    public Dictionary<string, List<object>>? StructuredSampleData { get; set; }
+
+    /// <summary>
+    /// Number of Arrow record batches
+    /// </summary>
+    [JsonPropertyName("batchCount")]
+    public int BatchCount { get; set; }
+
+    /// <summary>
+    /// Indicates if Arrow parsing was successful
+    /// </summary>
+    [JsonPropertyName("arrowParsingSuccess")]
+    public bool ArrowParsingSuccess { get; set; }
+
+    /// <summary>
+    /// Arrow parsing error if any
+    /// </summary>
+    [JsonPropertyName("arrowParsingError")]
+    public string? ArrowParsingError { get; set; }
+}
+
+/// <summary>
+/// Detailed Arrow schema information
+/// </summary>
+public class ArrowSchemaDetails
+{
+    /// <summary>
+    /// Number of fields in the schema
+    /// </summary>
+    [JsonPropertyName("fieldCount")]
+    public int FieldCount { get; set; }
+
+    /// <summary>
+    /// Column information
+    /// </summary>
+    [JsonPropertyName("columns")]
+    public List<ArrowColumnDetails>? Columns { get; set; }
+}
+
+/// <summary>
+/// Detailed information about an Arrow column
+/// </summary>
+public class ArrowColumnDetails
+{
+    /// <summary>
+    /// Column name
+    /// </summary>
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Column data type
+    /// </summary>
+    [JsonPropertyName("dataType")]
+    public string DataType { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Whether the column is nullable
+    /// </summary>
+    [JsonPropertyName("isNullable")]
+    public bool IsNullable { get; set; }
+
+    /// <summary>
+    /// Column metadata
+    /// </summary>
+    [JsonPropertyName("metadata")]
+    public Dictionary<string, string>? Metadata { get; set; }
 }

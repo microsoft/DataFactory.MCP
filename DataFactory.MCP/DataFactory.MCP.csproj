@@ -33,6 +33,7 @@
     <!-- tried 4.76 before broke macOS interactive auth -->
     <PackageReference Include="Microsoft.Identity.Client" Version="4.67.0" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.3" />
+    <PackageReference Include="Apache.Arrow" Version="22.1.0" />
   </ItemGroup>
 
 </Project>
