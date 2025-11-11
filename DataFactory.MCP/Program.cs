@@ -29,6 +29,7 @@ builder.Services
     .WithTools<ConnectionsTool>()
     .WithTools<WorkspacesTool>()
     .WithTools<DataflowTool>()
+    .WithTools<DataflowQueryTool>()
     .WithTools<CapacityTool>()
     .WithTools<AzureResourceDiscoveryTool>();
 

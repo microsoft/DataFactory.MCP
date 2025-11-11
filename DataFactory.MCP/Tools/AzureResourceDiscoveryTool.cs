@@ -1,6 +1,7 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
 using DataFactory.MCP.Abstractions.Interfaces;
+using DataFactory.MCP.Extensions;
 using System.Text.Json;
 
 namespace DataFactory.MCP.Tools;
@@ -39,7 +40,7 @@ public class AzureResourceDiscoveryTool
                 }).ToList()
             };
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return result.ToMcpJson();
         }
         catch (Exception ex)
         {
@@ -77,7 +78,7 @@ public class AzureResourceDiscoveryTool
                 }).ToList()
             };
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return result.ToMcpJson();
         }
         catch (Exception ex)
         {
@@ -119,7 +120,7 @@ public class AzureResourceDiscoveryTool
                 }).ToList()
             };
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return result.ToMcpJson();
         }
         catch (Exception ex)
         {
@@ -174,7 +175,7 @@ public class AzureResourceDiscoveryTool
                 }).ToList()
             };
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return result.ToMcpJson();
         }
         catch (Exception ex)
         {

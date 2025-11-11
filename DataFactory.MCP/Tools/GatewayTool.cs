@@ -39,11 +39,7 @@ public class GatewayTool
                 Gateways = response.Value.Select(g => g.ToFormattedInfo())
             };
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            return result.ToMcpJson();
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -78,11 +74,7 @@ public class GatewayTool
             }
 
             var result = gateway.ToFormattedInfo();
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            return result.ToMcpJson();
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -184,11 +176,7 @@ public class GatewayTool
                 }
             };
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            return result.ToMcpJson();
         }
         catch (UnauthorizedAccessException ex)
         {

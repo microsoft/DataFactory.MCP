@@ -38,11 +38,7 @@ public class CapacityTool
                 FormattedResults = response.Value.ToFormattedList()
             };
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            return result.ToMcpJson();
         }
         catch (UnauthorizedAccessException ex)
         {

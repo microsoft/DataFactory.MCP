@@ -47,11 +47,7 @@ public class DataflowTool
                 Dataflows = response.Value.Select(d => d.ToFormattedInfo())
             };
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            return result.ToMcpJson();
         }
         catch (ArgumentException ex)
         {
@@ -102,11 +98,7 @@ public class DataflowTool
                 CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
             };
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            return result.ToMcpJson();
         }
         catch (ArgumentException ex)
         {
@@ -130,95 +122,5 @@ public class DataflowTool
         }
     }
 
-    [McpServerTool, Description(@"Executes a query against a dataflow and returns the complete results (all data) in Apache Arrow format. This allows you to run M (Power Query) language queries against data sources connected through the dataflow and get the full dataset.
 
-FORMATTING INSTRUCTION: When displaying results to users, please format the 'table.rows' data as a markdown table using the column names from 'table.columns'. This provides immediate visual representation of the query results.")]
-    public async Task<string> ExecuteQueryAsync(
-        [Description("The workspace ID containing the dataflow (required)")] string workspaceId,
-        [Description("The dataflow ID to execute the query against (required)")] string dataflowId,
-        [Description("The name of the query to execute (required)")] string queryName,
-        [Description("The M (Power Query) language query to execute. Can be either a raw M expression (which will be auto-wrapped) or a complete section document. Results will be returned as structured data - format the table.rows as a markdown table for user display.")] string customMashupDocument)
-    {
-        try
-        {
-            // Auto-wrap the query if it's not already in section format
-            var wrappedQuery = WrapQueryIfNeeded(customMashupDocument, queryName);
-
-            var request = new ExecuteDataflowQueryRequest
-            {
-                QueryName = queryName,
-                CustomMashupDocument = wrappedQuery
-            };
-
-            var response = await _dataflowService.ExecuteQueryAsync(workspaceId, dataflowId, request);
-
-            if (response.Success)
-            {
-                // Create comprehensive Arrow data report
-                var result = response.CreateArrowDataReport();
-
-                return JsonSerializer.Serialize(result, new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                });
-            }
-            else
-            {
-                var errorResult = new
-                {
-                    Success = false,
-                    Error = response.Error,
-                    Message = $"Failed to execute query '{queryName}' on dataflow {dataflowId}",
-                    WorkspaceId = workspaceId,
-                    DataflowId = dataflowId,
-                    QueryName = queryName
-                };
-
-                return JsonSerializer.Serialize(errorResult, new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                });
-            }
-        }
-        catch (ArgumentException ex)
-        {
-            return $"Error: {ex.Message}";
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return string.Format(Messages.AuthenticationErrorTemplate, ex.Message);
-        }
-        catch (HttpRequestException ex)
-        {
-            return string.Format(Messages.ApiRequestFailedTemplate, ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return $"Error executing dataflow query: {ex.Message}";
-        }
-    }
-
-    /// <summary>
-    /// Wraps a raw M query in the proper section format if it's not already wrapped
-    /// </summary>
-    private static string WrapQueryIfNeeded(string query, string queryName)
-    {
-        if (string.IsNullOrWhiteSpace(query))
-            return query;
-
-        // Check if the query already starts with "section" (case-insensitive)
-        var trimmedQuery = query.Trim();
-        if (trimmedQuery.StartsWith("section ", StringComparison.OrdinalIgnoreCase))
-        {
-            // Already in section format, return as-is
-            return query;
-        }
-
-        // Auto-wrap the raw M query in section format
-        return $@"section Section1;
-
-shared {queryName} = {query.TrimEnd()};";
-    }
 }
