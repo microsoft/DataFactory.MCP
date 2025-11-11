@@ -1,4 +1,5 @@
 using System.Text.Json;
+using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Models;
 
 namespace DataFactory.MCP.Models.Connection.Formatters;
@@ -28,24 +29,8 @@ public static class FabricConnectionResultFormatter
             }
         };
 
-        return JsonSerializer.Serialize(result, new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        return result.ToMcpJson();
     }
 
-    /// <summary>
-    /// Formats an error result based on exception type
-    /// </summary>
-    public static string FormatErrorResult(Exception ex)
-    {
-        return ex switch
-        {
-            UnauthorizedAccessException => string.Format(Messages.AuthenticationErrorTemplate, ex.Message),
-            HttpRequestException => string.Format(Messages.ApiRequestFailedTemplate, ex.Message),
-            ArgumentException => ex.Message, // Validation errors are already formatted
-            _ => $"Error creating connection: {ex.Message}"
-        };
-    }
+
 }

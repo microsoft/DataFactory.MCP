@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Text.Json;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
+using DataFactory.MCP.Factories;
 using DataFactory.MCP.Models;
 using DataFactory.MCP.Models.Connection;
 using DataFactory.MCP.Models.Connection.Factories;
@@ -50,15 +51,15 @@ public class ConnectionsTool
         }
         catch (UnauthorizedAccessException ex)
         {
-            return string.Format(Messages.AuthenticationErrorTemplate, ex.Message);
+            return ErrorResponseFactory.CreateAuthenticationError(ex.Message).ToMcpJson();
         }
         catch (HttpRequestException ex)
         {
-            return string.Format(Messages.ApiRequestFailedTemplate, ex.Message);
+            return ErrorResponseFactory.CreateHttpError(ex.Message).ToMcpJson();
         }
         catch (Exception ex)
         {
-            return string.Format(Messages.ErrorListingConnectionsTemplate, ex.Message);
+            return ErrorResponseFactory.CreateOperationError("listing connections", ex.Message).ToMcpJson();
         }
     }
 
@@ -77,7 +78,7 @@ public class ConnectionsTool
 
             if (connection == null)
             {
-                return string.Format(Messages.ConnectionNotFoundTemplate, connectionId);
+                return ErrorResponseFactory.CreateNotFoundError("Connection", connectionId).ToMcpJson();
             }
 
             var result = connection.ToFormattedInfo();
@@ -85,11 +86,11 @@ public class ConnectionsTool
         }
         catch (UnauthorizedAccessException ex)
         {
-            return string.Format(Messages.AuthenticationErrorTemplate, ex.Message);
+            return ErrorResponseFactory.CreateAuthenticationError(ex.Message).ToMcpJson();
         }
         catch (Exception ex)
         {
-            return string.Format(Messages.ErrorRetrievingConnectionTemplate, ex.Message);
+            return ErrorResponseFactory.CreateOperationError("retrieving connection", ex.Message).ToMcpJson();
         }
     }
 
@@ -110,7 +111,7 @@ public class ConnectionsTool
         }
         catch (Exception ex)
         {
-            return FabricConnectionResultFormatter.FormatErrorResult(ex);
+            return ErrorResponseFactory.CreateOperationError("creating cloud SQL connection", ex.Message).ToMcpJson();
         }
     }
 
@@ -129,7 +130,7 @@ public class ConnectionsTool
         }
         catch (Exception ex)
         {
-            return FabricConnectionResultFormatter.FormatErrorResult(ex);
+            return ErrorResponseFactory.CreateOperationError("creating cloud SQL workspace identity connection", ex.Message).ToMcpJson();
         }
     }
 
@@ -146,7 +147,7 @@ public class ConnectionsTool
         }
         catch (Exception ex)
         {
-            return FabricConnectionResultFormatter.FormatErrorResult(ex);
+            return ErrorResponseFactory.CreateOperationError("creating cloud web anonymous connection", ex.Message).ToMcpJson();
         }
     }
 
@@ -166,7 +167,7 @@ public class ConnectionsTool
         }
         catch (Exception ex)
         {
-            return FabricConnectionResultFormatter.FormatErrorResult(ex);
+            return ErrorResponseFactory.CreateOperationError("creating cloud web basic connection", ex.Message).ToMcpJson();
         }
     }
 
@@ -188,7 +189,7 @@ public class ConnectionsTool
         }
         catch (Exception ex)
         {
-            return FabricConnectionResultFormatter.FormatErrorResult(ex);
+            return ErrorResponseFactory.CreateOperationError("creating VNet gateway SQL connection", ex.Message).ToMcpJson();
         }
     }
 
@@ -208,7 +209,7 @@ public class ConnectionsTool
         }
         catch (Exception ex)
         {
-            return FabricConnectionResultFormatter.FormatErrorResult(ex);
+            return ErrorResponseFactory.CreateOperationError("creating VNet gateway SQL workspace identity connection", ex.Message).ToMcpJson();
         }
     }
 }

@@ -2,6 +2,7 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
+using DataFactory.MCP.Factories;
 using DataFactory.MCP.Models;
 using DataFactory.MCP.Models.Gateway;
 using System.Text.Json;
@@ -43,15 +44,15 @@ public class GatewayTool
         }
         catch (UnauthorizedAccessException ex)
         {
-            return string.Format(Messages.AuthenticationErrorTemplate, ex.Message);
+            return ErrorResponseFactory.CreateAuthenticationError(ex.Message).ToMcpJson();
         }
         catch (HttpRequestException ex)
         {
-            return string.Format(Messages.ApiRequestFailedTemplate, ex.Message);
+            return ErrorResponseFactory.CreateHttpError(ex.Message).ToMcpJson();
         }
         catch (Exception ex)
         {
-            return string.Format(Messages.ErrorListingGatewaysTemplate, ex.Message);
+            return ErrorResponseFactory.CreateOperationError("listing gateways", ex.Message).ToMcpJson();
         }
     }
 
@@ -78,11 +79,11 @@ public class GatewayTool
         }
         catch (UnauthorizedAccessException ex)
         {
-            return string.Format(Messages.AuthenticationErrorTemplate, ex.Message);
+            return ErrorResponseFactory.CreateAuthenticationError(ex.Message).ToMcpJson();
         }
         catch (Exception ex)
         {
-            return string.Format(Messages.ErrorRetrievingGatewayTemplate, ex.Message);
+            return ErrorResponseFactory.CreateOperationError("retrieving gateway", ex.Message).ToMcpJson();
         }
     }
 
@@ -180,15 +181,15 @@ public class GatewayTool
         }
         catch (UnauthorizedAccessException ex)
         {
-            return string.Format(Messages.AuthenticationErrorTemplate, ex.Message);
+            return ErrorResponseFactory.CreateAuthenticationError(ex.Message).ToMcpJson();
         }
         catch (HttpRequestException ex)
         {
-            return $"Error creating VNet gateway: {ex.Message}";
+            return ErrorResponseFactory.CreateHttpError(ex.Message).ToMcpJson();
         }
         catch (Exception ex)
         {
-            return $"Error creating VNet gateway '{displayName}': {ex.Message}";
+            return ErrorResponseFactory.CreateOperationError($"creating VNet gateway '{displayName}'", ex.Message).ToMcpJson();
         }
     }
 }

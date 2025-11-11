@@ -4,7 +4,7 @@ using DataFactory.MCP.Models.Dataflow;
 namespace DataFactory.MCP.Factories;
 
 /// <summary>
-/// Factory class for creating standardized error responses
+/// Factory class for creating standardized error responses across all MCP tools
 /// </summary>
 public static class ErrorResponseFactory
 {
@@ -73,6 +73,62 @@ public static class ErrorResponseFactory
             Success = false,
             Error = "ExecutionError",
             Message = $"Error executing dataflow query: {message}"
+        };
+    }
+
+    /// <summary>
+    /// Creates a generic operation error response
+    /// </summary>
+    public static object CreateOperationError(string operation, string message)
+    {
+        return new
+        {
+            Success = false,
+            Error = "OperationError",
+            Message = $"Error {operation}: {message}",
+            Operation = operation
+        };
+    }
+
+    /// <summary>
+    /// Creates a resource not found error response
+    /// </summary>
+    public static object CreateNotFoundError(string resourceType, string resourceId)
+    {
+        return new
+        {
+            Success = false,
+            Error = "NotFoundError",
+            Message = $"{resourceType} with ID '{resourceId}' was not found",
+            ResourceType = resourceType,
+            ResourceId = resourceId
+        };
+    }
+
+    /// <summary>
+    /// Creates a forbidden access error response
+    /// </summary>
+    public static object CreateForbiddenError(string message)
+    {
+        return new
+        {
+            Success = false,
+            Error = "ForbiddenError",
+            Message = $"Access denied: {message}"
+        };
+    }
+
+    /// <summary>
+    /// Creates a connection operation error response based on exception type
+    /// </summary>
+    public static object CreateConnectionError(Exception ex, string operation)
+    {
+        return ex switch
+        {
+            UnauthorizedAccessException => CreateAuthenticationError(ex.Message),
+            HttpRequestException => CreateHttpError(ex.Message),
+            ArgumentException => CreateValidationError(ex.Message),
+            _ => CreateOperationError(operation, ex.Message)
         };
     }
 }

@@ -2,6 +2,7 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
+using DataFactory.MCP.Factories;
 using DataFactory.MCP.Models;
 using DataFactory.MCP.Models.Dataflow;
 using System.Text.Json;
@@ -51,19 +52,19 @@ public class DataflowTool
         }
         catch (ArgumentException ex)
         {
-            return $"Error: {ex.Message}";
+            return ErrorResponseFactory.CreateValidationError(ex.Message).ToMcpJson();
         }
         catch (UnauthorizedAccessException ex)
         {
-            return string.Format(Messages.AuthenticationErrorTemplate, ex.Message);
+            return ErrorResponseFactory.CreateAuthenticationError(ex.Message).ToMcpJson();
         }
         catch (HttpRequestException ex)
         {
-            return string.Format(Messages.ApiRequestFailedTemplate, ex.Message);
+            return ErrorResponseFactory.CreateHttpError(ex.Message).ToMcpJson();
         }
         catch (Exception ex)
         {
-            return $"Error listing dataflows: {ex.Message}";
+            return ErrorResponseFactory.CreateOperationError("listing dataflows", ex.Message).ToMcpJson();
         }
     }
 
