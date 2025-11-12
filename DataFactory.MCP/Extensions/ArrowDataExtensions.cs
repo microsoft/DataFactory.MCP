@@ -8,10 +8,23 @@ namespace DataFactory.MCP.Extensions;
 public static class ArrowDataExtensions
 {
     /// <summary>
+    /// Creates a comprehensive Arrow data report with structured data
+    /// </summary>
+    /// <param name="response">The execution response</param>
+    public static object CreateArrowDataReport(this ExecuteDataflowQueryResponse response) => new
+    {
+        Table = response.Summary?.StructuredSampleData != null
+            ? FormatAsTable(response.Summary.StructuredSampleData)
+            : CreateEmptyTable(),
+        ExecutionSummary = CreateExecutionSummary(response),
+        ArrowData = response.Summary?.ToFormattedArrowSummary()
+    };
+
+    /// <summary>
     /// Formats Apache Arrow data summary for display with full data
     /// </summary>
     /// <param name="summary">The query result summary</param>
-    public static object ToFormattedArrowSummary(this QueryResultSummary summary) => new
+    private static object ToFormattedArrowSummary(this QueryResultSummary summary) => new
     {
         DataFormat = "Apache Arrow Stream",
         ParsingStatus = summary.ArrowParsingSuccess ? "Success" : "Fallback to text parsing",
@@ -110,19 +123,6 @@ public static class ArrowDataExtensions
 
     private static string InferDataType(List<object> values) =>
         values.FirstOrDefault(v => v != null)?.GetType().Name ?? (values.Count == 0 ? "Unknown" : "Null");
-
-    /// <summary>
-    /// Creates a comprehensive Arrow data report with structured data
-    /// </summary>
-    /// <param name="response">The execution response</param>
-    public static object CreateArrowDataReport(this ExecuteDataflowQueryResponse response) => new
-    {
-        Table = response.Summary?.StructuredSampleData != null
-            ? FormatAsTable(response.Summary.StructuredSampleData)
-            : CreateEmptyTable(),
-        ExecutionSummary = CreateExecutionSummary(response),
-        ArrowData = response.Summary?.ToFormattedArrowSummary()
-    };
 
     private static object CreateExecutionSummary(ExecuteDataflowQueryResponse response) => new
     {
