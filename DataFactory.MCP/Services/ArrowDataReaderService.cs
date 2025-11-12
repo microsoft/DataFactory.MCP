@@ -33,7 +33,7 @@ public class ArrowDataReaderService : IArrowDataReaderService
     /// </summary>
     /// <param name="arrowData">The Apache Arrow binary data</param>
     /// <returns>Formatted Arrow data information</returns>
-    public ArrowDataInfo ReadArrowStream(byte[] arrowData)
+    private ArrowDataInfo ReadArrowStream(byte[] arrowData)
     {
         try
         {

@@ -1,12 +1,74 @@
+using DataFactory.MCP.Models.Arrow;
 using DataFactory.MCP.Models.Dataflow.Query;
 
 namespace DataFactory.MCP.Extensions;
 
 /// <summary>
-/// Extensions for formatting Apache Arrow data responses
+/// Extensions for formatting Apache Arrow data responses and converting between Arrow models
 /// </summary>
 public static class ArrowDataExtensions
 {
+    /// <summary>
+    /// Converts ArrowDataInfo to QueryResultSummary for dataflow query responses
+    /// </summary>
+    /// <param name="arrowInfo">The Arrow data information</param>
+    /// <returns>Query result summary suitable for dataflow responses</returns>
+    public static QueryResultSummary ToQueryResultSummary(this ArrowDataInfo arrowInfo)
+    {
+        var summary = new QueryResultSummary
+        {
+            ArrowParsingSuccess = arrowInfo.Success,
+            ArrowParsingError = arrowInfo.Error,
+            EstimatedRowCount = arrowInfo.TotalRows,
+            BatchCount = arrowInfo.BatchCount
+        };
+
+        if (arrowInfo.Schema != null)
+        {
+            summary.Columns = arrowInfo.Schema.Columns?.Select(c => c.Name).ToList() ?? new List<string>();
+
+            summary.ArrowSchema = new ArrowSchemaDetails
+            {
+                FieldCount = arrowInfo.Schema.FieldCount,
+                Columns = arrowInfo.Schema.Columns?.Select(c => new ArrowColumnDetails
+                {
+                    Name = c.Name,
+                    DataType = c.DataType,
+                    IsNullable = c.IsNullable,
+                    Metadata = c.Metadata
+                }).ToList()
+            };
+        }
+
+        // Use the extracted data
+        var dataToUse = arrowInfo.AllData;
+
+        if (dataToUse != null)
+        {
+            // Convert structured data to string format for backward compatibility
+            summary.SampleData = dataToUse.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.Select(v => v?.ToString() ?? "null").ToList()
+            );
+
+            // Also provide the structured data
+            summary.StructuredSampleData = dataToUse;
+        }
+
+        // If Arrow parsing failed, provide basic fallback information
+        if (!arrowInfo.Success)
+        {
+            summary.Columns = new List<string> { "Data parsing failed" };
+            summary.SampleData = new Dictionary<string, List<string>>
+            {
+                { "Error", new List<string> { arrowInfo.Error ?? "Unknown Arrow parsing error" } }
+            };
+            summary.EstimatedRowCount = 0;
+        }
+
+        return summary;
+    }
+
     /// <summary>
     /// Creates a comprehensive Arrow data report with structured data
     /// </summary>

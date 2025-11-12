@@ -1,5 +1,6 @@
 using DataFactory.MCP.Abstractions;
 using DataFactory.MCP.Abstractions.Interfaces;
+using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Models.Dataflow;
 using DataFactory.MCP.Models.Dataflow.Query;
 using Microsoft.Extensions.Logging;
@@ -167,7 +168,8 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
                     request.QueryName, dataflowId, contentLength, contentType);
 
                 // Extract summary information from the Arrow data using the enhanced reader
-                var summary = ExtractArrowDataSummary(responseData);
+                var arrowInfo = await _arrowDataReaderService.ReadArrowStreamAsync(responseData);
+                var summary = arrowInfo.ToQueryResultSummary();
 
                 return new ExecuteDataflowQueryResponse
                 {
@@ -211,67 +213,5 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
                 ContentLength = 0
             };
         }
-    }
-
-
-
-    private QueryResultSummary ExtractArrowDataSummary(byte[] arrowData)
-    {
-        // Use the enhanced Arrow reader service with full data retrieval
-        var arrowInfo = _arrowDataReaderService.ReadArrowStreamAsync(arrowData).Result;
-
-        var summary = new QueryResultSummary
-        {
-            ArrowParsingSuccess = arrowInfo.Success,
-            ArrowParsingError = arrowInfo.Error,
-            EstimatedRowCount = arrowInfo.TotalRows,
-            BatchCount = arrowInfo.BatchCount
-        };
-
-        if (arrowInfo.Schema != null)
-        {
-            summary.Columns = arrowInfo.Schema.Columns?.Select(c => c.Name).ToList() ?? new List<string>();
-
-            summary.ArrowSchema = new ArrowSchemaDetails
-            {
-                FieldCount = arrowInfo.Schema.FieldCount,
-                Columns = arrowInfo.Schema.Columns?.Select(c => new ArrowColumnDetails
-                {
-                    Name = c.Name,
-                    DataType = c.DataType,
-                    IsNullable = c.IsNullable,
-                    Metadata = c.Metadata
-                }).ToList()
-            };
-        }
-
-        // Use the extracted data
-        var dataToUse = arrowInfo.AllData;
-
-        if (dataToUse != null)
-        {
-            // Convert structured data to string format for backward compatibility
-            summary.SampleData = dataToUse.ToDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value.Select(v => v?.ToString() ?? "null").ToList()
-            );
-
-            // Also provide the structured data
-            summary.StructuredSampleData = dataToUse;
-        }
-
-        // If Arrow parsing failed, provide basic fallback information
-        if (!arrowInfo.Success)
-        {
-            summary.Columns = new List<string> { "Data parsing failed" };
-            summary.SampleData = new Dictionary<string, List<string>>
-            {
-                { "Error", new List<string> { arrowInfo.Error ?? "Unknown Arrow parsing error" } },
-                { "DataSize", new List<string> { $"{arrowData.Length} bytes" } }
-            };
-            summary.EstimatedRowCount = 0;
-        }
-
-        return summary;
     }
 }
