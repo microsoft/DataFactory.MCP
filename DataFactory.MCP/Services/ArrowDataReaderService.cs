@@ -22,25 +22,23 @@ public class ArrowDataReaderService : IArrowDataReaderService
     /// Reads Apache Arrow stream and extracts metadata and formatted data
     /// </summary>
     /// <param name="arrowData">The Apache Arrow binary data</param>
-    /// <param name="returnAllData">If true, returns all data; if false, returns sample data only</param>
     /// <returns>Formatted Arrow data information</returns>
-    public Task<ArrowDataInfo> ReadArrowStreamAsync(byte[] arrowData, bool returnAllData = false)
+    public Task<ArrowDataInfo> ReadArrowStreamAsync(byte[] arrowData)
     {
-        return Task.Run(() => ReadArrowStream(arrowData, returnAllData));
+        return Task.Run(() => ReadArrowStream(arrowData));
     }
 
     /// <summary>
     /// Reads Apache Arrow stream and extracts metadata and formatted data (synchronous version)
     /// </summary>
     /// <param name="arrowData">The Apache Arrow binary data</param>
-    /// <param name="returnAllData">If true, returns all data; if false, returns sample data only</param>
     /// <returns>Formatted Arrow data information</returns>
-    public ArrowDataInfo ReadArrowStream(byte[] arrowData, bool returnAllData = false)
+    public ArrowDataInfo ReadArrowStream(byte[] arrowData)
     {
         try
         {
             _logger.LogDebug("Starting Arrow stream processing for {DataSize} bytes", arrowData.Length);
-            return ProcessArrowStream(arrowData, returnAllData);
+            return ProcessArrowStream(arrowData);
         }
         catch (Exception ex)
         {
@@ -49,7 +47,7 @@ public class ArrowDataReaderService : IArrowDataReaderService
         }
     }
 
-    private ArrowDataInfo ProcessArrowStream(byte[] arrowData, bool returnAllData)
+    private ArrowDataInfo ProcessArrowStream(byte[] arrowData)
     {
         using var stream = new MemoryStream(arrowData);
         using var reader = new ArrowStreamReader(stream);
@@ -63,10 +61,7 @@ public class ArrowDataReaderService : IArrowDataReaderService
         var batches = ReadAllBatches(reader, info);
         _logger.LogDebug("Read {BatchCount} batches with total {TotalRows} rows", batches.Count, info.TotalRows);
 
-        if (returnAllData)
-            info.AllData = ExtractAllData(batches, info.Schema?.Columns);
-        else
-            info.SampleData = ExtractSampleData(batches, info.Schema?.Columns);
+        info.AllData = ExtractAllData(batches, info.Schema?.Columns);
 
         info.BatchCount = batches.Count;
         return info;
@@ -108,31 +103,6 @@ public class ArrowDataReaderService : IArrowDataReaderService
         }
 
         return allData;
-    }
-
-    private static Dictionary<string, List<object>> ExtractSampleData(List<RecordBatch> batches, List<ArrowColumnInfo>? columns, int maxSampleSize = 10, int maxBatches = 3)
-    {
-        if (columns == null || columns.Count == 0)
-            return [];
-
-        var sampleData = columns.ToDictionary(col => col.Name, _ => new List<object>());
-
-        foreach (var batch in batches.Take(maxBatches))
-        {
-            var sampleCount = Math.Min(5, batch.Length);
-            ExtractBatchData(batch, columns, sampleData, sampleCount);
-
-            // Limit total samples per column
-            foreach (var col in columns)
-            {
-                if (sampleData[col.Name].Count > maxSampleSize)
-                {
-                    sampleData[col.Name] = sampleData[col.Name].Take(maxSampleSize).ToList();
-                }
-            }
-        }
-
-        return sampleData;
     }
 
     private static void ExtractBatchData(RecordBatch batch, List<ArrowColumnInfo> columns, Dictionary<string, List<object>> data, int rowLimit)
@@ -192,7 +162,6 @@ public class ArrowDataReaderService : IArrowDataReaderService
                 FieldCount = 0,
                 Columns = []
             },
-            SampleData = [],
             AllData = [],
             TotalRows = 0,
             BatchCount = 0

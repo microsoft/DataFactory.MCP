@@ -8,7 +8,6 @@ public class ArrowDataInfo
     public bool Success { get; set; }
     public string? Error { get; set; }
     public ArrowSchemaInfo? Schema { get; set; }
-    public Dictionary<string, List<object>>? SampleData { get; set; }
     public Dictionary<string, List<object>>? AllData { get; set; }
     public int TotalRows { get; set; }
     public int BatchCount { get; set; }

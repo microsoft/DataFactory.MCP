@@ -218,7 +218,7 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
     private QueryResultSummary ExtractArrowDataSummary(byte[] arrowData)
     {
         // Use the enhanced Arrow reader service with full data retrieval
-        var arrowInfo = _arrowDataReaderService.ReadArrowStreamAsync(arrowData, returnAllData: true).Result;
+        var arrowInfo = _arrowDataReaderService.ReadArrowStreamAsync(arrowData).Result;
 
         var summary = new QueryResultSummary
         {
@@ -245,8 +245,8 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
             };
         }
 
-        // Use AllData if available (when returnAllData=true), otherwise use SampleData
-        var dataToUse = arrowInfo.AllData ?? arrowInfo.SampleData;
+        // Use the extracted data
+        var dataToUse = arrowInfo.AllData;
 
         if (dataToUse != null)
         {
