@@ -65,6 +65,7 @@ public class McpTestFixture : IDisposable
                 services.AddScoped<WorkspacesTool>();
                 services.AddScoped<DataflowTool>();
                 services.AddScoped<CapacityTool>();
+                services.AddScoped<DataflowQueryTool>();
             })
             .Build();
 
