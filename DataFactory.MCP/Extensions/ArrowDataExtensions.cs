@@ -16,56 +16,8 @@ public static class ArrowDataExtensions
         Table = response.Summary?.StructuredSampleData != null
             ? FormatAsTable(response.Summary.StructuredSampleData)
             : CreateEmptyTable(),
-        ExecutionSummary = CreateExecutionSummary(response),
-        ArrowData = response.Summary?.ToFormattedArrowSummary()
+        ExecutionSummary = CreateExecutionSummary(response)
     };
-
-    /// <summary>
-    /// Formats Apache Arrow data summary for display with full data
-    /// </summary>
-    /// <param name="summary">The query result summary</param>
-    private static object ToFormattedArrowSummary(this QueryResultSummary summary) => new
-    {
-        DataFormat = "Apache Arrow Stream",
-        ParsingStatus = summary.ArrowParsingSuccess ? "Success" : "Fallback to text parsing",
-        ParsingError = summary.ArrowParsingError,
-        Schema = CreateSchemaInfo(summary.ArrowSchema),
-        DataSummary = CreateDataSummary(summary),
-        Format = summary.Format,
-        ProcessingNotes = CreateProcessingNotes(summary)
-    };
-
-    private static object? CreateSchemaInfo(ArrowSchemaDetails? schema) =>
-        schema == null ? null : new
-        {
-            FieldCount = schema.FieldCount,
-            Columns = schema.Columns?.Select(c => new
-            {
-                Name = c.Name,
-                DataType = c.DataType,
-                IsNullable = c.IsNullable,
-                HasMetadata = c.Metadata?.Any() == true
-            })
-        };
-
-    private static object CreateDataSummary(QueryResultSummary summary) => new
-    {
-        TotalRows = summary.EstimatedRowCount,
-        BatchCount = summary.BatchCount,
-        Columns = summary.Columns,
-        FullDataAvailable = summary.SampleData?.Keys.ToList()
-    };
-
-    private static string[] CreateProcessingNotes(QueryResultSummary summary) =>
-    [
-        summary.ArrowParsingSuccess
-            ? "Data successfully parsed using Apache Arrow libraries"
-            : "Arrow parsing failed, used text-based extraction as fallback",
-        $"Extracted {summary.Columns?.Count ?? 0} columns with {summary.EstimatedRowCount ?? 0} estimated rows",
-        summary.BatchCount > 0
-            ? $"Data organized in {summary.BatchCount} Arrow record batches"
-            : "Batch information not available"
-    ];
 
     private static object FormatAsTable(Dictionary<string, List<object>> structuredData)
     {
