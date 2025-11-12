@@ -1,6 +1,8 @@
 using DataFactory.MCP.Models;
 using DataFactory.MCP.Models.Connection;
 using DataFactory.MCP.Models.Dataflow.Query;
+using DataFactory.MCP.Models.Common.Responses;
+using DataFactory.MCP.Models.Common.Responses.Errors;
 
 namespace DataFactory.MCP.Extensions;
 
@@ -62,108 +64,65 @@ public static class ResponseExtensions
     /// <summary>
     /// Converts an UnauthorizedAccessException to a standardized authentication error response
     /// </summary>
-    public static object ToAuthenticationError(this UnauthorizedAccessException ex)
+    public static McpAuthenticationErrorResponse ToAuthenticationError(this UnauthorizedAccessException ex)
     {
-        return new
-        {
-            Success = false,
-            Error = "AuthenticationError",
-            Message = string.Format(Messages.AuthenticationErrorTemplate, ex.Message)
-        };
+        return new McpAuthenticationErrorResponse(string.Format(Messages.AuthenticationErrorTemplate, ex.Message));
     }
 
     /// <summary>
     /// Converts an HttpRequestException to a standardized HTTP error response
     /// </summary>
-    public static object ToHttpError(this HttpRequestException ex)
+    public static McpHttpErrorResponse ToHttpError(this HttpRequestException ex)
     {
-        return new
-        {
-            Success = false,
-            Error = "HttpRequestError",
-            Message = string.Format(Messages.ApiRequestFailedTemplate, ex.Message)
-        };
+        return new McpHttpErrorResponse(string.Format(Messages.ApiRequestFailedTemplate, ex.Message));
     }
 
     /// <summary>
     /// Converts an ArgumentException to a standardized validation error response
     /// </summary>
-    public static object ToValidationError(this ArgumentException ex)
+    public static McpValidationErrorResponse ToValidationError(this ArgumentException ex)
     {
-        return new
-        {
-            Success = false,
-            Error = "ValidationError",
-            Message = $"Validation failed: {ex.Message}"
-        };
+        return new McpValidationErrorResponse(ex.Message);
     }
 
     /// <summary>
     /// Converts a general Exception to a standardized operation error response
     /// </summary>
-    public static object ToOperationError(this Exception ex, string operation)
+    public static McpOperationErrorResponse ToOperationError(this Exception ex, string operation)
     {
-        return new
-        {
-            Success = false,
-            Error = "OperationError",
-            Message = $"Error {operation}: {ex.Message}",
-            Operation = operation
-        };
+        return new McpOperationErrorResponse(ex.Message, operation);
     }
 
     /// <summary>
     /// Creates a validation error response from a message
     /// </summary>
-    public static object ToValidationError(string message)
+    public static McpValidationErrorResponse ToValidationError(string message)
     {
-        return new
-        {
-            Success = false,
-            Error = "ValidationError",
-            Message = $"Validation failed: {message}"
-        };
+        return new McpValidationErrorResponse(message);
     }
 
     /// <summary>
     /// Creates a resource not found error response
     /// </summary>
-    public static object ToNotFoundError(string resourceType, string resourceId)
+    public static McpNotFoundErrorResponse ToNotFoundError(string resourceType, string resourceId)
     {
-        return new
-        {
-            Success = false,
-            Error = "NotFoundError",
-            Message = $"{resourceType} with ID '{resourceId}' was not found",
-            ResourceType = resourceType,
-            ResourceId = resourceId
-        };
+        return new McpNotFoundErrorResponse(resourceType, resourceId);
     }
 
     /// <summary>
     /// Creates a forbidden access error response
     /// </summary>
-    public static object ToForbiddenError(string message)
+    public static McpForbiddenErrorResponse ToForbiddenError(string message)
     {
-        return new
-        {
-            Success = false,
-            Error = "ForbiddenError",
-            Message = $"Access denied: {message}"
-        };
+        return new McpForbiddenErrorResponse(message);
     }
 
     /// <summary>
     /// Creates a generic error response
     /// </summary>
-    public static object ToGenericError(string message)
+    public static McpExecutionErrorResponse ToGenericError(string message)
     {
-        return new
-        {
-            Success = false,
-            Error = "ExecutionError",
-            Message = $"Error executing dataflow query: {message}"
-        };
+        return new McpExecutionErrorResponse(message);
     }
 
     /// <summary>

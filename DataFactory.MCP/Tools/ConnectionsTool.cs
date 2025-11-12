@@ -83,6 +83,10 @@ public class ConnectionsTool
         {
             return ex.ToAuthenticationError().ToMcpJson();
         }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
         catch (Exception ex)
         {
             return ex.ToOperationError("retrieving connection").ToMcpJson();
