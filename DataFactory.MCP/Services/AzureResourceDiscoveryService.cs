@@ -1,3 +1,4 @@
+using DataFactory.MCP.Abstractions;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models;
 using DataFactory.MCP.Models.Azure;
@@ -14,7 +15,11 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
     private readonly IAuthenticationService _authService;
     private readonly HttpClient _httpClient;
     private readonly ILogger<AzureResourceDiscoveryService> _logger;
-    private const string AzureResourceManagerBaseUrl = "https://management.azure.com";
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
 
     public AzureResourceDiscoveryService(
         IAuthenticationService authService,
@@ -38,7 +43,11 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
                 return new List<AzureSubscription>();
             }
 
-            var url = $"{AzureResourceManagerBaseUrl}/subscriptions?api-version=2020-01-01";
+            var url = FabricUrlBuilder.ForAzureResourceManager()
+                .WithLiteralPath("subscriptions")
+                .WithApiVersion("2020-01-01")
+                .Build();
+
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -51,10 +60,7 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var subscriptionsResponse = JsonSerializer.Deserialize<AzureSubscriptionsResponse>(content, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            var subscriptionsResponse = JsonSerializer.Deserialize<AzureSubscriptionsResponse>(content, JsonOptions);
 
             _logger.LogInformation("Successfully retrieved {Count} subscriptions", subscriptionsResponse?.Value?.Count ?? 0);
             return subscriptionsResponse?.Value ?? new List<AzureSubscription>();
@@ -79,7 +85,11 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
                 return new List<AzureResourceGroup>();
             }
 
-            var url = $"{AzureResourceManagerBaseUrl}/subscriptions/{subscriptionId}/resourcegroups?api-version=2021-04-01";
+            var url = FabricUrlBuilder.ForAzureResourceManager()
+                .WithLiteralPath($"subscriptions/{subscriptionId}/resourcegroups")
+                .WithApiVersion("2021-04-01")
+                .Build();
+
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -92,10 +102,7 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var resourceGroupsResponse = JsonSerializer.Deserialize<AzureResourceGroupsResponse>(content, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            var resourceGroupsResponse = JsonSerializer.Deserialize<AzureResourceGroupsResponse>(content, JsonOptions);
 
             _logger.LogInformation("Successfully retrieved {Count} resource groups", resourceGroupsResponse?.Value?.Count ?? 0);
             return resourceGroupsResponse?.Value ?? new List<AzureResourceGroup>();
@@ -121,15 +128,16 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
                 return new List<AzureVirtualNetwork>();
             }
 
-            string url;
+            var urlBuilder = FabricUrlBuilder.ForAzureResourceManager();
             if (!string.IsNullOrEmpty(resourceGroupName))
             {
-                url = $"{AzureResourceManagerBaseUrl}/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks?api-version=2023-04-01";
+                urlBuilder.WithLiteralPath($"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks");
             }
             else
             {
-                url = $"{AzureResourceManagerBaseUrl}/subscriptions/{subscriptionId}/providers/Microsoft.Network/virtualNetworks?api-version=2023-04-01";
+                urlBuilder.WithLiteralPath($"subscriptions/{subscriptionId}/providers/Microsoft.Network/virtualNetworks");
             }
+            var url = urlBuilder.WithApiVersion("2023-04-01").Build();
 
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
@@ -143,10 +151,7 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var virtualNetworksResponse = JsonSerializer.Deserialize<AzureVirtualNetworksResponse>(content, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            var virtualNetworksResponse = JsonSerializer.Deserialize<AzureVirtualNetworksResponse>(content, JsonOptions);
 
             _logger.LogInformation("Successfully retrieved {Count} virtual networks", virtualNetworksResponse?.Value?.Count ?? 0);
             return virtualNetworksResponse?.Value ?? new List<AzureVirtualNetwork>();
@@ -172,7 +177,11 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
                 return new List<AzureSubnet>();
             }
 
-            var url = $"{AzureResourceManagerBaseUrl}/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets?api-version=2023-04-01";
+            var url = FabricUrlBuilder.ForAzureResourceManager()
+                .WithLiteralPath($"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets")
+                .WithApiVersion("2023-04-01")
+                .Build();
+
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -185,10 +194,7 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var subnetsResponse = JsonSerializer.Deserialize<AzureSubnetsResponse>(content, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            var subnetsResponse = JsonSerializer.Deserialize<AzureSubnetsResponse>(content, JsonOptions);
 
             _logger.LogInformation("Successfully retrieved {Count} subnets", subnetsResponse?.Value?.Count ?? 0);
             return subnetsResponse?.Value ?? new List<AzureSubnet>();
@@ -203,5 +209,6 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
     public void Dispose()
     {
         _httpClient?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

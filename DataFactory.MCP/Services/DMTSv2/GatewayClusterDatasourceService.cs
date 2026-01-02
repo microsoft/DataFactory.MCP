@@ -1,3 +1,4 @@
+using DataFactory.MCP.Abstractions;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Models;
@@ -16,7 +17,9 @@ namespace DataFactory.MCP.Services.DMTSv2;
 /// </summary>
 public class GatewayClusterDatasourceService : IGatewayClusterDatasourceService, IDisposable
 {
-    private const string GatewayClusterDatasourcesUrl = "https://api.powerbi.com/v2.0/myorg/me/gatewayClusterDatasources";
+    private static readonly string GatewayClusterDatasourcesUrl = FabricUrlBuilder.ForPowerBiV2Api()
+        .WithLiteralPath("myorg/me/gatewayClusterDatasources")
+        .Build();
 
     private readonly ILogger<GatewayClusterDatasourceService> _logger;
     private readonly IAuthenticationService _authService;

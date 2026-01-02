@@ -2,7 +2,6 @@ using DataFactory.MCP.Abstractions;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models.Workspace;
 using Microsoft.Extensions.Logging;
-using System.Text;
 
 namespace DataFactory.MCP.Services;
 
@@ -28,7 +27,12 @@ public class FabricWorkspaceService : FabricServiceBase, IFabricWorkspaceService
         {
             await EnsureAuthenticationAsync();
 
-            var url = BuildWorkspacesUrl(roles, continuationToken, preferWorkspaceSpecificEndpoints);
+            var url = FabricUrlBuilder.ForFabricApi()
+                .WithLiteralPath("workspaces")
+                .WithQueryParam("roles", roles)
+                .WithContinuationToken(continuationToken)
+                .WithQueryParam("preferWorkspaceSpecificEndpoints", preferWorkspaceSpecificEndpoints)
+                .Build();
 
             Logger.LogInformation("Fetching workspaces from: {Url}", url);
 
@@ -56,34 +60,5 @@ public class FabricWorkspaceService : FabricServiceBase, IFabricWorkspaceService
             Logger.LogError(ex, "Error fetching workspaces");
             throw;
         }
-    }
-
-    private static string BuildWorkspacesUrl(string? roles, string? continuationToken, bool? preferWorkspaceSpecificEndpoints)
-    {
-        var url = new StringBuilder($"{BaseUrl}/workspaces");
-        var queryParams = new List<string>();
-
-        if (!string.IsNullOrEmpty(roles))
-        {
-            queryParams.Add($"roles={Uri.EscapeDataString(roles)}");
-        }
-
-        if (!string.IsNullOrEmpty(continuationToken))
-        {
-            queryParams.Add($"continuationToken={Uri.EscapeDataString(continuationToken)}");
-        }
-
-        if (preferWorkspaceSpecificEndpoints.HasValue)
-        {
-            queryParams.Add($"preferWorkspaceSpecificEndpoints={preferWorkspaceSpecificEndpoints.Value.ToString().ToLower()}");
-        }
-
-        if (queryParams.Any())
-        {
-            url.Append("?");
-            url.Append(string.Join("&", queryParams));
-        }
-
-        return url.ToString();
     }
 }

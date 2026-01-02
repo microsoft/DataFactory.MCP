@@ -45,7 +45,9 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
         {
             await ValidateGuidsAndAuthenticateAsync((workspaceId, nameof(workspaceId)));
 
-            var endpoint = BuildDataflowsEndpoint(workspaceId);
+            var endpoint = FabricUrlBuilder.ForFabricApi()
+                .WithLiteralPath($"workspaces/{workspaceId}/dataflows")
+                .BuildEndpoint();
             Logger.LogInformation("Fetching dataflows from workspace {WorkspaceId}", workspaceId);
 
             var dataflowsResponse = await GetAsync<ListDataflowsResponse>(endpoint, continuationToken);
@@ -70,7 +72,9 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
             await ValidateGuidsAndAuthenticateAsync((workspaceId, nameof(workspaceId)));
             ValidationService.ValidateAndThrow(request, nameof(request));
 
-            var endpoint = $"workspaces/{workspaceId}/dataflows";
+            var endpoint = FabricUrlBuilder.ForFabricApi()
+                .WithLiteralPath($"workspaces/{workspaceId}/dataflows")
+                .BuildEndpoint();
             Logger.LogInformation("Creating dataflow '{DisplayName}' in workspace {WorkspaceId}",
                 request.DisplayName, workspaceId);
 
@@ -89,11 +93,6 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
         }
     }
 
-    private static string BuildDataflowsEndpoint(string workspaceId)
-    {
-        return $"workspaces/{workspaceId}/dataflows";
-    }
-
     public async Task<ExecuteDataflowQueryResponse> ExecuteQueryAsync(
         string workspaceId,
         string dataflowId,
@@ -106,7 +105,9 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
                 (dataflowId, nameof(dataflowId)));
             ValidationService.ValidateAndThrow(request, nameof(request));
 
-            var endpoint = $"workspaces/{workspaceId}/dataflows/{dataflowId}/executeQuery";
+            var endpoint = FabricUrlBuilder.ForFabricApi()
+                .WithLiteralPath($"workspaces/{workspaceId}/dataflows/{dataflowId}/executeQuery")
+                .BuildEndpoint();
 
             Logger.LogInformation("Executing query '{QueryName}' on dataflow {DataflowId} in workspace {WorkspaceId}",
                 request.QueryName, dataflowId, workspaceId);
@@ -187,7 +188,9 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
 
     private async Task<GetDataflowDefinitionHttpResponse> GetDataflowDefinitionResponseAsync(string workspaceId, string dataflowId)
     {
-        var endpoint = $"workspaces/{workspaceId}/items/{dataflowId}/getDefinition";
+        var endpoint = FabricUrlBuilder.ForFabricApi()
+            .WithLiteralPath($"workspaces/{workspaceId}/items/{dataflowId}/getDefinition")
+            .BuildEndpoint();
 
         Logger.LogInformation("Getting definition for dataflow {DataflowId} in workspace {WorkspaceId}",
             dataflowId, workspaceId);
@@ -297,7 +300,9 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
             (workspaceId, nameof(workspaceId)),
             (dataflowId, nameof(dataflowId)));
 
-        var endpoint = $"workspaces/{workspaceId}/items/{dataflowId}/updateDefinition";
+        var endpoint = FabricUrlBuilder.ForFabricApi()
+            .WithLiteralPath($"workspaces/{workspaceId}/items/{dataflowId}/updateDefinition")
+            .BuildEndpoint();
         var request = new UpdateDataflowDefinitionRequest { Definition = definition };
 
         Logger.LogInformation("Updating dataflow definition for {DataflowId}", dataflowId);

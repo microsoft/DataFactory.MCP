@@ -13,7 +13,6 @@ namespace DataFactory.MCP.Abstractions;
 /// </summary>
 public abstract class FabricServiceBase : IDisposable
 {
-    protected const string BaseUrl = "https://api.fabric.microsoft.com/v1";
     protected readonly HttpClient HttpClient;
     protected readonly ILogger Logger;
     protected readonly IAuthenticationService AuthService;
@@ -79,11 +78,10 @@ public abstract class FabricServiceBase : IDisposable
     {
         await EnsureAuthenticationAsync();
 
-        var url = $"{BaseUrl}/{endpoint}";
-        if (!string.IsNullOrEmpty(continuationToken))
-        {
-            url += $"?continuationToken={Uri.EscapeDataString(continuationToken)}";
-        }
+        var url = FabricUrlBuilder.ForFabricApi()
+            .WithLiteralPath(endpoint)
+            .WithContinuationToken(continuationToken)
+            .Build();
 
         Logger.LogInformation("Fetching from: {Url}", url);
 
@@ -108,7 +106,9 @@ public abstract class FabricServiceBase : IDisposable
     {
         await EnsureAuthenticationAsync();
 
-        var url = $"{BaseUrl}/{endpoint}";
+        var url = FabricUrlBuilder.ForFabricApi()
+            .WithLiteralPath(endpoint)
+            .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
         // Serialize object to JSON content
@@ -139,7 +139,9 @@ public abstract class FabricServiceBase : IDisposable
     {
         await EnsureAuthenticationAsync();
 
-        var url = $"{BaseUrl}/{endpoint}";
+        var url = FabricUrlBuilder.ForFabricApi()
+            .WithLiteralPath(endpoint)
+            .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
         var jsonContent = JsonSerializer.Serialize(request, JsonOptions);
@@ -168,7 +170,9 @@ public abstract class FabricServiceBase : IDisposable
     {
         await EnsureAuthenticationAsync();
 
-        var url = $"{BaseUrl}/{endpoint}";
+        var url = FabricUrlBuilder.ForFabricApi()
+            .WithLiteralPath(endpoint)
+            .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
         var jsonContent = JsonSerializer.Serialize(request, JsonOptions);
