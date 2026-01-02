@@ -6,6 +6,7 @@ using DataFactory.MCP.Models.Dataflow.Definition;
 using DataFactory.MCP.Models.Dataflow.Query;
 using DataFactory.MCP.Models.Connection;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -24,13 +25,14 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
     private readonly IDataflowDefinitionProcessor _definitionProcessor;
 
     public FabricDataflowService(
+        IHttpClientFactory httpClientFactory,
         ILogger<FabricDataflowService> logger,
         IAuthenticationService authService,
         IValidationService validationService,
         IArrowDataReaderService arrowDataReaderService,
         IGatewayClusterDatasourceService cloudDatasourceService,
         IDataflowDefinitionProcessor definitionProcessor)
-        : base(logger, authService, validationService)
+        : base(httpClientFactory, logger, authService, validationService)
     {
         _arrowDataReaderService = arrowDataReaderService;
         _cloudDatasourceService = cloudDatasourceService;

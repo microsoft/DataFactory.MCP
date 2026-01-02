@@ -2,6 +2,7 @@ using DataFactory.MCP.Abstractions;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models.Gateway;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 
@@ -13,10 +14,11 @@ namespace DataFactory.MCP.Services;
 public class FabricGatewayService : FabricServiceBase, IFabricGatewayService
 {
     public FabricGatewayService(
+        IHttpClientFactory httpClientFactory,
         ILogger<FabricGatewayService> logger,
         IAuthenticationService authService,
         IValidationService validationService)
-        : base(logger, authService, validationService)
+        : base(httpClientFactory, logger, authService, validationService)
     {
     }
 

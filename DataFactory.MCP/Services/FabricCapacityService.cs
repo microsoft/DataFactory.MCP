@@ -2,6 +2,7 @@ using DataFactory.MCP.Abstractions;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models.Capacity;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
 
 namespace DataFactory.MCP.Services;
 
@@ -11,10 +12,11 @@ namespace DataFactory.MCP.Services;
 public class FabricCapacityService : FabricServiceBase, IFabricCapacityService
 {
     public FabricCapacityService(
+        IHttpClientFactory httpClientFactory,
         ILogger<FabricCapacityService> logger,
         IAuthenticationService authService,
         IValidationService validationService)
-        : base(logger, authService, validationService)
+        : base(httpClientFactory, logger, authService, validationService)
     {
     }
 

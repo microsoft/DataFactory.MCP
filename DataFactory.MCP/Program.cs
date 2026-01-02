@@ -19,6 +19,25 @@ using var loggerFactory = LoggerFactory.Create(builder =>
     builder.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace));
 var logger = loggerFactory.CreateLogger("DataFactory.MCP.Startup");
 
+// Register named HttpClients to avoid socket exhaustion
+builder.Services.AddHttpClient("FabricApi", client =>
+{
+    client.BaseAddress = new Uri("https://api.fabric.microsoft.com/v1/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddHttpClient("AzureResourceManager", client =>
+{
+    client.BaseAddress = new Uri("https://management.azure.com/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddHttpClient("PowerBiApi", client =>
+{
+    client.BaseAddress = new Uri("https://api.powerbi.com/v2.0/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
 // Add the MCP services: the transport to use (stdio) and the tools to register.
 builder.Services
     .AddSingleton<IValidationService, ValidationService>()

@@ -3,6 +3,7 @@ using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models;
 using DataFactory.MCP.Models.Azure;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
 using System.Text.Json;
 
 namespace DataFactory.MCP.Services;
@@ -10,7 +11,7 @@ namespace DataFactory.MCP.Services;
 /// <summary>
 /// Service for discovering Azure resources using Azure Resource Manager APIs
 /// </summary>
-public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDisposable
+public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService
 {
     private readonly IAuthenticationService _authService;
     private readonly HttpClient _httpClient;
@@ -22,11 +23,12 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
     };
 
     public AzureResourceDiscoveryService(
+        IHttpClientFactory httpClientFactory,
         IAuthenticationService authService,
         ILogger<AzureResourceDiscoveryService> logger)
     {
+        _httpClient = httpClientFactory.CreateClient(HttpClientNames.AzureResourceManager);
         _authService = authService;
-        _httpClient = new HttpClient();
         _logger = logger;
     }
 
@@ -204,11 +206,5 @@ public class AzureResourceDiscoveryService : IAzureResourceDiscoveryService, IDi
             _logger.LogError(ex, "Error getting subnets for VNet {VirtualNetworkName}", virtualNetworkName);
             return new List<AzureSubnet>();
         }
-    }
-
-    public void Dispose()
-    {
-        _httpClient?.Dispose();
-        GC.SuppressFinalize(this);
     }
 }

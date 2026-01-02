@@ -3,6 +3,7 @@ using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Models;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -15,7 +16,7 @@ namespace DataFactory.MCP.Services.DMTSv2;
 /// 
 /// API Endpoint: GET https://api.powerbi.com/v2.0/myorg/me/gatewayClusterDatasources
 /// </summary>
-public class GatewayClusterDatasourceService : IGatewayClusterDatasourceService, IDisposable
+public class GatewayClusterDatasourceService : IGatewayClusterDatasourceService
 {
     private static readonly string GatewayClusterDatasourcesUrl = FabricUrlBuilder.ForPowerBiV2Api()
         .WithLiteralPath("myorg/me/gatewayClusterDatasources")
@@ -32,12 +33,13 @@ public class GatewayClusterDatasourceService : IGatewayClusterDatasourceService,
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
     public GatewayClusterDatasourceService(
+        IHttpClientFactory httpClientFactory,
         ILogger<GatewayClusterDatasourceService> logger,
         IAuthenticationService authService)
     {
+        _httpClient = httpClientFactory.CreateClient(HttpClientNames.PowerBiV2Api);
         _logger = logger;
         _authService = authService;
-        _httpClient = new HttpClient();
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -128,12 +130,6 @@ public class GatewayClusterDatasourceService : IGatewayClusterDatasourceService,
         }
 
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenResult);
-    }
-
-    public void Dispose()
-    {
-        _httpClient.Dispose();
-        GC.SuppressFinalize(this);
     }
 
     #region Internal Models

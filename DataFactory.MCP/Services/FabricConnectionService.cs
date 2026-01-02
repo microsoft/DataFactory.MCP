@@ -3,6 +3,7 @@ using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models.Connection;
 using DataFactory.MCP.Models.Connection.Create;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
 using System.Text.Json;
 using System.Text;
 
@@ -14,10 +15,11 @@ namespace DataFactory.MCP.Services;
 public class FabricConnectionService : FabricServiceBase, IFabricConnectionService
 {
     public FabricConnectionService(
+        IHttpClientFactory httpClientFactory,
         ILogger<FabricConnectionService> logger,
         IAuthenticationService authService,
         IValidationService validationService)
-        : base(logger, authService, validationService)
+        : base(httpClientFactory, logger, authService, validationService)
     {
         // Add the custom connection converter to handle polymorphic deserialization
         JsonOptions.Converters.Add(new ConnectionJsonConverter());

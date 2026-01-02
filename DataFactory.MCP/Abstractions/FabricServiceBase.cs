@@ -1,6 +1,7 @@
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -9,9 +10,10 @@ using System.Text.Json.Serialization;
 namespace DataFactory.MCP.Abstractions;
 
 /// <summary>
-/// Abstract base class for Microsoft Fabric API services providing common functionality
+/// Abstract base class for Microsoft Fabric API services providing common functionality.
+/// Uses IHttpClientFactory for proper HttpClient lifecycle management.
 /// </summary>
-public abstract class FabricServiceBase : IDisposable
+public abstract class FabricServiceBase
 {
     protected readonly HttpClient HttpClient;
     protected readonly ILogger Logger;
@@ -20,11 +22,12 @@ public abstract class FabricServiceBase : IDisposable
     protected readonly JsonSerializerOptions JsonOptions;
 
     protected FabricServiceBase(
+        IHttpClientFactory httpClientFactory,
         ILogger logger,
         IAuthenticationService authService,
         IValidationService validationService)
     {
-        HttpClient = new HttpClient();
+        HttpClient = httpClientFactory.CreateClient(HttpClientNames.FabricApi);
         Logger = logger;
         AuthService = authService;
         ValidationService = validationService;
@@ -192,10 +195,5 @@ public abstract class FabricServiceBase : IDisposable
 
             return false;
         }
-    }
-
-    public void Dispose()
-    {
-        HttpClient?.Dispose();
     }
 }
