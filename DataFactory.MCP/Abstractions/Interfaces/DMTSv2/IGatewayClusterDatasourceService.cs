@@ -1,4 +1,4 @@
-namespace DataFactory.MCP.Abstractions.Interfaces;
+namespace DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 
 /// <summary>
 /// Service for retrieving ClusterId from the Power BI v2.0 API for cloud datasources.
@@ -6,7 +6,7 @@ namespace DataFactory.MCP.Abstractions.Interfaces;
 /// 
 /// API Endpoint: GET https://api.powerbi.com/v2.0/myorg/me/gatewayClusterDatasources
 /// </summary>
-public interface IPowerBICloudDatasourceV2Service
+public interface IGatewayClusterDatasourceService
 {
     /// <summary>
     /// Gets the ClusterId for a specific connectionId (cloud datasource ID).

@@ -1,11 +1,12 @@
 using DataFactory.MCP.Abstractions.Interfaces;
+using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Models;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace DataFactory.MCP.Services;
+namespace DataFactory.MCP.Services.DMTSv2;
 
 /// <summary>
 /// Service for retrieving ClusterId from the Power BI v2.0 API for cloud datasources.
@@ -13,11 +14,11 @@ namespace DataFactory.MCP.Services;
 /// 
 /// API Endpoint: GET https://api.powerbi.com/v2.0/myorg/me/gatewayClusterDatasources
 /// </summary>
-public class PowerBICloudDatasourceV2Service : IPowerBICloudDatasourceV2Service, IDisposable
+public class GatewayClusterDatasourceService : IGatewayClusterDatasourceService, IDisposable
 {
     private const string GatewayClusterDatasourcesUrl = "https://api.powerbi.com/v2.0/myorg/me/gatewayClusterDatasources";
-    
-    private readonly ILogger<PowerBICloudDatasourceV2Service> _logger;
+
+    private readonly ILogger<GatewayClusterDatasourceService> _logger;
     private readonly IAuthenticationService _authService;
     private readonly HttpClient _httpClient;
     private readonly JsonSerializerOptions _jsonOptions;
@@ -27,8 +28,8 @@ public class PowerBICloudDatasourceV2Service : IPowerBICloudDatasourceV2Service,
     private DateTime _cacheExpiration = DateTime.MinValue;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
-    public PowerBICloudDatasourceV2Service(
-        ILogger<PowerBICloudDatasourceV2Service> logger,
+    public GatewayClusterDatasourceService(
+        ILogger<GatewayClusterDatasourceService> logger,
         IAuthenticationService authService)
     {
         _logger = logger;
@@ -50,7 +51,7 @@ public class PowerBICloudDatasourceV2Service : IPowerBICloudDatasourceV2Service,
             _logger.LogInformation("Looking up ClusterId for connectionId: {ConnectionId}", connectionId);
 
             var datasources = await GetCloudDatasourcesAsync();
-            
+
             var matchingDatasource = datasources
                 .FirstOrDefault(ds => ds.Id.Equals(connectionId, StringComparison.OrdinalIgnoreCase));
 

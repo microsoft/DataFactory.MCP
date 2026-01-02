@@ -1,5 +1,6 @@
 using DataFactory.MCP.Abstractions;
 using DataFactory.MCP.Abstractions.Interfaces;
+using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Models.Dataflow;
 using DataFactory.MCP.Models.Dataflow.Query;
 using DataFactory.MCP.Models.Connection;
@@ -25,7 +26,7 @@ internal class GetDataflowDefinitionHttpResponse
 public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
 {
     private readonly IArrowDataReaderService _arrowDataReaderService;
-    private readonly IPowerBICloudDatasourceV2Service _cloudDatasourceService;
+    private readonly IGatewayClusterDatasourceService _cloudDatasourceService;
     private readonly IDataflowDefinitionProcessor _definitionProcessor;
 
     public FabricDataflowService(
@@ -33,7 +34,7 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
         IAuthenticationService authService,
         IValidationService validationService,
         IArrowDataReaderService arrowDataReaderService,
-        IPowerBICloudDatasourceV2Service cloudDatasourceService,
+        IGatewayClusterDatasourceService cloudDatasourceService,
         IDataflowDefinitionProcessor definitionProcessor)
         : base(logger, authService, validationService)
     {

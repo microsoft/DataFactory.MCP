@@ -3,7 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using DataFactory.MCP.Abstractions.Interfaces;
+using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Services;
+using DataFactory.MCP.Services.DMTSv2;
 using DataFactory.MCP.Tools;
 using DataFactory.MCP.Models.Connection.Factories;
 
@@ -51,7 +53,7 @@ public class McpTestFixture : IDisposable
                 services.AddScoped<IValidationService, ValidationService>();
                 services.AddScoped<IAuthenticationService, AuthenticationService>();
                 services.AddScoped<IArrowDataReaderService, ArrowDataReaderService>();
-                services.AddScoped<IPowerBICloudDatasourceV2Service, PowerBICloudDatasourceV2Service>();
+                services.AddScoped<IGatewayClusterDatasourceService, GatewayClusterDatasourceService>();
                 services.AddScoped<IFabricGatewayService, FabricGatewayService>();
                 services.AddScoped<IFabricConnectionService, FabricConnectionService>();
                 services.AddScoped<IFabricWorkspaceService, FabricWorkspaceService>();
