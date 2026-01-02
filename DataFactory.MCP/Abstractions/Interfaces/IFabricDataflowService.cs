@@ -67,8 +67,8 @@ public interface IFabricDataflowService
     /// <param name="workspaceId">The workspace ID containing the dataflow</param>
     /// <param name="dataflowId">The dataflow ID to update</param>
     /// <param name="definition">The updated dataflow definition</param>
-    /// <returns>True if successful, false otherwise</returns>
-    Task<bool> UpdateDataflowDefinitionAsync(
+    /// <exception cref="HttpRequestException">Thrown when the API request fails</exception>
+    Task UpdateDataflowDefinitionAsync(
         string workspaceId,
         string dataflowId,
         DataflowDefinition definition);

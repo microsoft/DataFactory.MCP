@@ -245,18 +245,17 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
                 connectionId,
                 clusterId);
 
-            // Step 3: Update via HTTP
-            var updateResult = await UpdateDataflowDefinitionAsync(workspaceId, dataflowId, updatedDefinition);
+            // Step 4: Update via HTTP
+            await UpdateDataflowDefinitionAsync(workspaceId, dataflowId, updatedDefinition);
 
             Logger.LogInformation("Successfully added connection {ConnectionId} to dataflow {DataflowId}",
                 connectionId, dataflowId);
 
             return new UpdateDataflowDefinitionResponse
             {
-                Success = updateResult,
+                Success = true,
                 DataflowId = dataflowId,
-                WorkspaceId = workspaceId,
-                ErrorMessage = updateResult ? null : "Failed to update dataflow definition"
+                WorkspaceId = workspaceId
             };
         }
         catch (Exception ex)
@@ -300,32 +299,24 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
         return clusterId;
     }
 
-    public async Task<bool> UpdateDataflowDefinitionAsync(string workspaceId, string dataflowId, DataflowDefinition definition)
+    public async Task UpdateDataflowDefinitionAsync(string workspaceId, string dataflowId, DataflowDefinition definition)
     {
-        try
+        await ValidateGuidsAndAuthenticateAsync(
+            (workspaceId, nameof(workspaceId)),
+            (dataflowId, nameof(dataflowId)));
+
+        var endpoint = $"workspaces/{workspaceId}/items/{dataflowId}/updateDefinition";
+        var request = new UpdateDataflowDefinitionRequest { Definition = definition };
+
+        Logger.LogInformation("Updating dataflow definition for {DataflowId}", dataflowId);
+
+        var success = await PostNoContentAsync(endpoint, request);
+
+        if (!success)
         {
-            await ValidateGuidsAndAuthenticateAsync(
-                (workspaceId, nameof(workspaceId)),
-                (dataflowId, nameof(dataflowId)));
-
-            var endpoint = $"workspaces/{workspaceId}/items/{dataflowId}/updateDefinition";
-            var request = new UpdateDataflowDefinitionRequest { Definition = definition };
-
-            Logger.LogInformation("Updating dataflow definition for {DataflowId}", dataflowId);
-
-            var success = await PostNoContentAsync(endpoint, request);
-
-            if (success)
-            {
-                Logger.LogInformation("Successfully updated dataflow definition for {DataflowId}", dataflowId);
-            }
-
-            return success;
+            throw new HttpRequestException($"Failed to update dataflow definition for {dataflowId}");
         }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error updating dataflow definition for {DataflowId}", dataflowId);
-            return false;
-        }
+
+        Logger.LogInformation("Successfully updated dataflow definition for {DataflowId}", dataflowId);
     }
 }
