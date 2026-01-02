@@ -3,9 +3,9 @@ using System.Text.Json.Serialization;
 namespace DataFactory.MCP.Models.Dataflow;
 
 /// <summary>
-/// Represents a Dataflow object in Microsoft Fabric
+/// Create Dataflow response
 /// </summary>
-public class Dataflow
+public class CreateDataflowResponse
 {
     /// <summary>
     /// The item ID
@@ -42,16 +42,4 @@ public class Dataflow
     /// </summary>
     [JsonPropertyName("folderId")]
     public string? FolderId { get; set; }
-
-    /// <summary>
-    /// List of applied tags
-    /// </summary>
-    [JsonPropertyName("tags")]
-    public List<ItemTag>? Tags { get; set; }
-
-    /// <summary>
-    /// Additional properties of the dataflow
-    /// </summary>
-    [JsonPropertyName("properties")]
-    public DataflowProperties? Properties { get; set; }
 }

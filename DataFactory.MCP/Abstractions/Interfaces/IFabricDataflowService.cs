@@ -1,4 +1,5 @@
 using DataFactory.MCP.Models.Dataflow;
+using DataFactory.MCP.Models.Dataflow.Definition;
 using DataFactory.MCP.Models.Dataflow.Query;
 using DataFactory.MCP.Models.Connection;
 

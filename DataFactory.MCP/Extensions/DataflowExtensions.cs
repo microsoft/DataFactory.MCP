@@ -1,4 +1,5 @@
 using DataFactory.MCP.Models.Dataflow;
+using DataFactory.MCP.Models.Dataflow.Definition;
 
 namespace DataFactory.MCP.Extensions;
 

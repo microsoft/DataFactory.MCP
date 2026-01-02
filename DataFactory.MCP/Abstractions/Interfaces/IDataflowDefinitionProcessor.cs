@@ -1,5 +1,6 @@
 using DataFactory.MCP.Models.Connection;
 using DataFactory.MCP.Models.Dataflow;
+using DataFactory.MCP.Models.Dataflow.Definition;
 using System.Text.Json;
 
 namespace DataFactory.MCP.Abstractions.Interfaces;

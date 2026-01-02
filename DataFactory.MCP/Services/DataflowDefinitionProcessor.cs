@@ -1,6 +1,7 @@
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models.Connection;
 using DataFactory.MCP.Models.Dataflow;
+using DataFactory.MCP.Models.Dataflow.Definition;
 using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.Json;
