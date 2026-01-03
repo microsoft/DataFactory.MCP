@@ -29,7 +29,7 @@ public class AzureResourceManagerAuthenticationHandler : DelegatingHandler
         {
             var token = await _authService.GetAccessTokenAsync(AzureAdConfiguration.AzureResourceManagerScopes);
 
-            ValidateToken(token);
+            TokenValidator.ValidateToken(token);
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
@@ -44,18 +44,5 @@ public class AzureResourceManagerAuthenticationHandler : DelegatingHandler
         }
 
         return await base.SendAsync(request, cancellationToken);
-    }
-
-    private void ValidateToken(string token)
-    {
-        if (string.IsNullOrEmpty(token) || token.Contains("Error") || token.Contains("Failed"))
-        {
-            throw new UnauthorizedAccessException(Messages.AuthenticationRequired);
-        }
-
-        if (!token.StartsWith("eyJ"))
-        {
-            throw new UnauthorizedAccessException(Messages.InvalidTokenFormat);
-        }
     }
 }

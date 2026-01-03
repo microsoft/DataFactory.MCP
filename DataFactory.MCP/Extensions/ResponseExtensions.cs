@@ -11,19 +11,6 @@ namespace DataFactory.MCP.Extensions;
 public static class ResponseExtensions
 {
     /// <summary>
-    /// Creates a successful response with data
-    /// </summary>
-    public static object ToSuccessResponse(this object data, string? message = null)
-    {
-        return new
-        {
-            Success = true,
-            Message = message,
-            Data = data
-        };
-    }
-
-    /// <summary>
     /// Creates an error response for failed query execution
     /// </summary>
     public static object ToQueryExecutionError(this ExecuteDataflowQueryResponse response, string workspaceId, string dataflowId, string queryName)
@@ -110,48 +97,10 @@ public static class ResponseExtensions
     }
 
     /// <summary>
-    /// Creates a validation error response from a message
-    /// </summary>
-    public static McpValidationErrorResponse ToValidationError(string message)
-    {
-        return new McpValidationErrorResponse(message);
-    }
-
-    /// <summary>
     /// Creates a resource not found error response
     /// </summary>
     public static McpNotFoundErrorResponse ToNotFoundError(string resourceType, string resourceId)
     {
         return new McpNotFoundErrorResponse(resourceType, resourceId);
-    }
-
-    /// <summary>
-    /// Creates a forbidden access error response
-    /// </summary>
-    public static McpForbiddenErrorResponse ToForbiddenError(string message)
-    {
-        return new McpForbiddenErrorResponse(message);
-    }
-
-    /// <summary>
-    /// Creates a generic error response
-    /// </summary>
-    public static McpExecutionErrorResponse ToGenericError(string message)
-    {
-        return new McpExecutionErrorResponse(message);
-    }
-
-    /// <summary>
-    /// Creates a connection operation error response based on exception type with smart dispatch
-    /// </summary>
-    public static object ToConnectionError(this Exception ex, string operation)
-    {
-        return ex switch
-        {
-            UnauthorizedAccessException uae => uae.ToAuthenticationError(),
-            HttpRequestException hre => hre.ToHttpError(),
-            ArgumentException ae => ae.ToValidationError(),
-            _ => ex.ToOperationError(operation)
-        };
     }
 }

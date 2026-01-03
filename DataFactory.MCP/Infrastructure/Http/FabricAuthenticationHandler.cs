@@ -48,7 +48,7 @@ public class FabricAuthenticationHandler : DelegatingHandler
                 ? await _authService.GetAccessTokenAsync(_scopes)
                 : await _authService.GetAccessTokenAsync();
 
-            ValidateToken(token);
+            TokenValidator.ValidateToken(token);
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
@@ -64,24 +64,5 @@ public class FabricAuthenticationHandler : DelegatingHandler
         }
 
         return await base.SendAsync(request, cancellationToken);
-    }
-
-    private void ValidateToken(string token)
-    {
-        if (string.IsNullOrEmpty(token))
-        {
-            throw new UnauthorizedAccessException(Messages.AuthenticationRequired);
-        }
-
-        if (token.Contains("No valid authentication") || token.Contains("expired"))
-        {
-            throw new UnauthorizedAccessException(Messages.AuthenticationRequired);
-        }
-
-        // Basic JWT token validation - JWT tokens start with "eyJ"
-        if (!token.StartsWith("eyJ"))
-        {
-            throw new UnauthorizedAccessException(Messages.InvalidTokenFormat);
-        }
     }
 }

@@ -104,46 +104,10 @@ public static class Messages
     /// API request failed message template
     /// </summary>
     public const string ApiRequestFailedTemplate = "API request failed: {0}";
-
-    /// <summary>
-    /// Error listing connections message template
-    /// </summary>
-    public const string ErrorListingConnectionsTemplate = "Error listing connections: {0}";
-
-    /// <summary>
-    /// Error retrieving connection message template
-    /// </summary>
-    public const string ErrorRetrievingConnectionTemplate = "Error retrieving connection: {0}";
-
-    /// <summary>
-    /// Error listing gateways message template
-    /// </summary>
-    public const string ErrorListingGatewaysTemplate = "Error listing gateways: {0}";
-
-    /// <summary>
-    /// Error retrieving gateway message template
-    /// </summary>
-    public const string ErrorRetrievingGatewayTemplate = "Error retrieving gateway: {0}";
-
-    /// <summary>
-    /// Error listing workspaces message template
-    /// </summary>
-    public const string ErrorListingWorkspacesTemplate = "Error listing workspaces: {0}";
     #endregion
 
     #region Validation Messages
-    /// <summary>
-    /// Message when application ID parameter is empty
-    /// </summary>
-    public const string InvalidParameterApplicationIdEmpty = "Invalid parameter: applicationId cannot be empty";
-
-    /// <summary>
-    /// Message when client secret parameter is empty
-    /// </summary>
-    public const string InvalidParameterClientSecretEmpty = "Invalid parameter: clientSecret cannot be empty";
-
     public static string InvalidParameterEmpty(string parameterName) => $"{parameterName} is required and cannot be empty";
-
     #endregion
 
     #region Not Found Messages
