@@ -11,6 +11,10 @@
 				"--dataflow-query"
 			]
 		}
+		// "DataFactory.MCP.Http": {
+		// 	"type": "http",
+		// 	"url": "http://localhost:3001"
+		// }
 	},
 	"inputs": []
 }
