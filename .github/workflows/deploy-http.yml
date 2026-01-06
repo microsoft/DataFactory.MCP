@@ -56,7 +56,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: "Restore dependencies"
-        run: dotnet restore ${{ env.PROJECT_PATH }}
+        run: dotnet restore ${{ env.PROJECT_PATH }} --configfile nuget.public.config
 
       - name: "Build"
         run: dotnet build ${{ env.PROJECT_PATH }} --configuration Release --no-restore
