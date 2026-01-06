@@ -9,11 +9,16 @@ on:
       environment:
         description: "Deployment environment"
         required: true
-        default: "production"
+        default: "staging"
         type: choice
         options:
           - production
           - staging
+      ref:
+        description: "Branch or commit SHA to deploy (leave empty for default branch)"
+        required: false
+        default: ""
+        type: string
 
 env:
   AZURE_WEBAPP_NAME: datafactory-mcp-http # Set this to your App Service name
@@ -29,12 +34,15 @@ jobs:
     steps:
       - name: "Checkout"
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
 
       - name: "Get Version from Tag"
         id: version
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            VERSION="manual-$(date +'%Y%m%d-%H%M%S')"
+            REF="${{ github.event.inputs.ref || github.ref_name }}"
+            VERSION="manual-${REF//\//-}-$(date +'%Y%m%d-%H%M%S')"
           else
             # Extract version from tag (http-v1.0.0 -> 1.0.0)
             VERSION="${GITHUB_REF#refs/tags/http-v}"
