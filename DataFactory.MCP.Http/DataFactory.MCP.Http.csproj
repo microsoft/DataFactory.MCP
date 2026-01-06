@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <RollForward>Major</RollForward>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+
+        <!-- Package metadata -->
+        <PackageId>Microsoft.DataFactory.MCP.Http</PackageId>
+        <PackageTags>AI; MCP; server; http; aspnetcore</PackageTags>
+        <Description>An HTTP MCP server using the MCP C# SDK for DataFactory operations.</Description>
+        <PackageIcon>Microsoft-Fabric.png</PackageIcon>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="/" />
+        <None Include="..\assets\Microsoft-Fabric.png" Pack="true" PackagePath="/" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\DataFactory.MCP.Core\DataFactory.MCP.Core.csproj" />
+    </ItemGroup>
+
+</Project>
