@@ -16,6 +16,14 @@ public interface IAuthenticationService
     Task<string> AuthenticateServicePrincipalAsync(string applicationId, string clientSecret, string? tenantId = null);
 
     /// <summary>
+    /// Authenticate using an externally provided access token (e.g., from OAuth passthrough)
+    /// </summary>
+    /// <param name="accessToken">The access token to use</param>
+    /// <param name="userName">Optional username/identifier for the token owner</param>
+    /// <returns>Status message</returns>
+    string AuthenticateWithExternalToken(string accessToken, string? userName = null);
+
+    /// <summary>
     /// Get current authentication status and profile information
     /// </summary>
     string GetAuthenticationStatus();
@@ -35,3 +43,4 @@ public interface IAuthenticationService
     /// </summary>
     Task<string> GetAccessTokenAsync(string[] scopes);
 }
+

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Configuration;
+using DataFactory.MCP.Infrastructure;
 using DataFactory.MCP.Infrastructure.Http;
 using DataFactory.MCP.Models.Connection.Factories;
 using DataFactory.MCP.Services;
@@ -49,6 +50,7 @@ public static class ServiceCollectionExtensions
 
         // Register core services
         services
+            .AddSingleton<ITokenAccessor, TokenAccessor>()
             .AddSingleton<IValidationService, ValidationService>()
             .AddSingleton<IAuthenticationService, AuthenticationService>()
             .AddSingleton<IArrowDataReaderService, ArrowDataReaderService>()

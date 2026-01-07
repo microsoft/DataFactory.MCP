@@ -11,12 +11,14 @@ namespace DataFactory.MCP.Services;
 public class AuthenticationService : IAuthenticationService
 {
     private readonly ILogger<AuthenticationService> _logger;
+    private readonly ITokenAccessor _tokenAccessor;
     private McpAuthenticationResult? _currentAuth;
     private IPublicClientApplication? _publicClientApp;
 
-    public AuthenticationService(ILogger<AuthenticationService> logger)
+    public AuthenticationService(ILogger<AuthenticationService> logger, ITokenAccessor tokenAccessor)
     {
         _logger = logger;
+        _tokenAccessor = tokenAccessor;
         InitializeClientApplications();
     }
 
@@ -76,6 +78,38 @@ public class AuthenticationService : IAuthenticationService
         {
             _logger.LogError(ex, "Interactive authentication failed");
             _currentAuth = null;
+            return string.Format(Messages.AuthenticationErrorTemplate, ex.Message);
+        }
+    }
+
+    public string AuthenticateWithExternalToken(string accessToken, string? userName = null)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                return "External token cannot be null or empty.";
+            }
+
+            _logger.LogInformation("Setting external access token for user: {UserName}", userName ?? "Unknown");
+
+            // Store the token in the token accessor for per-request access
+            _tokenAccessor.SetAccessToken(accessToken);
+
+            // Also update current auth state for status checks
+            _currentAuth = McpAuthenticationResult.Success(
+                accessToken,
+                userName ?? "ExternalToken",
+                null,
+                null, // We don't know when external tokens expire
+                "External Token (passthrough)"
+            );
+
+            return $"Successfully authenticated with external token for: {userName ?? "Unknown user"}";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to set external token");
             return string.Format(Messages.AuthenticationErrorTemplate, ex.Message);
         }
     }
@@ -179,6 +213,13 @@ public class AuthenticationService : IAuthenticationService
     {
         try
         {
+            // First, check if we have an external token (OAuth passthrough)
+            if (_tokenAccessor.HasExternalToken)
+            {
+                _logger.LogDebug("Using external token from token accessor");
+                return _tokenAccessor.AccessToken!;
+            }
+
             if (_currentAuth == null || !_currentAuth.IsSuccess)
             {
                 return Messages.NoAuthenticationFound;
@@ -231,6 +272,14 @@ public class AuthenticationService : IAuthenticationService
     {
         try
         {
+            // First, check if we have an external token (OAuth passthrough)
+            // Note: With external tokens, we can't request different scopes - we use what was given
+            if (_tokenAccessor.HasExternalToken)
+            {
+                _logger.LogDebug("Using external token from token accessor (requested scopes: {Scopes})", string.Join(", ", scopes));
+                return _tokenAccessor.AccessToken!;
+            }
+
             if (_publicClientApp == null)
             {
                 return Messages.PublicClientNotInitialized;

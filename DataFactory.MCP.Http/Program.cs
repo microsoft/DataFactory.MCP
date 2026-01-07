@@ -1,5 +1,6 @@
 using DataFactory.MCP.Configuration;
 using DataFactory.MCP.Extensions;
+using DataFactory.MCP.Http.Middleware;
 using DataFactory.MCP.Tools;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,10 @@ mcpBuilder.AddDataFactoryMcpOptionalTools(
     logger);
 
 var app = builder.Build();
+
+// Enable Bearer token passthrough for OAuth authentication
+// This extracts tokens from incoming requests and uses them for Fabric API calls
+app.UseBearerTokenPassthrough();
 
 // Map MCP endpoints
 app.MapMcp();
