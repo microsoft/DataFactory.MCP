@@ -7,6 +7,7 @@ using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Configuration;
 using DataFactory.MCP.Infrastructure.Http;
 using DataFactory.MCP.Services;
+using DataFactory.MCP.Services.Authentication;
 using DataFactory.MCP.Services.DMTSv2;
 using DataFactory.MCP.Tools;
 using DataFactory.MCP.Models.Connection.Factories;
@@ -72,7 +73,11 @@ public class McpTestFixture : IDisposable
 
 
                 // Register services
-                // AuthenticationService must be Singleton to persist tokens across scopes/requests
+                // Authentication system with providers (must be Singleton to persist tokens across scopes/requests)
+                services.AddSingleton<IAuthenticationStateManager, AuthenticationStateManager>();
+                services.AddSingleton<IAuthenticationProvider, InteractiveAuthenticationProvider>();
+                services.AddSingleton<IAuthenticationProvider, DeviceCodeAuthenticationProvider>();
+                services.AddSingleton<IAuthenticationProvider, ServicePrincipalAuthenticationProvider>();
                 services.AddSingleton<IAuthenticationService, AuthenticationService>();
                 services.AddScoped<IValidationService, ValidationService>();
                 services.AddScoped<IArrowDataReaderService, ArrowDataReaderService>();

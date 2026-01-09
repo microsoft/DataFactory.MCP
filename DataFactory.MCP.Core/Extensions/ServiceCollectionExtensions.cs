@@ -7,6 +7,7 @@ using DataFactory.MCP.Configuration;
 using DataFactory.MCP.Infrastructure.Http;
 using DataFactory.MCP.Models.Connection.Factories;
 using DataFactory.MCP.Services;
+using DataFactory.MCP.Services.Authentication;
 using DataFactory.MCP.Services.DMTSv2;
 using DataFactory.MCP.Tools;
 
@@ -50,7 +51,13 @@ public static class ServiceCollectionExtensions
         // Register core services
         services
             .AddSingleton<IValidationService, ValidationService>()
+            // Authentication system with providers
+            .AddSingleton<IAuthenticationStateManager, AuthenticationStateManager>()
+            .AddSingleton<IAuthenticationProvider, InteractiveAuthenticationProvider>()
+            .AddSingleton<IAuthenticationProvider, DeviceCodeAuthenticationProvider>()
+            .AddSingleton<IAuthenticationProvider, ServicePrincipalAuthenticationProvider>()
             .AddSingleton<IAuthenticationService, AuthenticationService>()
+            // Other services
             .AddSingleton<IArrowDataReaderService, ArrowDataReaderService>()
             .AddSingleton<IGatewayClusterDatasourceService, GatewayClusterDatasourceService>()
             .AddSingleton<IDataTransformationService, DataTransformationService>()
