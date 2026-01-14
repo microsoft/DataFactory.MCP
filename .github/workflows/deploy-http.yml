@@ -9,11 +9,10 @@ on:
       environment:
         description: "Deployment environment"
         required: true
-        default: "staging"
+        default: "production"
         type: choice
         options:
           - production
-          - staging
       ref:
         description: "Branch or commit SHA to deploy (leave empty for default branch)"
         required: false
