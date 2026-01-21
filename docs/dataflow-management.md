@@ -10,6 +10,7 @@ The dataflow management tools allow you to:
 - **Get** decoded dataflow definitions with M code and metadata
 - **Execute** M (Power Query) queries against dataflows
 - **Add** connections to existing dataflows
+- **Add or update** queries in existing dataflows
 - Navigate paginated results for large dataflow collections
 
 ## MCP Tools
@@ -189,6 +190,62 @@ add_connection_to_dataflow(
 | `workspaceId` | Yes | The workspace ID containing the dataflow |
 | `dataflowId` | Yes | The dataflow ID to update |
 | `connectionId` | Yes | The connection ID to add to the dataflow |
+
+### add_or_update_query_in_dataflow
+
+Adds or updates a query in an existing dataflow by updating its definition. The query will be added to the mashup.pq file and registered in queryMetadata.json.
+
+#### Usage
+```
+add_or_update_query_in_dataflow(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  dataflowId: "87654321-4321-4321-4321-210987654321",
+  queryName: "MyQuery",
+  mCode: "let Source = Sql.Database(\"server\", \"db\") in Source"
+)
+```
+
+#### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `workspaceId` | Yes | The workspace ID containing the dataflow |
+| `dataflowId` | Yes | The dataflow ID to update |
+| `queryName` | Yes | The name of the query to add or update |
+| `mCode` | Yes | The M (Power Query) code for the query. Can be a full 'let...in' expression or a simple expression that will be wrapped automatically. |
+
+#### Response Format
+```json
+{
+  "success": true,
+  "dataflowId": "87654321-4321-4321-4321-210987654321",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "queryName": "MyQuery",
+  "message": "Successfully added/updated query 'MyQuery' in dataflow 87654321-4321-4321-4321-210987654321"
+}
+```
+
+#### Examples
+
+**Add a simple query:**
+```
+add_or_update_query_in_dataflow(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  dataflowId: "87654321-4321-4321-4321-210987654321",
+  queryName: "Customers",
+  mCode: "let\n    Source = Sql.Database(\"server.database.windows.net\", \"mydb\"),\n    Customers = Source{[Schema=\"dbo\", Item=\"Customers\"]}[Data]\nin\n    Customers"
+)
+```
+
+**Update an existing query with transformations:**
+```
+add_or_update_query_in_dataflow(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  dataflowId: "87654321-4321-4321-4321-210987654321",
+  queryName: "FilteredOrders",
+  mCode: "let\n    Source = Sql.Database(\"server\", \"db\"),\n    Orders = Source{[Schema=\"dbo\", Item=\"Orders\"]}[Data],\n    FilteredRows = Table.SelectRows(Orders, each [Status] = \"Active\"),\n    SortedRows = Table.Sort(FilteredRows, {{\"OrderDate\", Order.Descending}})\nin\n    SortedRows"
+)
+```
 
 ## Dataflow Properties
 

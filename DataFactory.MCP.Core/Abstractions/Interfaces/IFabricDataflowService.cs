@@ -87,4 +87,18 @@ public interface IFabricDataflowService
         string dataflowId,
         string connectionId,
         DataFactory.MCP.Models.Connection.Connection connection);
+
+    /// <summary>
+    /// Adds or updates a query in an existing dataflow by updating its definition
+    /// </summary>
+    /// <param name="workspaceId">The workspace ID containing the dataflow</param>
+    /// <param name="dataflowId">The dataflow ID to update</param>
+    /// <param name="queryName">The name of the query to add or update</param>
+    /// <param name="mCode">The M (Power Query) code for the query</param>
+    /// <returns>Update operation result</returns>
+    Task<UpdateDataflowDefinitionResponse> AddOrUpdateQueryAsync(
+        string workspaceId,
+        string dataflowId,
+        string queryName,
+        string mCode);
 }

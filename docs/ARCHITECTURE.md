@@ -250,6 +250,7 @@ MCP Tools are the public interface that AI assistants interact with. Each tool i
 - `CreateDataflowAsync()`: Create a new dataflow
 - `GetDecodedDataflowDefinitionAsync()`: Get decoded dataflow definition (queryMetadata.json, mashup.pq, .platform)
 - `AddConnectionToDataflowAsync()`: Add a connection to an existing dataflow
+- `AddOrUpdateQueryInDataflowAsync()`: Add or update a query in an existing dataflow
 
 #### DataflowQueryTool (Feature Flag: `--dataflow-query`)
 - `ExecuteQueryAsync()`: Execute M (Power Query) queries against dataflows with Apache Arrow response parsing
@@ -399,11 +400,13 @@ Implements `IDataflowDefinitionProcessor` and handles:
 - Base64 decoding of dataflow definition parts
 - QueryMetadata.json, mashup.pq, and .platform extraction
 - Connection addition to dataflow definitions
+- Query addition/update in dataflow definitions
 
 Key Methods:
 ```csharp
 DecodedDataflowDefinition DecodeDefinition(DataflowDefinition rawDefinition)
 DataflowDefinition AddConnectionToDefinition(DataflowDefinition definition, Connection connection, string connectionId, string? clusterId)
+DataflowDefinition AddOrUpdateQueryInDefinition(DataflowDefinition definition, string queryName, string mCode)
 ```
 
 #### DataTransformationService

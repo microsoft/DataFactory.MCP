@@ -29,4 +29,16 @@ public interface IDataflowDefinitionProcessor
         Connection connection,
         string connectionId,
         string? clusterId);
+
+    /// <summary>
+    /// Adds or updates a query in an existing dataflow definition
+    /// </summary>
+    /// <param name="definition">The dataflow definition to modify</param>
+    /// <param name="queryName">The name of the query to add or update</param>
+    /// <param name="mCode">The M (Power Query) code for the query</param>
+    /// <returns>Updated dataflow definition</returns>
+    DataflowDefinition AddOrUpdateQueryInDefinition(
+        DataflowDefinition definition,
+        string queryName,
+        string mCode);
 }

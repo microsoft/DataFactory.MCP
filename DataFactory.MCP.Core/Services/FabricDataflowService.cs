@@ -314,4 +314,69 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
 
         Logger.LogInformation("Successfully updated dataflow definition for {DataflowId}", dataflowId);
     }
+
+    public async Task<UpdateDataflowDefinitionResponse> AddOrUpdateQueryAsync(
+        string workspaceId,
+        string dataflowId,
+        string queryName,
+        string mCode)
+    {
+        try
+        {
+            ValidateGuids(
+                (workspaceId, nameof(workspaceId)),
+                (dataflowId, nameof(dataflowId)));
+
+            ValidationService.ValidateRequiredString(queryName, nameof(queryName));
+            ValidationService.ValidateRequiredString(mCode, nameof(mCode));
+
+            Logger.LogInformation("Adding/updating query '{QueryName}' in dataflow {DataflowId} in workspace {WorkspaceId}",
+                queryName, dataflowId, workspaceId);
+
+            // Step 1: Get current dataflow definition via HTTP
+            var currentDefinition = await GetDataflowDefinitionAsync(workspaceId, dataflowId);
+            if (currentDefinition?.Parts == null)
+            {
+                return new UpdateDataflowDefinitionResponse
+                {
+                    Success = false,
+                    ErrorMessage = "Failed to retrieve current dataflow definition",
+                    DataflowId = dataflowId,
+                    WorkspaceId = workspaceId
+                };
+            }
+
+            // Step 2: Process query addition/update via business logic service
+            var updatedDefinition = _definitionProcessor.AddOrUpdateQueryInDefinition(
+                currentDefinition,
+                queryName,
+                mCode);
+
+            // Step 3: Update via HTTP
+            await UpdateDataflowDefinitionAsync(workspaceId, dataflowId, updatedDefinition);
+
+            Logger.LogInformation("Successfully added/updated query '{QueryName}' in dataflow {DataflowId}",
+                queryName, dataflowId);
+
+            return new UpdateDataflowDefinitionResponse
+            {
+                Success = true,
+                DataflowId = dataflowId,
+                WorkspaceId = workspaceId
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error adding/updating query '{QueryName}' in dataflow {DataflowId} in workspace {WorkspaceId}",
+                queryName, dataflowId, workspaceId);
+
+            return new UpdateDataflowDefinitionResponse
+            {
+                Success = false,
+                ErrorMessage = ex.Message,
+                DataflowId = dataflowId,
+                WorkspaceId = workspaceId
+            };
+        }
+    }
 }

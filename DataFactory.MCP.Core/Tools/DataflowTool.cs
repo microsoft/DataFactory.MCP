@@ -235,4 +235,51 @@ public class DataflowTool
             return ex.ToOperationError("adding connection to dataflow").ToMcpJson();
         }
     }
+
+    [McpServerTool, Description(@"Adds or updates a query in an existing dataflow by updating its definition. The query will be added to the mashup.pq file and registered in queryMetadata.json.")]
+    public async Task<string> AddOrUpdateQueryInDataflowAsync(
+        [Description("The workspace ID containing the dataflow (required)")] string workspaceId,
+        [Description("The dataflow ID to update (required)")] string dataflowId,
+        [Description("The name of the query to add or update (required)")] string queryName,
+        [Description("The M (Power Query) code for the query (required). Can be a full 'let...in' expression or a simple expression that will be wrapped automatically.")] string mCode)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(dataflowId, nameof(dataflowId));
+            _validationService.ValidateRequiredString(queryName, nameof(queryName));
+            _validationService.ValidateRequiredString(mCode, nameof(mCode));
+
+            var result = await _dataflowService.AddOrUpdateQueryAsync(workspaceId, dataflowId, queryName, mCode);
+
+            var response = new
+            {
+                Success = result.Success,
+                DataflowId = result.DataflowId,
+                WorkspaceId = result.WorkspaceId,
+                QueryName = queryName,
+                Message = result.Success
+                    ? $"Successfully added/updated query '{queryName}' in dataflow {dataflowId}"
+                    : result.ErrorMessage
+            };
+
+            return response.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("adding/updating query in dataflow").ToMcpJson();
+        }
+    }
 }
