@@ -7,6 +7,7 @@ using DataFactory.MCP.Configuration;
 using DataFactory.MCP.Infrastructure.Http;
 using DataFactory.MCP.Models.Connection.Factories;
 using DataFactory.MCP.Services;
+using DataFactory.MCP.Services.Authentication;
 using DataFactory.MCP.Services.DMTSv2;
 using DataFactory.MCP.Tools;
 
@@ -50,7 +51,13 @@ public static class ServiceCollectionExtensions
         // Register core services
         services
             .AddSingleton<IValidationService, ValidationService>()
+            // Authentication system with providers
+            .AddSingleton<IAuthenticationStateManager, AuthenticationStateManager>()
+            .AddSingleton<IAuthenticationProvider, InteractiveAuthenticationProvider>()
+            .AddSingleton<IAuthenticationProvider, DeviceCodeAuthenticationProvider>()
+            .AddSingleton<IAuthenticationProvider, ServicePrincipalAuthenticationProvider>()
             .AddSingleton<IAuthenticationService, AuthenticationService>()
+            // Other services
             .AddSingleton<IArrowDataReaderService, ArrowDataReaderService>()
             .AddSingleton<IGatewayClusterDatasourceService, GatewayClusterDatasourceService>()
             .AddSingleton<IDataTransformationService, DataTransformationService>()
@@ -103,6 +110,24 @@ public static class ServiceCollectionExtensions
             args,
             FeatureFlags.DataflowQuery,
             nameof(DataflowQueryTool),
+            logger);
+
+        // Conditionally enable DeviceCodeAuthenticationTool based on feature flag
+        // This is only enabled for HTTP version
+        mcpBuilder.RegisterToolWithFeatureFlag<DeviceCodeAuthenticationTool>(
+            configuration,
+            args,
+            FeatureFlags.DeviceCodeAuth,
+            nameof(DeviceCodeAuthenticationTool),
+            logger);
+
+        // Conditionally enable InteractiveAuthenticationTool based on feature flag
+        // Enabled by default for stdio, disabled by default for HTTP
+        mcpBuilder.RegisterToolWithFeatureFlag<InteractiveAuthenticationTool>(
+            configuration,
+            args,
+            FeatureFlags.InteractiveAuth,
+            nameof(InteractiveAuthenticationTool),
             logger);
 
         return mcpBuilder;

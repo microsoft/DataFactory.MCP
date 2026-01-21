@@ -9,16 +9,30 @@ on:
       environment:
         description: "Deployment environment"
         required: true
-        default: "staging"
+        default: "production"
         type: choice
         options:
           - production
-          - staging
       ref:
         description: "Branch or commit SHA to deploy (leave empty for default branch)"
         required: false
         default: ""
         type: string
+      dataflow_query:
+        description: "Enable the dataflow-query feature flag"
+        required: false
+        default: true
+        type: boolean
+      device_code_auth:
+        description: "Enable the device-code-auth feature flag"
+        required: false
+        default: true
+        type: boolean
+      interactive_auth:
+        description: "Enable the interactive-auth feature flag"
+        required: false
+        default: false
+        type: boolean
 
 env:
   AZURE_WEBAPP_NAME: DataFactoryMCP
@@ -97,6 +111,12 @@ jobs:
           client-id: ${{ secrets.AZURE_HTTP_DEPLOY_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_HTTP_DEPLOY_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_HTTP_DEPLOY_SUBSCRIPTION_ID }}
+
+      - name: "Configure App Settings"
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          app-settings-json: '[{"name": "dataflow-query", "value": "${{ github.event.inputs.dataflow_query || true }}"}, {"name": "device-code-auth", "value": "${{ github.event.inputs.device_code_auth || true }}"}, {"name": "interactive-auth", "value": "${{ github.event.inputs.interactive_auth || false }}"}]'
 
       - name: "Deploy to Azure Web App"
         id: deploy

@@ -26,7 +26,7 @@ var mcpBuilder = builder.Services
 // Register optional tools based on feature flags
 mcpBuilder.AddDataFactoryMcpOptionalTools(
     builder.Configuration,
-    args,
+    args.Concat(["--interactive-auth"]).ToArray(),  // Enable interactive auth by default for stdio
     logger);
 
 await builder.Build().RunAsync();

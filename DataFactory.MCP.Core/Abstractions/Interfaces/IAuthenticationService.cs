@@ -11,6 +11,16 @@ public interface IAuthenticationService
     Task<string> AuthenticateInteractiveAsync();
 
     /// <summary>
+    /// Start device code authentication - returns device code and URL immediately
+    /// </summary>
+    Task<string> StartDeviceCodeAuthAsync();
+
+    /// <summary>
+    /// Check the status of pending device code authentication
+    /// </summary>
+    Task<string> CheckDeviceAuthStatusAsync();
+
+    /// <summary>
     /// Authenticate with Azure AD using service principal and client secret
     /// </summary>
     Task<string> AuthenticateServicePrincipalAsync(string applicationId, string clientSecret, string? tenantId = null);
