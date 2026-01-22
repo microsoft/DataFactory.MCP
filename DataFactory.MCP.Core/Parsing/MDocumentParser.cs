@@ -73,31 +73,6 @@ public class MDocumentParser
     }
 
     /// <summary>
-    /// Extracts a table name from a user requirement string.
-    /// </summary>
-    public string? ExtractTableName(string text)
-    {
-        // Try to extract a table name from common patterns
-        var patterns = new[]
-        {
-            @"(?:to|into|save to|load to|write to)\s+['""]?(\w+)['""]?",
-            @"(\w+)\s+table",
-            @"table\s+['""]?(\w+)['""]?"
-        };
-
-        foreach (var pattern in patterns)
-        {
-            var match = Regex.Match(text, pattern, RegexOptions.IgnoreCase);
-            if (match.Success && match.Groups[1].Success)
-            {
-                return match.Groups[1].Value;
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>
     /// Extracts a balanced bracket attribute that appears before the given position.
     /// Handles nested brackets like [DataDestinations = {[Definition = [Kind = "Reference", ...]]}]
     /// </summary>
