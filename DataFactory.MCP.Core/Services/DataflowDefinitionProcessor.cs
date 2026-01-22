@@ -248,27 +248,38 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
         for (int i = 0; i < lines.Count; i++)
         {
             var trimmedLine = lines[i].TrimStart();
-            // Check if this line or the next line (after attribute) contains the shared declaration
-            if (trimmedLine.StartsWith(sharedDeclaration, StringComparison.OrdinalIgnoreCase) ||
-                (trimmedLine.StartsWith("[") && i + 1 < lines.Count &&
-                 lines[i + 1].TrimStart().StartsWith(sharedDeclaration, StringComparison.OrdinalIgnoreCase)))
+
+            // Check if this line contains the shared declaration directly
+            if (trimmedLine.StartsWith(sharedDeclaration, StringComparison.OrdinalIgnoreCase))
             {
-                // If this line is an attribute, start from here
-                if (trimmedLine.StartsWith("[") && !trimmedLine.StartsWith("[StagingDefinition", StringComparison.OrdinalIgnoreCase))
+                // Look back to see if there's an attribute on a previous line
+                queryStartIndex = i;
+                for (int k = i - 1; k >= 0; k--)
                 {
-                    queryStartIndex = i;
-                }
-                else if (trimmedLine.StartsWith(sharedDeclaration, StringComparison.OrdinalIgnoreCase))
-                {
-                    queryStartIndex = i;
-                }
-                else
-                {
-                    continue;
+                    var prevTrimmed = lines[k].TrimStart();
+                    // If we hit another shared declaration or section, stop looking back
+                    if (prevTrimmed.StartsWith("shared ", StringComparison.OrdinalIgnoreCase) ||
+                        prevTrimmed.StartsWith("section ", StringComparison.OrdinalIgnoreCase) ||
+                        string.IsNullOrWhiteSpace(prevTrimmed))
+                    {
+                        break;
+                    }
+                    // If we find an attribute (starts with [ and not [StagingDefinition), include it
+                    if (prevTrimmed.StartsWith("[") && !prevTrimmed.StartsWith("[StagingDefinition", StringComparison.OrdinalIgnoreCase))
+                    {
+                        queryStartIndex = k;
+                        // Continue looking back in case of multi-line attributes
+                    }
+                    // Also handle continuation lines of multi-line attributes (lines that don't start with [ or shared)
+                    else if (prevTrimmed.Contains("]]]}]") || prevTrimmed.Contains("]]") || 
+                             prevTrimmed.StartsWith("Settings") || prevTrimmed.StartsWith("Definition"))
+                    {
+                        queryStartIndex = k;
+                    }
                 }
 
                 // Find the end of this query (next attribute/shared or end of file)
-                for (int j = queryStartIndex + 1; j < lines.Count; j++)
+                for (int j = i + 1; j < lines.Count; j++)
                 {
                     var nextTrimmed = lines[j].TrimStart();
                     if (nextTrimmed.StartsWith("shared ", StringComparison.OrdinalIgnoreCase) ||
@@ -280,6 +291,41 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
                 }
                 if (queryEndIndex == -1) queryEndIndex = lines.Count - 1;
                 break;
+            }
+
+            // Also check if this line starts an attribute and a subsequent line has the shared declaration
+            // (to handle multi-line attributes where shared is not on line i+1)
+            if (trimmedLine.StartsWith("[") && !trimmedLine.StartsWith("[StagingDefinition", StringComparison.OrdinalIgnoreCase))
+            {
+                // Look ahead for the shared declaration (up to 10 lines for multi-line attributes)
+                for (int lookAhead = 1; lookAhead <= 10 && i + lookAhead < lines.Count; lookAhead++)
+                {
+                    var aheadTrimmed = lines[i + lookAhead].TrimStart();
+                    if (aheadTrimmed.StartsWith(sharedDeclaration, StringComparison.OrdinalIgnoreCase))
+                    {
+                        queryStartIndex = i;
+
+                        // Find the end of this query
+                        for (int j = i + lookAhead + 1; j < lines.Count; j++)
+                        {
+                            var nextTrimmed = lines[j].TrimStart();
+                            if (nextTrimmed.StartsWith("shared ", StringComparison.OrdinalIgnoreCase) ||
+                                (nextTrimmed.StartsWith("[") && !nextTrimmed.StartsWith("[StagingDefinition", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                queryEndIndex = j - 1;
+                                break;
+                            }
+                        }
+                        if (queryEndIndex == -1) queryEndIndex = lines.Count - 1;
+                        break;
+                    }
+                    // If we hit another shared declaration, stop looking
+                    if (aheadTrimmed.StartsWith("shared ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        break;
+                    }
+                }
+                if (queryStartIndex >= 0) break;
             }
         }
 
@@ -414,6 +460,120 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
         }
 
         metadataDict["queriesMetadata"] = queriesMetadata;
+        return metadataDict;
+    }
+
+    public DataflowDefinition SyncMashupInDefinition(
+        DataflowDefinition definition,
+        string newMashupDocument,
+        IList<(string QueryName, string MCode, string? Attribute)> parsedQueries)
+    {
+        // Step 1: Replace the entire mashup.pq with the new document
+        var mashupPart = definition.Parts?.FirstOrDefault(p =>
+            p.Path?.Equals("mashup.pq", StringComparison.OrdinalIgnoreCase) == true);
+
+        if (mashupPart != null)
+        {
+            var updatedBytes = Encoding.UTF8.GetBytes(newMashupDocument);
+            mashupPart.Payload = Convert.ToBase64String(updatedBytes);
+            _logger.LogDebug("Replaced mashup.pq with new document ({Length} bytes)", newMashupDocument.Length);
+        }
+
+        // Step 2: Sync queryMetadata.json to match the queries in the new document
+        var queryMetadataPart = definition.Parts?.FirstOrDefault(p =>
+            p.Path?.Equals("querymetadata.json", StringComparison.OrdinalIgnoreCase) == true);
+
+        if (queryMetadataPart?.Payload != null)
+        {
+            var decodedBytes = Convert.FromBase64String(queryMetadataPart.Payload);
+            var currentMetadataJson = Encoding.UTF8.GetString(decodedBytes);
+
+            using var document = JsonDocument.Parse(currentMetadataJson);
+            var currentMetadata = document.RootElement;
+
+            var updatedMetadata = SyncQueryMetadata(currentMetadata, parsedQueries);
+
+            var updatedMetadataJson = JsonSerializer.Serialize(updatedMetadata, JsonSerializerOptionsProvider.Indented);
+            var updatedMetadataBytes = Encoding.UTF8.GetBytes(updatedMetadataJson);
+            queryMetadataPart.Payload = Convert.ToBase64String(updatedMetadataBytes);
+
+            _logger.LogDebug("Synced queryMetadata.json with {QueryCount} queries", parsedQueries.Count);
+        }
+
+        return definition;
+    }
+
+    private Dictionary<string, object> SyncQueryMetadata(
+        JsonElement currentMetadata,
+        IList<(string QueryName, string MCode, string? Attribute)> parsedQueries)
+    {
+        var metadataDict = _dataTransformationService.JsonElementToDictionary(currentMetadata);
+
+        // Ensure documentLocale is set
+        if (!metadataDict.ContainsKey("documentLocale"))
+        {
+            metadataDict["documentLocale"] = "en-US";
+        }
+
+        // Build a set of query names that reference DataDestinations
+        // These referenced queries should be marked as hidden
+        var destinationQueries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (_, _, attribute) in parsedQueries)
+        {
+            if (!string.IsNullOrEmpty(attribute))
+            {
+                var referencedQuery = ExtractDestinationQueryNameFromAttribute(attribute);
+                if (!string.IsNullOrEmpty(referencedQuery))
+                {
+                    destinationQueries.Add(referencedQuery);
+                }
+            }
+        }
+
+        // Build new queriesMetadata from the parsed queries
+        var newQueriesMetadata = new Dictionary<string, object>();
+        
+        // Get existing queriesMetadata to preserve queryIds where possible
+        var existingQueriesMetadata = metadataDict.ContainsKey("queriesMetadata") 
+            ? metadataDict["queriesMetadata"] as Dictionary<string, object> ?? new Dictionary<string, object>()
+            : new Dictionary<string, object>();
+
+        foreach (var (queryName, _, _) in parsedQueries)
+        {
+            // Try to preserve existing queryId if the query already exists
+            string queryId;
+            if (existingQueriesMetadata.TryGetValue(queryName, out var existingEntry) &&
+                existingEntry is Dictionary<string, object> existingDict &&
+                existingDict.TryGetValue("queryId", out var existingId))
+            {
+                queryId = existingId?.ToString() ?? Guid.NewGuid().ToString();
+            }
+            else
+            {
+                queryId = Guid.NewGuid().ToString();
+            }
+
+            var queryMetadataEntry = new Dictionary<string, object>
+            {
+                ["queryId"] = queryId,
+                ["queryName"] = queryName,
+                ["loadEnabled"] = false
+            };
+
+            // Mark destination queries as hidden
+            if (destinationQueries.Contains(queryName))
+            {
+                queryMetadataEntry["isHidden"] = true;
+            }
+
+            newQueriesMetadata[queryName] = queryMetadataEntry;
+        }
+
+        metadataDict["queriesMetadata"] = newQueriesMetadata;
+        
+        _logger.LogDebug("Synced query metadata: {QueryCount} queries, {HiddenCount} hidden",
+            parsedQueries.Count, destinationQueries.Count);
+
         return metadataDict;
     }
 }

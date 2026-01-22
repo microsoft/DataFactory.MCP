@@ -392,4 +392,160 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
             };
         }
     }
+
+    public async Task<UpdateDataflowDefinitionResponse> AddOrUpdateQueriesBatchAsync(
+        string workspaceId,
+        string dataflowId,
+        IList<(string QueryName, string MCode, string? Attribute)> queries,
+        string? sectionAttribute = null)
+    {
+        try
+        {
+            ValidateGuids(
+                (workspaceId, nameof(workspaceId)),
+                (dataflowId, nameof(dataflowId)));
+
+            if (queries == null || queries.Count == 0)
+            {
+                return new UpdateDataflowDefinitionResponse
+                {
+                    Success = false,
+                    ErrorMessage = "No queries provided",
+                    DataflowId = dataflowId,
+                    WorkspaceId = workspaceId
+                };
+            }
+
+            Logger.LogInformation("Adding/updating {QueryCount} queries in dataflow {DataflowId} in workspace {WorkspaceId}",
+                queries.Count, dataflowId, workspaceId);
+
+            // Step 1: Get current dataflow definition once
+            var currentDefinition = await GetDataflowDefinitionAsync(workspaceId, dataflowId);
+            if (currentDefinition?.Parts == null)
+            {
+                return new UpdateDataflowDefinitionResponse
+                {
+                    Success = false,
+                    ErrorMessage = "Failed to retrieve current dataflow definition",
+                    DataflowId = dataflowId,
+                    WorkspaceId = workspaceId
+                };
+            }
+
+            // Step 2: Apply all query updates to the definition in memory
+            var updatedDefinition = currentDefinition;
+            foreach (var (queryName, mCode, attribute) in queries)
+            {
+                ValidationService.ValidateRequiredString(queryName, nameof(queryName));
+                ValidationService.ValidateRequiredString(mCode, nameof(mCode));
+
+                updatedDefinition = _definitionProcessor.AddOrUpdateQueryInDefinition(
+                    updatedDefinition,
+                    queryName,
+                    mCode,
+                    attribute,
+                    sectionAttribute);
+            }
+
+            // Step 3: Save the updated definition once
+            await UpdateDataflowDefinitionAsync(workspaceId, dataflowId, updatedDefinition);
+
+            Logger.LogInformation("Successfully added/updated {QueryCount} queries in dataflow {DataflowId}",
+                queries.Count, dataflowId);
+
+            return new UpdateDataflowDefinitionResponse
+            {
+                Success = true,
+                DataflowId = dataflowId,
+                WorkspaceId = workspaceId
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error batch adding/updating queries in dataflow {DataflowId} in workspace {WorkspaceId}",
+                dataflowId, workspaceId);
+
+            return new UpdateDataflowDefinitionResponse
+            {
+                Success = false,
+                ErrorMessage = ex.Message,
+                DataflowId = dataflowId,
+                WorkspaceId = workspaceId
+            };
+        }
+    }
+
+    public async Task<UpdateDataflowDefinitionResponse> SyncMashupDocumentAsync(
+        string workspaceId,
+        string dataflowId,
+        string newMashupDocument,
+        IList<(string QueryName, string MCode, string? Attribute)> parsedQueries)
+    {
+        try
+        {
+            ValidateGuids(
+                (workspaceId, nameof(workspaceId)),
+                (dataflowId, nameof(dataflowId)));
+            ValidationService.ValidateRequiredString(newMashupDocument, nameof(newMashupDocument));
+
+            if (parsedQueries == null || parsedQueries.Count == 0)
+            {
+                return new UpdateDataflowDefinitionResponse
+                {
+                    Success = false,
+                    ErrorMessage = "No queries provided in the document",
+                    DataflowId = dataflowId,
+                    WorkspaceId = workspaceId
+                };
+            }
+
+            Logger.LogInformation("Syncing mashup document with {QueryCount} queries in dataflow {DataflowId} in workspace {WorkspaceId}",
+                parsedQueries.Count, dataflowId, workspaceId);
+
+            // Step 1: Get current dataflow definition
+            var currentDefinition = await GetDataflowDefinitionAsync(workspaceId, dataflowId);
+            if (currentDefinition?.Parts == null)
+            {
+                return new UpdateDataflowDefinitionResponse
+                {
+                    Success = false,
+                    ErrorMessage = "Failed to retrieve current dataflow definition",
+                    DataflowId = dataflowId,
+                    WorkspaceId = workspaceId
+                };
+            }
+
+            // Step 2: Sync the mashup document (replace entire mashup + sync metadata)
+            var updatedDefinition = _definitionProcessor.SyncMashupInDefinition(
+                currentDefinition,
+                newMashupDocument,
+                parsedQueries);
+
+            // Step 3: Save the updated definition
+            await UpdateDataflowDefinitionAsync(workspaceId, dataflowId, updatedDefinition);
+
+            Logger.LogInformation("Successfully synced mashup document with {QueryCount} queries in dataflow {DataflowId}",
+                parsedQueries.Count, dataflowId);
+
+            return new UpdateDataflowDefinitionResponse
+            {
+                Success = true,
+                DataflowId = dataflowId,
+                WorkspaceId = workspaceId
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error syncing mashup document in dataflow {DataflowId} in workspace {WorkspaceId}",
+                dataflowId, workspaceId);
+
+            return new UpdateDataflowDefinitionResponse
+            {
+                Success = false,
+                ErrorMessage = ex.Message,
+                DataflowId = dataflowId,
+                WorkspaceId = workspaceId
+            };
+        }
+    }
 }

@@ -103,4 +103,36 @@ public interface IFabricDataflowService
         string mCode,
         string? attribute = null,
         string? sectionAttribute = null);
+
+    /// <summary>
+    /// Adds or updates multiple queries in an existing dataflow in a single operation.
+    /// More efficient than calling AddOrUpdateQueryAsync multiple times as it fetches
+    /// the definition once, applies all changes in memory, and saves once.
+    /// </summary>
+    /// <param name="workspaceId">The workspace ID containing the dataflow</param>
+    /// <param name="dataflowId">The dataflow ID to update</param>
+    /// <param name="queries">List of queries to add/update as tuples of (queryName, mCode, attribute)</param>
+    /// <param name="sectionAttribute">Optional section-level attribute (e.g., [StagingDefinition = [Kind = "FastCopy"]])</param>
+    /// <returns>Update operation result</returns>
+    Task<UpdateDataflowDefinitionResponse> AddOrUpdateQueriesBatchAsync(
+        string workspaceId,
+        string dataflowId,
+        IList<(string QueryName, string MCode, string? Attribute)> queries,
+        string? sectionAttribute = null);
+
+    /// <summary>
+    /// Syncs a dataflow with a new M document by replacing the entire mashup content.
+    /// This is a declarative approach: the provided document becomes the complete state.
+    /// Queries not in the new document will be removed from metadata.
+    /// </summary>
+    /// <param name="workspaceId">The workspace ID containing the dataflow</param>
+    /// <param name="dataflowId">The dataflow ID to sync</param>
+    /// <param name="newMashupDocument">The complete M section document</param>
+    /// <param name="parsedQueries">List of parsed queries from the document</param>
+    /// <returns>Update operation result</returns>
+    Task<UpdateDataflowDefinitionResponse> SyncMashupDocumentAsync(
+        string workspaceId,
+        string dataflowId,
+        string newMashupDocument,
+        IList<(string QueryName, string MCode, string? Attribute)> parsedQueries);
 }

@@ -42,4 +42,18 @@ public interface IDataflowDefinitionProcessor
         string mCode,
         string? attribute = null,
         string? sectionAttribute = null);
+
+    /// <summary>
+    /// Syncs the dataflow definition with a new M document by replacing the entire mashup
+    /// and updating the query metadata to match.
+    /// This is a declarative approach: the provided document IS the desired state.
+    /// </summary>
+    /// <param name="definition">The current dataflow definition</param>
+    /// <param name="newMashupDocument">The complete M section document to sync</param>
+    /// <param name="parsedQueries">List of parsed queries with their names, code, and attributes</param>
+    /// <returns>Updated dataflow definition with synced mashup and metadata</returns>
+    DataflowDefinition SyncMashupInDefinition(
+        DataflowDefinition definition,
+        string newMashupDocument,
+        IList<(string QueryName, string MCode, string? Attribute)> parsedQueries);
 }

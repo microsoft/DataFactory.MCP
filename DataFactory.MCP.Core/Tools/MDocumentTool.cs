@@ -263,68 +263,40 @@ If validation fails, it returns detailed error information to help fix the docum
                 }.ToMcpJson();
             }
 
-            // Step 3: Save each query to the dataflow
-            var results = new List<object>();
-            var allSuccess = true;
-
-            // Extract section-level attribute (e.g., [StagingDefinition = [Kind = "FastCopy"]])
-            string? sectionAttribute = null;
-            var stagingMatch = System.Text.RegularExpressions.Regex.Match(
+            // Step 3: Sync the entire M document to the dataflow
+            // This replaces the entire mashup.pq and syncs queryMetadata.json to match.
+            // This is a declarative approach: the provided document IS the desired state.
+            var result = await _dataflowService.SyncMashupDocumentAsync(
+                workspaceId,
+                dataflowId,
                 mDocument,
-                @"^\s*(\[StagingDefinition\s*=\s*\[[^\]]+\]\])",
-                System.Text.RegularExpressions.RegexOptions.Multiline);
-            if (stagingMatch.Success)
+                queries.Select(q => (q.Name, q.Code, (string?)q.Attribute)).ToList());
+
+            if (!result.Success)
             {
-                sectionAttribute = stagingMatch.Groups[1].Value.Trim();
-            }
-
-            foreach (var query in queries)
-            {
-                try
+                return new
                 {
-                    var result = await _dataflowService.AddOrUpdateQueryAsync(
-                        workspaceId,
-                        dataflowId,
-                        query.Name,
-                        query.Code,
-                        query.Attribute,
-                        sectionAttribute);
-
-                    results.Add(new
-                    {
-                        QueryName = query.Name,
-                        Success = result.Success,
-                        Message = result.Success ? "Saved successfully" : result.ErrorMessage
-                    });
-
-                    if (!result.Success)
-                        allSuccess = false;
-                }
-                catch (Exception ex)
-                {
-                    results.Add(new
-                    {
-                        QueryName = query.Name,
-                        Success = false,
-                        Message = ex.Message
-                    });
-                    allSuccess = false;
-                }
+                    Success = false,
+                    Stage = "Save",
+                    WorkspaceId = workspaceId,
+                    DataflowId = dataflowId,
+                    DetectedPattern = validationResult.IsGen2 ? "Gen2 FastCopy" : "Gen1 Pipeline",
+                    TotalQueries = queries.Count,
+                    ErrorMessage = result.ErrorMessage,
+                    Message = "Failed to save queries to dataflow"
+                }.ToMcpJson();
             }
 
             return new
             {
-                Success = allSuccess,
+                Success = true,
                 Stage = "SaveComplete",
                 WorkspaceId = workspaceId,
                 DataflowId = dataflowId,
                 DetectedPattern = validationResult.IsGen2 ? "Gen2 FastCopy" : "Gen1 Pipeline",
                 TotalQueries = queries.Count,
-                SavedQueries = results.Count(r => ((dynamic)r).Success),
-                Results = results,
-                Message = allSuccess
-                    ? $"Successfully saved all {queries.Count} queries to dataflow"
-                    : "Some queries failed to save - see Results for details"
+                SavedQueries = queries.Count,
+                Message = $"Successfully saved all {queries.Count} queries to dataflow"
             }.ToMcpJson();
         }
         catch (ArgumentException ex)
