@@ -68,7 +68,10 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IFabricDataflowService, FabricDataflowService>()
             .AddSingleton<IFabricCapacityService, FabricCapacityService>()
             .AddSingleton<IAzureResourceDiscoveryService, AzureResourceDiscoveryService>()
-            .AddSingleton<FabricDataSourceConnectionFactory>();
+            .AddSingleton<FabricDataSourceConnectionFactory>()
+            // Background task management with MCP notifications
+            .AddSingleton<IMcpNotificationService, McpNotificationService>()
+            .AddSingleton<IBackgroundTaskManager, BackgroundTaskManager>();
 
         return services;
     }

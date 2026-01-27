@@ -4,6 +4,7 @@ using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Models.Dataflow;
 using DataFactory.MCP.Models.Dataflow.Definition;
+using DataFactory.MCP.Models.Dataflow.BackgroundTask;
 using DataFactory.MCP.Models.Connection;
 
 namespace DataFactory.MCP.Tools;
@@ -14,15 +15,18 @@ public class DataflowTool
     private readonly IFabricDataflowService _dataflowService;
     private readonly IFabricConnectionService _connectionService;
     private readonly IValidationService _validationService;
+    private readonly IBackgroundTaskManager _backgroundTaskManager;
 
     public DataflowTool(
         IFabricDataflowService dataflowService,
         IFabricConnectionService connectionService,
-        IValidationService validationService)
+        IValidationService validationService,
+        IBackgroundTaskManager backgroundTaskManager)
     {
         _dataflowService = dataflowService;
         _connectionService = connectionService;
         _validationService = validationService;
+        _backgroundTaskManager = backgroundTaskManager;
     }
 
     [McpServerTool, Description(@"Returns a list of Dataflows from the specified workspace. This API supports pagination.")]
@@ -363,6 +367,174 @@ public class DataflowTool
         catch (Exception ex)
         {
             return ex.ToOperationError("adding/updating query in dataflow").ToMcpJson();
+        }
+    }
+
+    [McpServerTool, Description(@"Start a dataflow refresh in the background. Returns immediately with task info.
+You'll receive a notification (via MCP logging/message) when the refresh completes.
+The user can continue chatting while the refresh runs in the background.
+
+Use this for long-running refresh operations. For quick status checks, use RefreshDataflowStatus.")]
+    public async Task<string> RefreshDataflowBackground(
+        McpServer mcpServer,
+        [Description("The workspace ID containing the dataflow (required)")] string workspaceId,
+        [Description("The dataflow ID to refresh (required)")] string dataflowId,
+        [Description("User-friendly name for notifications (optional, defaults to dataflow ID)")] string? displayName = null,
+        [Description("Execute option: 'SkipApplyChanges' (default, faster) or 'ApplyChangesIfNeeded' (applies pending changes first)")] string executeOption = "SkipApplyChanges")
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(dataflowId, nameof(dataflowId));
+
+            // Pass the MCP server (session) to the background task manager for notifications
+            var result = await _backgroundTaskManager.StartDataflowRefreshAsync(
+                mcpServer,
+                workspaceId,
+                dataflowId,
+                displayName,
+                executeOption);
+
+            var response = new
+            {
+                Success = !result.IsComplete || result.IsSuccess,
+                Message = result.IsComplete
+                    ? $"Refresh {result.Status}: {result.ErrorMessage}"
+                    : $"Refresh started in background. You'll be notified when complete.",
+                Status = result.Status,
+                TaskInfo = result.Context != null ? new
+                {
+                    WorkspaceId = result.Context.WorkspaceId,
+                    DataflowId = result.Context.DataflowId,
+                    JobInstanceId = result.Context.JobInstanceId,
+                    DisplayName = result.Context.DisplayName,
+                    StartedAt = result.Context.StartedAtUtc.ToString("o"),
+                    EstimatedPollInterval = $"{result.Context.RetryAfterSeconds} seconds"
+                } : null,
+                Hint = result.IsComplete
+                    ? null
+                    : "Continue chatting - you'll receive a notification when the refresh completes. " +
+                      "Use RefreshDataflowStatus to manually check progress if needed."
+            };
+
+            return response.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("starting dataflow refresh").ToMcpJson();
+        }
+    }
+
+    [McpServerTool, Description(@"Check the status of a dataflow refresh operation.
+Use this to manually poll for status if you started a refresh with RefreshDataflowBackground.
+Returns the current status including whether it's complete and any error information.")]
+    public async Task<string> RefreshDataflowStatus(
+        [Description("The workspace ID containing the dataflow (required)")] string workspaceId,
+        [Description("The dataflow ID being refreshed (required)")] string dataflowId,
+        [Description("The job instance ID from RefreshDataflowBackground result (required)")] string jobInstanceId)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(dataflowId, nameof(dataflowId));
+            _validationService.ValidateRequiredString(jobInstanceId, nameof(jobInstanceId));
+
+            var context = new DataflowRefreshContext
+            {
+                WorkspaceId = workspaceId,
+                DataflowId = dataflowId,
+                JobInstanceId = jobInstanceId
+            };
+
+            var result = await _backgroundTaskManager.GetRefreshStatusAsync(context);
+
+            var response = new
+            {
+                IsComplete = result.IsComplete,
+                IsSuccess = result.IsSuccess,
+                Status = result.Status,
+                WorkspaceId = workspaceId,
+                DataflowId = dataflowId,
+                JobInstanceId = jobInstanceId,
+                EndTimeUtc = result.EndTimeUtc?.ToString("o"),
+                Duration = result.DurationFormatted,
+                FailureReason = result.FailureReason,
+                Message = result.IsComplete
+                    ? (result.IsSuccess
+                        ? $"Refresh completed successfully in {result.DurationFormatted}"
+                        : $"Refresh {result.Status}: {result.FailureReason}")
+                    : $"Refresh still in progress (status: {result.Status})"
+            };
+
+            return response.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("checking refresh status").ToMcpJson();
+        }
+    }
+
+    [McpServerTool, Description(@"List all background tasks currently being tracked.
+Shows status of all dataflow refreshes started with RefreshDataflowBackground.")]
+    public Task<string> ListBackgroundTasks()
+    {
+        try
+        {
+            var tasks = _backgroundTaskManager.GetAllTasks();
+
+            var response = new
+            {
+                TaskCount = tasks.Count,
+                Tasks = tasks.Select(t => new
+                {
+                    t.TaskId,
+                    t.TaskType,
+                    t.DisplayName,
+                    t.Status,
+                    StartedAt = t.StartedAtUtc.ToString("o"),
+                    CompletedAt = t.CompletedAtUtc?.ToString("o"),
+                    Duration = t.CompletedAtUtc.HasValue
+                        ? (t.CompletedAtUtc.Value - t.StartedAtUtc).ToString(@"hh\:mm\:ss")
+                        : null,
+                    t.FailureReason,
+                    Context = t.Context != null ? new
+                    {
+                        t.Context.WorkspaceId,
+                        t.Context.DataflowId,
+                        t.Context.JobInstanceId
+                    } : null
+                })
+            };
+
+            return Task.FromResult(response.ToMcpJson());
+        }
+        catch (Exception ex)
+        {
+            return Task.FromResult(ex.ToOperationError("listing background tasks").ToMcpJson());
         }
     }
 }

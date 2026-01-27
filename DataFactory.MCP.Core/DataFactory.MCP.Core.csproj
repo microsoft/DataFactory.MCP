@@ -23,7 +23,7 @@
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.1" />
         <PackageReference Include="Microsoft.Identity.Client" Version="4.67.0" />
-        <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.3" />
+        <PackageReference Include="ModelContextProtocol" Version="0.6.0-preview.1" />
         <PackageReference Include="Apache.Arrow" Version="22.1.0" />
     </ItemGroup>
 
