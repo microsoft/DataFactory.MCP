@@ -15,18 +15,18 @@ public class DataflowTool
     private readonly IFabricDataflowService _dataflowService;
     private readonly IFabricConnectionService _connectionService;
     private readonly IValidationService _validationService;
-    private readonly IBackgroundTaskManager _backgroundTaskManager;
+    private readonly IDataflowRefreshService _dataflowRefreshService;
 
     public DataflowTool(
         IFabricDataflowService dataflowService,
         IFabricConnectionService connectionService,
         IValidationService validationService,
-        IBackgroundTaskManager backgroundTaskManager)
+        IDataflowRefreshService dataflowRefreshService)
     {
         _dataflowService = dataflowService;
         _connectionService = connectionService;
         _validationService = validationService;
-        _backgroundTaskManager = backgroundTaskManager;
+        _dataflowRefreshService = dataflowRefreshService;
     }
 
     [McpServerTool, Description(@"Returns a list of Dataflows from the specified workspace. This API supports pagination.")]
@@ -387,8 +387,8 @@ Use this for long-running refresh operations. For quick status checks, use Refre
             _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
             _validationService.ValidateRequiredString(dataflowId, nameof(dataflowId));
 
-            // Pass the MCP server (session) to the background task manager for notifications
-            var result = await _backgroundTaskManager.StartDataflowRefreshAsync(
+            // Pass the MCP server (session) to the service for notifications
+            var result = await _dataflowRefreshService.StartRefreshAsync(
                 mcpServer,
                 workspaceId,
                 dataflowId,
@@ -458,7 +458,7 @@ Returns the current status including whether it's complete and any error informa
                 JobInstanceId = jobInstanceId
             };
 
-            var result = await _backgroundTaskManager.GetRefreshStatusAsync(context);
+            var result = await _dataflowRefreshService.GetStatusAsync(context);
 
             var response = new
             {
@@ -504,7 +504,7 @@ Shows status of all dataflow refreshes started with RefreshDataflowBackground.")
     {
         try
         {
-            var tasks = _backgroundTaskManager.GetAllTasks();
+            var tasks = _dataflowRefreshService.GetAllTasks();
 
             var response = new
             {
@@ -512,21 +512,15 @@ Shows status of all dataflow refreshes started with RefreshDataflowBackground.")
                 Tasks = tasks.Select(t => new
                 {
                     t.TaskId,
-                    t.TaskType,
+                    t.JobType,
                     t.DisplayName,
                     t.Status,
-                    StartedAt = t.StartedAtUtc.ToString("o"),
-                    CompletedAt = t.CompletedAtUtc?.ToString("o"),
-                    Duration = t.CompletedAtUtc.HasValue
-                        ? (t.CompletedAtUtc.Value - t.StartedAtUtc).ToString(@"hh\:mm\:ss")
+                    StartedAt = t.StartedAt.ToString("o"),
+                    CompletedAt = t.CompletedAt?.ToString("o"),
+                    Duration = t.CompletedAt.HasValue
+                        ? (t.CompletedAt.Value - t.StartedAt).ToString(@"hh\:mm\:ss")
                         : null,
-                    t.FailureReason,
-                    Context = t.Context != null ? new
-                    {
-                        t.Context.WorkspaceId,
-                        t.Context.DataflowId,
-                        t.Context.JobInstanceId
-                    } : null
+                    t.FailureReason
                 })
             };
 

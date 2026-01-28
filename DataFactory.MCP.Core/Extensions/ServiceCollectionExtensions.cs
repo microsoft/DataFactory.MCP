@@ -8,6 +8,7 @@ using DataFactory.MCP.Infrastructure.Http;
 using DataFactory.MCP.Models.Connection.Factories;
 using DataFactory.MCP.Services;
 using DataFactory.MCP.Services.Authentication;
+using DataFactory.MCP.Services.BackgroundTasks;
 using DataFactory.MCP.Services.DMTSv2;
 using DataFactory.MCP.Services.Notifications;
 using DataFactory.MCP.Tools;
@@ -76,8 +77,10 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IPlatformNotificationProvider, WindowsToastNotificationProvider>()
             .AddSingleton<IPlatformNotificationProvider, MacOsNotificationProvider>()
             .AddSingleton<IPlatformNotificationProvider, LinuxNotificationProvider>()
-            // Background task management
-            .AddSingleton<IBackgroundTaskManager, BackgroundTaskManager>();
+            // Background task system (SOLID: separated concerns)
+            .AddSingleton<IBackgroundTaskTracker, BackgroundTaskTracker>()
+            .AddSingleton<IBackgroundJobRunner, BackgroundJobRunner>()
+            .AddSingleton<IDataflowRefreshService, DataflowRefreshService>();
         // Note: IUserNotificationService must be registered by the host (stdio or HTTP)
 
         return services;
