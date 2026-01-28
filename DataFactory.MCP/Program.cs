@@ -1,8 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Services;
@@ -22,13 +20,6 @@ builder.Services.AddDataFactoryMcpServices();
 
 // Register user notification service - stdio uses OS toast notifications
 builder.Services.AddSingleton<IUserNotificationService, SystemToastNotificationService>();
-
-// Configure MCP server capabilities - declare logging support for background notifications
-builder.Services.Configure<McpServerOptions>(options =>
-{
-    options.Capabilities ??= new ServerCapabilities();
-    options.Capabilities.Logging = new LoggingCapability();
-});
 
 // Configure MCP server with stdio transport and register tools
 logger.LogInformation("Registering core MCP tools...");

@@ -10,28 +10,26 @@ using ModelContextProtocol;
 namespace DataFactory.MCP.Services;
 
 /// <summary>
-/// Manages background tasks and sends MCP notifications on completion.
+/// Manages background tasks and sends notifications on completion.
 /// Polls Fabric API for job status and notifies client when done.
-/// Also sends cross-platform system notifications (toast/banner) for user visibility.
 /// </summary>
 public class BackgroundTaskManager : IBackgroundTaskManager
 {
-    private const string LoggerName = "BackgroundTasks";
     private static readonly TimeSpan MaxTaskDuration = TimeSpan.FromHours(4);
 
-    private readonly IMcpNotificationService _notificationService;
+    private readonly IMcpSessionAccessor _sessionAccessor;
     private readonly IUserNotificationService _userNotificationService;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<BackgroundTaskManager> _logger;
     private readonly ConcurrentDictionary<string, BackgroundTaskInfo> _tasks = new();
 
     public BackgroundTaskManager(
-        IMcpNotificationService notificationService,
+        IMcpSessionAccessor sessionAccessor,
         IUserNotificationService userNotificationService,
         IHttpClientFactory httpClientFactory,
         ILogger<BackgroundTaskManager> logger)
     {
-        _notificationService = notificationService;
+        _sessionAccessor = sessionAccessor;
         _userNotificationService = userNotificationService;
         _httpClientFactory = httpClientFactory;
         _logger = logger;
@@ -47,6 +45,9 @@ public class BackgroundTaskManager : IBackgroundTaskManager
         List<ItemJobParameter>? parameters = null)
     {
         ArgumentNullException.ThrowIfNull(session);
+
+        // Store session for background task notifications
+        _sessionAccessor.CurrentSession = session;
 
         var taskId = Guid.NewGuid().ToString();
         var friendlyName = displayName ?? $"Dataflow {dataflowId[..Math.Min(8, dataflowId.Length)]}...";
@@ -284,31 +285,7 @@ public class BackgroundTaskManager : IBackgroundTaskManager
 
     private async Task SendCompletionNotificationAsync(McpSession session, DataflowRefreshContext context, DataflowRefreshResult result)
     {
-        var level = result.IsSuccess ? "info" : "error";
-
-        var notificationData = new
-        {
-            type = "dataflow_refresh_completed",
-            taskType = "DataflowRefresh",
-            displayName = context.DisplayName,
-            workspaceId = context.WorkspaceId,
-            dataflowId = context.DataflowId,
-            jobInstanceId = context.JobInstanceId,
-            status = result.Status,
-            isSuccess = result.IsSuccess,
-            duration = result.DurationFormatted,
-            startedAt = context.StartedAtUtc.ToString("o"),
-            completedAt = result.EndTimeUtc?.ToString("o"),
-            failureReason = result.FailureReason,
-            message = result.IsSuccess
-                ? $"✅ Dataflow refresh '{context.DisplayName}' completed successfully in {result.DurationFormatted}"
-                : $"❌ Dataflow refresh '{context.DisplayName}' {result.Status}: {result.FailureReason ?? "Unknown error"}"
-        };
-
-        // Send MCP notification (for MCP client integration)
-        await _notificationService.SendNotificationAsync(session, level, LoggerName, notificationData);
-
-        // Send user notification (toast for stdio, logging for HTTP)
+        // Send user notification (toast for stdio, MCP notification for HTTP)
         await SendUserNotificationAsync(context, result);
     }
 

@@ -69,8 +69,9 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IFabricCapacityService, FabricCapacityService>()
             .AddSingleton<IAzureResourceDiscoveryService, AzureResourceDiscoveryService>()
             .AddSingleton<FabricDataSourceConnectionFactory>()
-            // Background task management with MCP notifications
-            .AddSingleton<IMcpNotificationService, McpNotificationService>()
+            // Session accessor for background notifications
+            .AddSingleton<IMcpSessionAccessor, McpSessionAccessor>()
+            // Background task management
             .AddSingleton<IBackgroundTaskManager, BackgroundTaskManager>();
         // Note: IUserNotificationService must be registered by the host (stdio or HTTP)
 
