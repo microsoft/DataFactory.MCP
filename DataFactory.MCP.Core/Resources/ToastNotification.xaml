@@ -1,0 +1,10 @@
+<Window xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
+        Title='Notification' WindowStyle='None' AllowsTransparency='True' Background='Transparent'
+        Topmost='True' ShowInTaskbar='False' SizeToContent='WidthAndHeight' WindowStartupLocation='Manual'>
+    <Border Background='#1E1E1E' CornerRadius='8' Padding='16' BorderBrush='{{BorderColor}}' BorderThickness='1'>
+        <StackPanel>
+            <TextBlock Text='{{Title}}' FontSize='14' FontWeight='Bold' Foreground='{{BorderColor}}' Margin='0,0,0,8'/>
+            <TextBlock Text='{{Message}}' FontSize='12' Foreground='White' TextWrapping='Wrap' MaxWidth='300'/>
+        </StackPanel>
+    </Border>
+</Window>

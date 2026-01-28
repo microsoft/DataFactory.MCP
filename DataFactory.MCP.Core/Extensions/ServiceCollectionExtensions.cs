@@ -8,7 +8,9 @@ using DataFactory.MCP.Infrastructure.Http;
 using DataFactory.MCP.Models.Connection.Factories;
 using DataFactory.MCP.Services;
 using DataFactory.MCP.Services.Authentication;
+using DataFactory.MCP.Services.BackgroundTasks;
 using DataFactory.MCP.Services.DMTSv2;
+using DataFactory.MCP.Services.Notifications;
 using DataFactory.MCP.Tools;
 
 namespace DataFactory.MCP.Extensions;
@@ -68,7 +70,19 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IFabricDataflowService, FabricDataflowService>()
             .AddSingleton<IFabricCapacityService, FabricCapacityService>()
             .AddSingleton<IAzureResourceDiscoveryService, AzureResourceDiscoveryService>()
-            .AddSingleton<FabricDataSourceConnectionFactory>();
+            .AddSingleton<FabricDataSourceConnectionFactory>()
+            // Session accessor for background notifications
+            .AddSingleton<IMcpSessionAccessor, McpSessionAccessor>()
+            // Platform notification providers (SOLID: each platform has its own provider)
+            .AddSingleton<IPlatformNotificationProvider, WindowsToastNotificationProvider>()
+            .AddSingleton<IPlatformNotificationProvider, MacOsNotificationProvider>()
+            .AddSingleton<IPlatformNotificationProvider, LinuxNotificationProvider>()
+            // Background task system (consolidated: monitor handles start, track, poll, notify)
+            .AddSingleton<IBackgroundJobMonitor, BackgroundJobMonitor>()
+            .AddSingleton<IDataflowRefreshService, DataflowRefreshService>()
+            // Notification queue - processes notifications with spacing to prevent overlap
+            .AddSingleton<INotificationQueue, NotificationQueue>();
+        // Note: IUserNotificationService must be registered by the host (stdio or HTTP)
 
         return services;
     }
