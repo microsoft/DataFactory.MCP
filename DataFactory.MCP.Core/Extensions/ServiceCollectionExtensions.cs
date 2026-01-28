@@ -9,6 +9,7 @@ using DataFactory.MCP.Models.Connection.Factories;
 using DataFactory.MCP.Services;
 using DataFactory.MCP.Services.Authentication;
 using DataFactory.MCP.Services.DMTSv2;
+using DataFactory.MCP.Services.Notifications;
 using DataFactory.MCP.Tools;
 
 namespace DataFactory.MCP.Extensions;
@@ -71,6 +72,10 @@ public static class ServiceCollectionExtensions
             .AddSingleton<FabricDataSourceConnectionFactory>()
             // Session accessor for background notifications
             .AddSingleton<IMcpSessionAccessor, McpSessionAccessor>()
+            // Platform notification providers (SOLID: each platform has its own provider)
+            .AddSingleton<IPlatformNotificationProvider, WindowsToastNotificationProvider>()
+            .AddSingleton<IPlatformNotificationProvider, MacOsNotificationProvider>()
+            .AddSingleton<IPlatformNotificationProvider, LinuxNotificationProvider>()
             // Background task management
             .AddSingleton<IBackgroundTaskManager, BackgroundTaskManager>();
         // Note: IUserNotificationService must be registered by the host (stdio or HTTP)
