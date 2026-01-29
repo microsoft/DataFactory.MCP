@@ -25,8 +25,8 @@ public class DataflowRefreshTool
     }
 
     [McpServerTool, Description(@"Start a dataflow refresh in the background. Returns immediately with task info.
-You'll receive a notification (via MCP logging/message) when the refresh completes.
-The user can continue chatting while the refresh runs in the background.
+You'll receive a notification when the refresh completes.
+You can continue chatting while the refresh runs in the background.
 
 Use this for long-running refresh operations. For quick status checks, use RefreshDataflowStatus.")]
     public async Task<string> RefreshDataflowBackground(
