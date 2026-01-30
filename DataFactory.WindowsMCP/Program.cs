@@ -17,6 +17,9 @@ var logger = loggerFactory.CreateLogger("DataFactory.WindowsMCP.Startup");
 // Register all DataFactory MCP services (shared with other versions)
 builder.Services.AddDataFactoryMcpServices();
 
+// Register Windows-specific MCP services
+builder.Services.AddWindowsMcpServices();
+
 // Configure MCP server with stdio transport and register tools
 logger.LogInformation("Registering core MCP tools...");
 var mcpBuilder = builder.Services
