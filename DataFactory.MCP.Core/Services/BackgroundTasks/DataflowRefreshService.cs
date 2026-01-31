@@ -90,8 +90,4 @@ public class DataflowRefreshService : IDataflowRefreshService
             FailureReason = jobInstance.FailureReason?.Message
         };
     }
-
-    public IReadOnlyList<TrackedTask> GetAllTasks() => _jobMonitor.GetAllTasks();
-
-    public TrackedTask? GetTask(string taskId) => _jobMonitor.GetTask(taskId);
 }

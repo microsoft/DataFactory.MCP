@@ -102,16 +102,6 @@ public class BackgroundJobMonitor : IBackgroundJobMonitor, IDisposable
         return startResult;
     }
 
-    public TrackedTask? GetTask(string taskId)
-    {
-        return _taskHistory.TryGetValue(taskId, out var task) ? task : null;
-    }
-
-    public IReadOnlyList<TrackedTask> GetAllTasks()
-    {
-        return _taskHistory.Values.ToList().AsReadOnly();
-    }
-
     public bool HasActiveJobs => !_activeJobs.IsEmpty;
 
     public int ActiveJobCount => _activeJobs.Count;

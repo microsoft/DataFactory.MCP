@@ -24,14 +24,4 @@ public interface IDataflowRefreshService
     /// Gets the status of a running refresh.
     /// </summary>
     Task<DataflowRefreshResult> GetStatusAsync(DataflowRefreshContext context);
-
-    /// <summary>
-    /// Gets all tracked tasks.
-    /// </summary>
-    IReadOnlyList<TrackedTask> GetAllTasks();
-
-    /// <summary>
-    /// Gets a specific task by ID.
-    /// </summary>
-    TrackedTask? GetTask(string taskId);
 }

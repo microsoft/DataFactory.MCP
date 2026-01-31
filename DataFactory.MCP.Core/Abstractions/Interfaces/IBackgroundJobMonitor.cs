@@ -18,16 +18,6 @@ public interface IBackgroundJobMonitor
     Task<BackgroundJobResult> StartJobAsync(IBackgroundJob job, McpSession session);
 
     /// <summary>
-    /// Gets a tracked task by ID (active or completed).
-    /// </summary>
-    TrackedTask? GetTask(string taskId);
-
-    /// <summary>
-    /// Gets all tracked tasks.
-    /// </summary>
-    IReadOnlyList<TrackedTask> GetAllTasks();
-
-    /// <summary>
     /// Gets whether there are any active jobs being monitored.
     /// </summary>
     bool HasActiveJobs { get; }
