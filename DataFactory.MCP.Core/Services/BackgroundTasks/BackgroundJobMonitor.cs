@@ -14,14 +14,17 @@ public class BackgroundJobMonitor : IBackgroundJobMonitor, IDisposable
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan MaxJobAge = TimeSpan.FromHours(4);
+    private const int MaxHistoryCount = 20;
 
     private readonly ConcurrentDictionary<string, MonitoredJob> _activeJobs = new();
-    private readonly ConcurrentDictionary<string, TrackedTask> _allTasks = new();
+    private readonly ConcurrentDictionary<string, TrackedTask> _taskHistory = new();
+    private readonly ConcurrentQueue<string> _historyOrder = new(); // Track insertion order for eviction
     private readonly IMcpSessionAccessor _sessionAccessor;
     private readonly INotificationQueue _notificationQueue;
     private readonly ILogger<BackgroundJobMonitor> _logger;
     private readonly Timer _pollTimer;
     private readonly SemaphoreSlim _pollLock = new(1, 1);
+    private readonly object _historyLock = new(); // For atomic history operations
     private bool _disposed;
 
     public BackgroundJobMonitor(
@@ -54,7 +57,7 @@ public class BackgroundJobMonitor : IBackgroundJobMonitor, IDisposable
         // Start the job
         var startResult = await job.StartAsync();
 
-        // Track the task
+        // Track the task in history (bounded)
         var trackedTask = new TrackedTask
         {
             TaskId = job.JobId,
@@ -64,7 +67,7 @@ public class BackgroundJobMonitor : IBackgroundJobMonitor, IDisposable
             StartedAt = startResult.StartedAt,
             Context = startResult.Context
         };
-        _allTasks[job.JobId] = trackedTask;
+        AddToHistory(trackedTask);
 
         if (startResult.IsComplete)
         {
@@ -101,12 +104,12 @@ public class BackgroundJobMonitor : IBackgroundJobMonitor, IDisposable
 
     public TrackedTask? GetTask(string taskId)
     {
-        return _allTasks.TryGetValue(taskId, out var task) ? task : null;
+        return _taskHistory.TryGetValue(taskId, out var task) ? task : null;
     }
 
     public IReadOnlyList<TrackedTask> GetAllTasks()
     {
-        return _allTasks.Values.ToList().AsReadOnly();
+        return _taskHistory.Values.ToList().AsReadOnly();
     }
 
     public bool HasActiveJobs => !_activeJobs.IsEmpty;
@@ -233,8 +236,8 @@ public class BackgroundJobMonitor : IBackgroundJobMonitor, IDisposable
 
     private void HandleJobCompletion(IBackgroundJob job, BackgroundJobResult result)
     {
-        // Update tracked task
-        if (_allTasks.TryGetValue(job.JobId, out var task))
+        // Update tracked task in history
+        if (_taskHistory.TryGetValue(job.JobId, out var task))
         {
             task.Status = result.Status;
             task.CompletedAt = result.CompletedAt ?? DateTime.UtcNow;
@@ -243,6 +246,28 @@ public class BackgroundJobMonitor : IBackgroundJobMonitor, IDisposable
 
         // Queue notification
         EnqueueNotification(job, result);
+    }
+
+    /// <summary>
+    /// Adds a task to history, evicting oldest entries if over max count.
+    /// </summary>
+    private void AddToHistory(TrackedTask task)
+    {
+        lock (_historyLock)
+        {
+            _taskHistory[task.TaskId] = task;
+            _historyOrder.Enqueue(task.TaskId);
+
+            // Evict oldest entries if over max
+            while (_taskHistory.Count > MaxHistoryCount && _historyOrder.TryDequeue(out var oldestId))
+            {
+                // Only remove if it's not currently active (still being monitored)
+                if (!_activeJobs.ContainsKey(oldestId))
+                {
+                    _taskHistory.TryRemove(oldestId, out _);
+                }
+            }
+        }
     }
 
     private void EnqueueNotification(IBackgroundJob job, BackgroundJobResult result)
