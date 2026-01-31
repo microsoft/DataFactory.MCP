@@ -1,5 +1,7 @@
-using Microsoft.Extensions.DependencyInjection;
+using DataFactory.WindowsMCP.Abstractions.Interfaces;
+using DataFactory.WindowsMCP.Services;      
 using DataFactory.WindowsMCP.Tools;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DataFactory.WindowsMCP.Extensions;
 
@@ -16,6 +18,16 @@ public static class WindowsServiceCollectionExtensions
     public static IMcpServerBuilder AddWindowsMcpTools(this IMcpServerBuilder mcpBuilder)
     {
         return mcpBuilder
-            .WithTools<WindowsSystemInfoTool>();
+            .WithTools<WindowsSystemInfoTool>()
+            .WithTools<ExcelTool>();
+    }
+
+    public static IServiceCollection AddWindowsMcpServices(this IServiceCollection services)
+    {
+        // Register Excel service
+        services
+            .AddSingleton<IExcelService, ExcelService>();
+
+        return services;
     }
 }

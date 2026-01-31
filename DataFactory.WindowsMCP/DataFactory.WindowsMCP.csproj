@@ -30,4 +30,11 @@
         <ProjectReference Include="..\DataFactory.MCP.Core\DataFactory.MCP.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="Interop.Microsoft.Office.Interop.Excel">
+        <HintPath>..\Interop.Microsoft.Office.Interop.Excel.dll</HintPath>
+        <EmbedInteropTypes>True</EmbedInteropTypes>
+      </Reference>
+    </ItemGroup>
+
 </Project>
