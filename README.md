@@ -27,6 +27,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 - **Connection Management**: `list_connections`, `get_connection`, `create_cloud_sql_basic`, `create_cloud_sql_workspace_identity`, `create_cloud_web_anonymous`, `create_cloud_web_basic`, `create_v_net_sql_basic`, `create_v_net_sql_workspace_identity`
 - **Workspace Management**: `list_workspaces`
 - **Dataflow Management**: `list_dataflows`, `create_dataflow`, `get_decoded_dataflow_definition`, `add_connection_to_dataflow`, `add_or_update_query_in_dataflow`, `validate_and_save_m_document`
+- **Dataflow Refresh**: `refresh_dataflow_background`, `refresh_dataflow_status`
 - **Dataflow Query Execution**: `execute_query` *(Preview)*
 - **Capacity Management**: `list_capacities`
 

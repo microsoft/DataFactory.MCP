@@ -8,8 +8,11 @@ using DataFactory.MCP.Configuration;
 using DataFactory.MCP.Infrastructure.Http;
 using DataFactory.MCP.Services;
 using DataFactory.MCP.Services.Authentication;
+using DataFactory.MCP.Services.BackgroundTasks;
 using DataFactory.MCP.Services.DMTSv2;
+using DataFactory.MCP.Services.Notifications;
 using DataFactory.MCP.Tools;
+using DataFactory.MCP.Tools.Dataflow;
 using DataFactory.MCP.Models.Connection.Factories;
 
 namespace DataFactory.MCP.Tests.Infrastructure;
@@ -91,12 +94,23 @@ public class McpTestFixture : IDisposable
                 services.AddScoped<IFabricCapacityService, FabricCapacityService>();
                 services.AddScoped<FabricDataSourceConnectionFactory>();
 
+                // Register background task services
+                services.AddSingleton<IMcpSessionAccessor, McpSessionAccessor>();
+                services.AddSingleton<IPlatformNotificationProvider, WindowsToastNotificationProvider>();
+                services.AddSingleton<IPlatformNotificationProvider, MacOsNotificationProvider>();
+                services.AddSingleton<IPlatformNotificationProvider, LinuxNotificationProvider>();
+                services.AddSingleton<IUserNotificationService, SystemToastNotificationService>();
+                services.AddSingleton<INotificationQueue, NotificationQueue>();
+                services.AddSingleton<IBackgroundJobMonitor, BackgroundJobMonitor>();
+                services.AddScoped<IDataflowRefreshService, DataflowRefreshService>();
+
                 // Register tools
                 services.AddScoped<AuthenticationTool>();
                 services.AddScoped<GatewayTool>();
                 services.AddScoped<ConnectionsTool>();
                 services.AddScoped<WorkspacesTool>();
                 services.AddScoped<DataflowTool>();
+                services.AddScoped<DataflowRefreshTool>();
                 services.AddScoped<CapacityTool>();
                 services.AddScoped<DataflowQueryTool>();
                 services.AddScoped<MDocumentTool>();

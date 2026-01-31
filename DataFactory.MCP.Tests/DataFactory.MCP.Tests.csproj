@@ -22,7 +22,7 @@
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.1" />
         <PackageReference Include="Microsoft.Identity.Client" Version="4.76.0" />
-        <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.3" />
+        <PackageReference Include="ModelContextProtocol" Version="0.6.0-preview.1" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.1" />
         <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.1" />
         <PackageReference Include="Xunit.SkippableFact" Version="1.5.23" />

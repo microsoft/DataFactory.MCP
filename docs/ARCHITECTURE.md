@@ -409,6 +409,54 @@ DataflowDefinition AddConnectionToDefinition(DataflowDefinition definition, Conn
 DataflowDefinition AddOrUpdateQueryInDefinition(DataflowDefinition definition, string queryName, string mCode)
 ```
 
+#### DataflowRefreshService
+Implements `IDataflowRefreshService` and handles:
+- Starting background dataflow refresh operations
+- Tracking refresh progress and history
+- Integration with `IBackgroundJobMonitor` for monitoring
+
+Key Methods:
+```csharp
+Task<DataflowRefreshResult> StartRefreshAsync(McpSession session, string workspaceId, string dataflowId, ...)
+Task<DataflowRefreshResult> GetStatusAsync(DataflowRefreshContext context)
+IReadOnlyList<TrackedTask> GetAllTasks()
+TrackedTask? GetTask(string taskId)
+```
+
+#### BackgroundJobMonitor
+Implements `IBackgroundJobMonitor` and handles:
+- Centralized management of background job lifecycle (start, track, poll, notify)
+- Single timer-based polling loop for efficiency (3-second intervals)
+- Job history tracking (active and completed tasks)
+- Integration with notification queue for completion alerts
+
+Key Methods:
+```csharp
+Task<BackgroundJobResult> StartJobAsync(IBackgroundJob job, McpSession session)
+TrackedTask? GetTask(string taskId)
+IReadOnlyList<TrackedTask> GetAllTasks()
+bool HasActiveJobs { get; }
+int ActiveJobCount { get; }
+```
+
+#### NotificationQueue
+Implements `INotificationQueue` and handles:
+- Queuing notifications for sequential delivery
+- Spacing notifications (3-second delay) to prevent overlap
+- Channel-based async producer/consumer pattern
+
+Key Methods:
+```csharp
+void Enqueue(QueuedNotification notification)
+int PendingCount { get; }
+```
+
+#### Platform Notification Providers
+Platform-specific implementations of `IPlatformNotificationProvider`:
+- **WindowsToastNotificationProvider**: WPF toast notifications via PowerShell
+- **MacOsNotificationProvider**: macOS Notification Center via osascript
+- **LinuxNotificationProvider**: Desktop notifications via notify-send
+
 #### DataTransformationService
 Implements `IDataTransformationService` and handles:
 - JSON content parsing and transformation
@@ -437,6 +485,13 @@ Defines interfaces and base classes that enable testability and extensibility.
 - `IArrowDataReaderService`: Apache Arrow data parsing contract
 - `IDataTransformationService`: Data transformation contract
 - `IDataflowDefinitionProcessor`: Dataflow definition processing contract
+- `IBackgroundJobMonitor`: Background job lifecycle management (start, track, poll, notify)
+- `IBackgroundJob`: Interface for background jobs (dataflow refresh, etc.)
+- `IDataflowRefreshService`: High-level dataflow refresh operations
+- `IUserNotificationService`: Cross-platform user notification delivery
+- `IPlatformNotificationProvider`: Platform-specific notification implementation
+- `INotificationQueue`: Notification queuing and spacing
+- `IMcpSessionAccessor`: MCP session access for background operations
 
 #### DMTSv2 Interfaces (`Abstractions/Interfaces/DMTSv2/`)
 - `IGatewayClusterDatasourceService`: Power BI gateway cluster datasource operations
@@ -718,6 +773,81 @@ Centralized JSON serialization options:
 5. Tool → ToMcpJson() → AI Assistant
 ```
 
+### Background Job Flow (Dataflow Refresh)
+
+```
+1. AI Assistant → DataflowTool.RefreshDataflowBackgroundAsync()
+2. Tool → DataflowRefreshService.StartRefreshAsync()
+3. Service → Creates DataflowRefreshJob (implements IBackgroundJob)
+4. Service → BackgroundJobMonitor.StartJobAsync()
+5. Monitor:
+   ├── Stores MCP session via IMcpSessionAccessor
+   ├── Calls job.StartAsync() → POST to Fabric API
+   ├── Tracks task in internal dictionary
+   ├── Starts/continues single Timer (3-second interval)
+   └── Returns initial result to Tool → AI Assistant
+6. Background Monitoring (single timer polls all jobs):
+   ├── Timer fires every 3 seconds
+   ├── Polls all active jobs in parallel (Task.WhenAll)
+   ├── For each completed job:
+   │   ├── Updates tracked task status
+   │   └── Enqueues notification to NotificationQueue
+   └── Stops timer when no active jobs remain
+7. Notification Delivery:
+   ├── NotificationQueue processor (single background task)
+   ├── Shows notifications sequentially with 3-second spacing
+   └── Platform-specific delivery:
+       ├── Windows: PowerShell + WPF toast
+       ├── macOS: osascript → Notification Center
+       └── Linux: notify-send → Desktop notification
+```
+
+#### Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Background Task System                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────┐      ┌─────────────────────────────────┐  │
+│  │DataflowRefresh  │─────▶│     BackgroundJobMonitor        │  │
+│  │    Service      │      │  ┌─────────────────────────┐    │  │
+│  └─────────────────┘      │  │ Single Timer (3s poll)  │    │  │
+│          │                │  └───────────┬─────────────┘    │  │
+│          │                │              │                   │  │
+│          ▼                │  ┌───────────▼─────────────┐    │  │
+│  ┌─────────────────┐      │  │  Active Jobs Dict       │    │  │
+│  │DataflowRefresh  │      │  │  ┌─────┐ ┌─────┐       │    │  │
+│  │     Job         │◀────▶│  │  │Job 1│ │Job 2│ ...   │    │  │
+│  └─────────────────┘      │  │  └─────┘ └─────┘       │    │  │
+│                           │  └───────────┬─────────────┘    │  │
+│                           │              │                   │  │
+│                           │  ┌───────────▼─────────────┐    │  │
+│                           │  │  Task History Dict      │    │  │
+│                           │  └─────────────────────────┘    │  │
+│                           └───────────────┬─────────────────┘  │
+│                                           │                     │
+│                           ┌───────────────▼─────────────────┐  │
+│                           │       NotificationQueue         │  │
+│                           │  ┌─────────────────────────┐    │  │
+│                           │  │ Channel<Notification>   │    │  │
+│                           │  │ (3s spacing)            │    │  │
+│                           │  └───────────┬─────────────┘    │  │
+│                           └───────────────┼─────────────────┘  │
+│                                           │                     │
+│  ┌────────────────────────────────────────┼────────────────┐   │
+│  │         IUserNotificationService       │                │   │
+│  │  ┌─────────────────────────────────────▼──────────────┐ │   │
+│  │  │          SystemToastNotificationService            │ │   │
+│  │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐         │ │   │
+│  │  │  │ Windows  │  │  macOS   │  │  Linux   │         │ │   │
+│  │  │  │ Provider │  │ Provider │  │ Provider │         │ │   │
+│  │  │  └──────────┘  └──────────┘  └──────────┘         │ │   │
+│  │  └────────────────────────────────────────────────────┘ │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 ## Security Architecture
 
 ### Authentication Security
@@ -967,7 +1097,7 @@ mcpBuilder.RegisterToolWithFeatureFlag<NewFeatureTool>(
 - **Circuit Breaker**: Prevent cascade failures with circuit breaker pattern
 
 ### Tool Enhancements
-- **Dataflow Refresh**: Trigger and monitor dataflow refresh operations
+- ~~**Dataflow Refresh**: Trigger and monitor dataflow refresh operations~~ ✅ Implemented
 - **Schema Discovery**: Introspect dataflow query schemas
 - **Incremental Refresh**: Support for incremental data refresh policies
 - **Lineage Tracking**: Data lineage and dependency visualization

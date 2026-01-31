@@ -109,7 +109,7 @@ extends:
                   command: "restore"
                   projects: "$(Build.SourcesDirectory)/DataFactory.MCP/DataFactory.MCP.csproj"
                   feedsToUse: "config"
-                  nugetConfigPath: "$(Build.SourcesDirectory)/nuget.config"
+                  nugetConfigPath: "$(Build.SourcesDirectory)/nuget.private.config"
                   verbosityRestore: "Normal"
                   noCache: true
                 retryCountOnTaskFailure: 3

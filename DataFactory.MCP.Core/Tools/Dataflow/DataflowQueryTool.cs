@@ -4,10 +4,11 @@ using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Models.Dataflow.Query;
 
-namespace DataFactory.MCP.Tools;
+namespace DataFactory.MCP.Tools.Dataflow;
 
 /// <summary>
-/// MCP Tool for executing queries against Microsoft Fabric Dataflows
+/// MCP Tool for executing queries against Microsoft Fabric Dataflows.
+/// Feature-flagged: enabled with --dataflow-query.
 /// </summary>
 [McpServerToolType]
 public class DataflowQueryTool
@@ -74,6 +75,4 @@ FORMATTING INSTRUCTION: When displaying results to users, please format the 'tab
             return ex.ToOperationError("executing dataflow query").ToMcpJson();
         }
     }
-
-
 }
