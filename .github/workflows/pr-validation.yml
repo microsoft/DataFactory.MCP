@@ -43,7 +43,7 @@ jobs:
           include-prerelease: true
 
       - name: 📦 Restore Dependencies
-        run: dotnet restore --configfile ../nuget.public.config
+        run: dotnet restore --configfile ../nuget.config
         working-directory: ./DataFactory.MCP
 
       - name: 🔨 Build Main Project
@@ -51,7 +51,7 @@ jobs:
         working-directory: ./DataFactory.MCP
 
       - name: 📦 Restore Dependencies Tests
-        run: dotnet restore --configfile ../nuget.public.config
+        run: dotnet restore --configfile ../nuget.config
         working-directory: ./DataFactory.MCP.Tests
 
       - name: 🔨 Build Test Project
