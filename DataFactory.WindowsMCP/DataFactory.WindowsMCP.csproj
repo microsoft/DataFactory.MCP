@@ -35,7 +35,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Reference Include="Microsoft.Office.Interop.Excel.dll">
+        <Reference Include="Microsoft.Office.Interop.Excel">
             <!-- $(PkgMicrosoft_Office_Interop_Excel) gets defined by the above GeneratePathProperty -->
             <HintPath>$(PkgMicrosoft_Office_Interop_Excel)\lib\net5.0\Microsoft.Office.Interop.Excel.dll</HintPath>
             <EmbedInteropTypes>True</EmbedInteropTypes>
