@@ -119,6 +119,54 @@ dotnet pack -c Release
 2. Run the project: `dotnet run`
 3. Test the tools through your MCP-enabled chat interface
 
+## Claude Skills (Optional)
+
+Enhance your Claude experience with pre-built Data Factory skills that provide operational tips and best practices.
+
+### Installation
+
+Upload the skill files from the [`claude-skills/`](claude-skills/) folder to your Claude Project:
+
+1. Go to your Claude Project settings
+2. Add these files to **Project Knowledge**:
+   - `datafactory-SKILL.md` - Index file (always loaded)
+   - `datafactory-core.md` - M basics, MCP tools overview
+   - `datafactory-performance.md` - Query optimization, timeouts, chunking
+   - `datafactory-destinations.md` - Output configuration, programmatic setup
+   - `datafactory-advanced.md` - Fast Copy, Action.Sequence, Modern Evaluator
+
+### What's Covered
+
+| Skill | Topics |
+|-------|--------|
+| **Core** | M (Power Query) fundamentals, Dataflow Gen2 overview, MCP tool reference |
+| **Performance** | Query timeouts, chunking strategies, filter optimization, connector selection |
+| **Destinations** | Lakehouse architecture, schema settings, programmatic destination configuration |
+| **Advanced** | `Action.Sequence` for writes, Fast Copy, Modern Evaluator |
+
+### Usage
+
+Once installed, Claude will automatically reference these skills based on your questions:
+- *"My query is timing out"* → loads performance tips
+- *"How do I set the output destination programmatically?"* → loads destination guide
+- *"What's Fast Copy?"* → loads advanced features
+
+## ChatGPT Skills (Optional)
+
+Create a Custom GPT or use ChatGPT Projects with pre-built Data Factory knowledge.
+
+### Installation
+
+1. Go to [ChatGPT](https://chat.openai.com) → **Explore GPTs** → **Create**
+2. Copy instructions from [`chatgpt-skills/gpt-instructions.md`](chatgpt-skills/gpt-instructions.md)
+3. Upload knowledge files from [`chatgpt-skills/`](chatgpt-skills/):
+   - `knowledge-core.md` - M basics, Dataflow Gen2 overview
+   - `knowledge-performance.md` - Query optimization, timeouts
+   - `knowledge-destinations.md` - Output configuration
+   - `knowledge-advanced.md` - Fast Copy, Action.Sequence
+
+See [`chatgpt-skills/README.md`](chatgpt-skills/README.md) for detailed setup options.
+
 ## Documentation
 
 For complete documentation, see our **[Documentation Index](https://github.com/microsoft/DataFactory.MCP/blob/main/docs/index.md)**.
