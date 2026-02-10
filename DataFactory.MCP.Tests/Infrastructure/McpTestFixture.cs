@@ -96,9 +96,6 @@ public class McpTestFixture : IDisposable
 
                 // Register background task services
                 services.AddSingleton<IMcpSessionAccessor, McpSessionAccessor>();
-                services.AddSingleton<IPlatformNotificationProvider, WindowsToastNotificationProvider>();
-                services.AddSingleton<IPlatformNotificationProvider, MacOsNotificationProvider>();
-                services.AddSingleton<IPlatformNotificationProvider, LinuxNotificationProvider>();
                 services.AddSingleton<IUserNotificationService, SystemToastNotificationService>();
                 services.AddSingleton<INotificationQueue, NotificationQueue>();
                 services.AddSingleton<IBackgroundJobMonitor, BackgroundJobMonitor>();
