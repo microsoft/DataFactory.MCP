@@ -41,4 +41,12 @@
     <Copy SourceFiles="@(StdioUIFiles)" DestinationFolder="$(OutputPath)%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 
+  <!-- Also copy StdioUI app output to publish directory so it gets signed and packed -->
+  <Target Name="CopyStdioUIToPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <StdioUIPublishFiles Include="..\DataFactory.MCP.StdioUI\bin\$(Configuration)\$(TargetFramework)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(StdioUIPublishFiles)" DestinationFolder="$(PublishDir)%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>
