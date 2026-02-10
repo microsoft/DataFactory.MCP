@@ -451,9 +451,11 @@ void Enqueue(QueuedNotification notification)
 int PendingCount { get; }
 ```
 
-#### Avalonia Notification Provider
-Cross-platform implementation of `IPlatformNotificationProvider`:
-- **AvaloniaNotificationProvider**: Shells out to the `DataFactory.MCP.StdioUI` Avalonia app via `dotnet exec`, providing a unified toast notification experience across Windows, macOS, and Linux
+#### Platform Notification Providers
+Platform-specific implementations of `IPlatformNotificationProvider` (registered in the stdio host only):
+- **WindowsToastNotificationProvider**: Launches a WPF toast via PowerShell using embedded XAML/PS1 resources
+- **MacOsNotificationProvider**: Shells out to `osascript` to display native macOS alerts
+- **LinuxNotificationProvider**: Shells out to `notify-send` (libnotify) for desktop notifications
 
 #### DataTransformationService
 Implements `IDataTransformationService` and handles:
@@ -487,7 +489,7 @@ Defines interfaces and base classes that enable testability and extensibility.
 - `IBackgroundJob`: Interface for background jobs (dataflow refresh, etc.)
 - `IDataflowRefreshService`: High-level dataflow refresh operations
 - `IUserNotificationService`: Cross-platform user notification delivery
-- `IPlatformNotificationProvider`: Cross-platform notification implementation (Avalonia)
+- `IPlatformNotificationProvider`: Platform-specific notification provider (Windows/macOS/Linux)
 - `INotificationQueue`: Notification queuing and spacing
 - `IMcpSessionAccessor`: MCP session access for background operations
 
@@ -794,7 +796,7 @@ Centralized JSON serialization options:
 7. Notification Delivery:
    ├── NotificationQueue processor (single background task)
    ├── Shows notifications sequentially with 3-second spacing
-   └── Cross-platform delivery via Avalonia StdioUI toast
+   └── Platform-native delivery (Windows toast / macOS alert / Linux notify-send)
 ```
 
 #### Architecture Diagram
@@ -835,8 +837,8 @@ Centralized JSON serialization options:
 │  │  ┌─────────────────────────────────────▼──────────────┐ │   │
 │  │  │          SystemToastNotificationService            │ │   │
 │  │  │       ┌──────────────────────────────┐              │ │   │
-│  │  │       │  AvaloniaNotificationProvider │              │ │   │
-│  │  │       │  (cross-platform StdioUI)     │              │ │   │
+│  │  │       │  Platform Notification        │              │ │   │
+│  │  │       │  Providers (Win/Mac/Linux)     │              │ │   │
 │  │  │       └──────────────────────────────┘              │ │   │
 │  │  └────────────────────────────────────────────────────┘ │   │
 │  └─────────────────────────────────────────────────────────┘   │
