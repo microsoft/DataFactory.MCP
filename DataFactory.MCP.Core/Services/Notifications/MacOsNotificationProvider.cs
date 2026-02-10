@@ -29,7 +29,7 @@ public class MacOsNotificationProvider : IPlatformNotificationProvider
             Process.Start(new ProcessStartInfo
             {
                 FileName = "osascript",
-                Arguments = $"-e \"display alert \\\"{escapedTitle}\\\" message \\\"{escapedMessage}\\\"\"",
+                Arguments = $"-e \"display notification \\\"{escapedMessage}\\\" with title \\\"{escapedTitle}\\\"\"",
                 UseShellExecute = false,
                 CreateNoWindow = true
             });

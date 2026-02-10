@@ -28,6 +28,17 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DataFactory.MCP.Core\DataFactory.MCP.Core.csproj" />
+    <ProjectReference Include="..\DataFactory.MCP.StdioUI\DataFactory.MCP.StdioUI.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
+
+  <!-- Copy StdioUI app output to our output directory -->
+  <Target Name="CopyStdioUIOutput" AfterTargets="Build">
+    <ItemGroup>
+      <StdioUIFiles Include="..\DataFactory.MCP.StdioUI\bin\$(Configuration)\$(TargetFramework)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(StdioUIFiles)" DestinationFolder="$(OutputPath)%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

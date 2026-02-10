@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
+using DataFactory.MCP.Notifications;
 using DataFactory.MCP.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -14,6 +15,9 @@ builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
 using var loggerFactory = LoggerFactory.Create(b =>
     b.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace));
 var logger = loggerFactory.CreateLogger("DataFactory.MCP.Startup");
+
+// Register Avalonia notification provider first (cross-platform, takes priority over platform-specific providers)
+builder.Services.AddSingleton<IPlatformNotificationProvider, AvaloniaNotificationProvider>();
 
 // Register all DataFactory MCP services (shared with HTTP version)
 builder.Services.AddDataFactoryMcpServices();
