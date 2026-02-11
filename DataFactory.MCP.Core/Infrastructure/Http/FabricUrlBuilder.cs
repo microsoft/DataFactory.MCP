@@ -27,11 +27,6 @@ public class FabricUrlBuilder
     public static FabricUrlBuilder ForFabricApi() => new(ApiVersions.Fabric.V1BaseUrl);
 
     /// <summary>
-    /// Creates a URL builder using the Azure Resource Manager base URL
-    /// </summary>
-    public static FabricUrlBuilder ForAzureResourceManager() => new("https://management.azure.com");
-
-    /// <summary>
     /// Creates a URL builder using the Power BI API v2 base URL
     /// </summary>
     public static FabricUrlBuilder ForPowerBiV2Api() => new(ApiVersions.PowerBi.V2BaseUrl);

@@ -30,7 +30,6 @@ public static class ServiceCollectionExtensions
     {
         // Register authentication handlers as transient (DelegatingHandlers must be transient)
         services.AddTransient<FabricAuthenticationHandler>();
-        services.AddTransient<AzureResourceManagerAuthenticationHandler>();
 
         // Register named HttpClients with authentication handlers
         services.AddHttpClient(HttpClientNames.FabricApi, client =>
@@ -38,12 +37,6 @@ public static class ServiceCollectionExtensions
             client.BaseAddress = new Uri(ApiVersions.Fabric.V1BaseUrl + "/");
             client.Timeout = TimeSpan.FromSeconds(30);
         }).AddHttpMessageHandler<FabricAuthenticationHandler>();
-
-        services.AddHttpClient(HttpClientNames.AzureResourceManager, client =>
-        {
-            client.BaseAddress = new Uri("https://management.azure.com/");
-            client.Timeout = TimeSpan.FromSeconds(30);
-        }).AddHttpMessageHandler<AzureResourceManagerAuthenticationHandler>();
 
         services.AddHttpClient(HttpClientNames.PowerBiV2Api, client =>
         {
@@ -70,7 +63,6 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IFabricWorkspaceService, FabricWorkspaceService>()
             .AddSingleton<IFabricDataflowService, FabricDataflowService>()
             .AddSingleton<IFabricCapacityService, FabricCapacityService>()
-            .AddSingleton<IAzureResourceDiscoveryService, AzureResourceDiscoveryService>()
             .AddSingleton<FabricDataSourceConnectionFactory>()
             // Session accessor for background notifications
             .AddSingleton<IMcpSessionAccessor, McpSessionAccessor>()
@@ -99,7 +91,6 @@ public static class ServiceCollectionExtensions
             .WithTools<DataflowTool>()
             .WithTools<DataflowRefreshTool>()
             .WithTools<CapacityTool>()
-            .WithTools<AzureResourceDiscoveryTool>()
             .WithTools<MDocumentTool>();
     }
 

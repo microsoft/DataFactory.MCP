@@ -27,11 +27,6 @@ public static class AzureAdConfiguration
     public static readonly string[] PowerBIScopes = new[] { "https://analysis.windows.net/powerbi/api/.default" };
 
     /// <summary>
-    /// Azure Resource Manager specific scopes
-    /// </summary>
-    public static readonly string[] AzureResourceManagerScopes = new[] { "https://management.azure.com/.default" };
-
-    /// <summary>
     /// Redirect URI for interactive authentication
     /// </summary>
     public const string RedirectUri = "http://localhost:0";

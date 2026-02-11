@@ -53,7 +53,6 @@ public class McpTestFixture : IDisposable
 
                 // Register authentication handlers
                 services.AddTransient<FabricAuthenticationHandler>();
-                services.AddTransient<AzureResourceManagerAuthenticationHandler>();
 
                 // Register named HttpClients with authentication handlers (matching Program.cs)
                 services.AddHttpClient(HttpClientNames.FabricApi, client =>
@@ -61,12 +60,6 @@ public class McpTestFixture : IDisposable
                     client.BaseAddress = new Uri(ApiVersions.Fabric.V1BaseUrl + "/");
                     client.Timeout = TimeSpan.FromSeconds(30);
                 }).AddHttpMessageHandler<FabricAuthenticationHandler>();
-
-                services.AddHttpClient(HttpClientNames.AzureResourceManager, client =>
-                {
-                    client.BaseAddress = new Uri("https://management.azure.com/");
-                    client.Timeout = TimeSpan.FromSeconds(30);
-                }).AddHttpMessageHandler<AzureResourceManagerAuthenticationHandler>();
 
                 services.AddHttpClient(HttpClientNames.PowerBiV2Api, client =>
                 {

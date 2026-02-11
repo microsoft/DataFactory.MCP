@@ -24,7 +24,7 @@ This document provides a comprehensive overview of the Microsoft Data Factory MC
 
 ## Overview
 
-The Microsoft Data Factory MCP Server is a .NET-based application that implements the Model Context Protocol (MCP) to provide AI assistants with comprehensive capabilities to interact with Microsoft Fabric services, including gateways, connections, workspaces, dataflows, capacities, and Azure resources. The server acts as a bridge between AI chat interfaces and Microsoft Fabric/Azure APIs.
+The Microsoft Data Factory MCP Server is a .NET-based application that implements the Model Context Protocol (MCP) to provide AI assistants with comprehensive capabilities to interact with Microsoft Fabric services, including gateways, connections, workspaces, dataflows, and capacities. The server acts as a bridge between AI chat interfaces and Microsoft Fabric APIs.
 
 ### Key Design Principles
 
@@ -101,8 +101,7 @@ The Microsoft Data Factory MCP Server is a .NET-based application that implement
 │  │  │ IFabricWorkspaceSvc│  │  │  │Response Ext  │ │MQuery Ext    │   │    │
 │  │  │ IFabricDataflowSvc │  │  │  │Json Ext      │ │HttpResponse  │   │    │
 │  │  │ IFabricCapacitySvc │  │  │  └──────────────┘ └──────────────┘   │    │
-│  │  │ IAzureResourceDisc │  │  └──────────────────────────────────────┘    │
-│  │  │ IValidationService │  │                                              │
+│  │  │ IValidationService │  │  └──────────────────────────────────────┘    │                                              │
 │  │  │ IArrowDataReader   │  │                                              │
 │  │  │ IDataTransformSvc  │  │                                              │
 │  │  │ IDataflowDefProc   │  │                                              │
@@ -114,15 +113,15 @@ The Microsoft Data Factory MCP Server is a .NET-based application that implement
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                            External APIs                                   │
 │  ┌─────────────────┐  ┌─────────────────────┐  ┌───────────────────────┐   │
-│  │    Azure AD     │  │ Microsoft Fabric API │  │ Azure Resource Manager│   │
-│  │ Authentication  │  │ api.fabric.microsoft │  │   management.azure    │   │
-│  │   via MSAL      │  │   .com/v1/           │  │        .com           │   │
-│  └─────────────────┘  └─────────────────────┘  └───────────────────────┘   │
-│                       │  • Gateways           │  │  • Subscriptions      │   │
-│                       │  • Connections        │  │  • Resource Groups    │   │
-│                       │  • Workspaces         │  │  • Virtual Networks   │   │
-│                       │  • Dataflows          │  │  • Subnets            │   │
-│                       │  • Capacities         │  └───────────────────────┘   │
+│  │    Azure AD     │  │ Microsoft Fabric API │                              │
+│  │ Authentication  │  │ api.fabric.microsoft │                              │
+│  │   via MSAL      │  │   .com/v1/           │                              │
+│  └─────────────────┘  └─────────────────────┘                              │
+│                       │  • Gateways           │                              │
+│                       │  • Connections        │                              │
+│                       │  • Workspaces         │                              │
+│                       │  • Dataflows          │                              │
+│                       │  • Capacities         │                              │
 │                       └─────────────────────┘                               │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │                    Power BI API (v2.0)                               │   │
@@ -148,7 +147,6 @@ builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
 
 // Register authentication handlers as transient (DelegatingHandlers must be transient)
 builder.Services.AddTransient<FabricAuthenticationHandler>();
-builder.Services.AddTransient<AzureResourceManagerAuthenticationHandler>();
 
 // Register named HttpClients with authentication handlers
 builder.Services.AddHttpClient(HttpClientNames.FabricApi, client =>
@@ -156,12 +154,6 @@ builder.Services.AddHttpClient(HttpClientNames.FabricApi, client =>
     client.BaseAddress = new Uri(ApiVersions.Fabric.V1BaseUrl + "/");
     client.Timeout = TimeSpan.FromSeconds(30);
 }).AddHttpMessageHandler<FabricAuthenticationHandler>();
-
-builder.Services.AddHttpClient(HttpClientNames.AzureResourceManager, client =>
-{
-    client.BaseAddress = new Uri("https://management.azure.com/");
-    client.Timeout = TimeSpan.FromSeconds(30);
-}).AddHttpMessageHandler<AzureResourceManagerAuthenticationHandler>();
 
 builder.Services.AddHttpClient(HttpClientNames.PowerBiV2Api, client =>
 {
@@ -182,7 +174,6 @@ builder.Services
     .AddSingleton<IFabricWorkspaceService, FabricWorkspaceService>()
     .AddSingleton<IFabricDataflowService, FabricDataflowService>()
     .AddSingleton<IFabricCapacityService, FabricCapacityService>()
-    .AddSingleton<IAzureResourceDiscoveryService, AzureResourceDiscoveryService>()
     .AddSingleton<FabricDataSourceConnectionFactory>();
 
 // Configure MCP server with tools
@@ -194,8 +185,7 @@ var mcpBuilder = builder.Services
     .WithTools<ConnectionsTool>()
     .WithTools<WorkspacesTool>()
     .WithTools<DataflowTool>()
-    .WithTools<CapacityTool>()
-    .WithTools<AzureResourceDiscoveryTool>();
+    .WithTools<CapacityTool>();
 
 // Conditionally enable DataflowQueryTool based on feature flag
 mcpBuilder.RegisterToolWithFeatureFlag<DataflowQueryTool>(
@@ -224,7 +214,6 @@ MCP Tools are the public interface that AI assistants interact with. Each tool i
 - `AuthenticateServicePrincipalAsync()`: Service principal authentication with client secret
 - `GetAuthenticationStatus()`: Current auth status and profile
 - `GetAccessTokenAsync()`: Retrieve Fabric API access token
-- `GetAzureResourceManagerTokenAsync()`: Retrieve ARM-scoped access token
 - `SignOutAsync()`: Clear authentication
 
 #### GatewayTool
@@ -258,12 +247,6 @@ MCP Tools are the public interface that AI assistants interact with. Each tool i
 #### CapacityTool
 - `ListCapacitiesAsync()`: List Fabric capacities user has access to
 
-#### AzureResourceDiscoveryTool
-- `GetAzureSubscriptionsAsync()`: List Azure subscriptions
-- `GetAzureResourceGroupsAsync()`: List resource groups in a subscription
-- `GetAzureVirtualNetworksAsync()`: List virtual networks, optionally filtered by resource group
-- `GetAzureSubnetsAsync()`: List subnets in a virtual network
-
 ### 3. Core Services Layer
 
 **Location**: `Services/`
@@ -274,7 +257,7 @@ Core services implement the business logic and handle external API interactions.
 Implements `IAuthenticationService` and handles:
 - Azure AD authentication flows via MSAL
 - Token management and in-memory storage
-- Multi-resource token acquisition (Fabric API, ARM)
+- Token acquisition for Fabric API
 - Credential validation
 - Multi-tenant support
 
@@ -354,20 +337,6 @@ Implements `IFabricCapacityService` and handles:
 Key Methods:
 ```csharp
 Task<CapacityResponse> ListCapacitiesAsync(string? continuationToken = null)
-```
-
-#### AzureResourceDiscoveryService
-Implements `IAzureResourceDiscoveryService` and handles:
-- Azure Resource Manager API integration
-- Subscription, resource group, virtual network, and subnet discovery
-- Uses ARM-specific authentication handler
-
-Key Methods:
-```csharp
-Task<List<AzureSubscription>> GetSubscriptionsAsync()
-Task<List<AzureResourceGroup>> GetResourceGroupsAsync(string subscriptionId)
-Task<List<AzureVirtualNetwork>> GetVirtualNetworksAsync(string subscriptionId, string? resourceGroupName = null)
-Task<List<AzureSubnet>> GetSubnetsAsync(string subscriptionId, string resourceGroupName, string virtualNetworkName)
 ```
 
 #### ValidationService
@@ -480,7 +449,6 @@ Defines interfaces and base classes that enable testability and extensibility.
 - `IFabricWorkspaceService`: Workspace operations contract
 - `IFabricDataflowService`: Dataflow operations contract
 - `IFabricCapacityService`: Capacity operations contract
-- `IAzureResourceDiscoveryService`: Azure resource discovery contract
 - `IValidationService`: Input validation contract
 - `IArrowDataReaderService`: Apache Arrow data parsing contract
 - `IDataTransformationService`: Data transformation contract
@@ -512,12 +480,6 @@ Data Transfer Objects (DTOs) and configuration models organized by domain:
 - `AuthenticationResult`: Authentication status and user info
 - `AzureAdConfiguration`: Azure AD configuration settings with default scopes
 - `Messages`: Centralized message strings for consistent error/success messaging
-
-#### Azure Models (`Models/Azure/`)
-- `AzureSubscription`: Azure subscription information
-- `AzureResourceGroup`: Resource group details
-- `AzureVirtualNetwork`: Virtual network configuration
-- `AzureSubnet`: Subnet information
 
 #### Capacity Models (`Models/Capacity/`)
 - `Capacity`: Fabric capacity information
@@ -624,15 +586,9 @@ A `DelegatingHandler` that automatically adds Bearer token authentication to out
 - Validates tokens before attaching
 - Used by Fabric API and Power BI API clients
 
-##### AzureResourceManagerAuthenticationHandler
-A `DelegatingHandler` for Azure Resource Manager API authentication:
-- Uses ARM-specific scopes for token acquisition
-- Enables access to subscriptions, resource groups, VNets
-
 ##### FabricUrlBuilder
 Fluent URL builder for consistent API endpoint construction:
 - `ForFabricApi()`: Create builder with Fabric API base URL
-- `ForAzureResourceManager()`: Create builder with ARM base URL
 - `ForPowerBiV2Api()`: Create builder with Power BI API base URL
 - `WithPath()`: Add URL-encoded path segments
 - `WithLiteralPath()`: Add literal path segments
@@ -654,13 +610,6 @@ Centralized API version management:
 ```csharp
 public static class ApiVersions
 {
-    public static class AzureResourceManager
-    {
-        public const string Subscriptions = "2020-01-01";
-        public const string ResourceGroups = "2021-04-01";
-        public const string Network = "2023-04-01";
-    }
-
     public static class Fabric
     {
         public const string V1 = "v1";
@@ -678,7 +627,6 @@ public static class ApiVersions
 #### HttpClientNames
 Named HTTP client constants:
 - `FabricApi`: Client for Microsoft Fabric API
-- `AzureResourceManager`: Client for Azure ARM API
 - `PowerBiV2Api`: Client for Power BI API v2.0
 
 #### FeatureFlags
@@ -728,20 +676,6 @@ Centralized JSON serialization options:
 8. Service → Tool (domain objects)
 9. Tool → Formats using extension methods
 10. Tool → AI Assistant (JSON via ToMcpJson())
-```
-
-### Azure Resource Discovery Flow
-
-```
-1. AI Assistant → AzureResourceDiscoveryTool
-2. Tool → AzureResourceDiscoveryService
-3. Service → HttpClientFactory.CreateClient("AzureResourceManager")
-4. HttpClient sends request through pipeline:
-   └── AzureResourceManagerAuthenticationHandler intercepts
-       └── Gets ARM-scoped token and adds Authorization header
-5. Request → Azure Resource Manager API (management.azure.com)
-6. ARM API → Returns subscriptions/resource groups/VNets/subnets
-7. Service → Tool → AI Assistant
 ```
 
 ### Dataflow Query Execution Flow
@@ -853,13 +787,11 @@ Centralized JSON serialization options:
 - **Credential Protection**: Never log or expose secrets; validation service checks inputs
 - **Secure Communication**: HTTPS only for all external API calls
 - **Token Refresh**: Automatic token refresh via MSAL when possible
-- **Multi-Resource Tokens**: Separate scopes for Fabric API vs Azure Resource Manager
 - **Delegating Handlers**: Authentication logic centralized in HTTP pipeline handlers
 
 ### HTTP Pipeline Security
 
 - **FabricAuthenticationHandler**: Validates and attaches tokens for Fabric/Power BI APIs
-- **AzureResourceManagerAuthenticationHandler**: Handles ARM-specific authentication
 - **TokenValidator**: Ensures tokens are valid before making requests
 - **Centralized Base URLs**: API endpoints defined in `ApiVersions` class to prevent URL manipulation
 
@@ -1021,7 +953,7 @@ mcpBuilder.RegisterToolWithFeatureFlag<NewFeatureTool>(
 - Transient lifetime for delegating handlers (required by HttpClient pipeline)
 
 ### Delegating Handler Pattern
-- Authentication handlers (`FabricAuthenticationHandler`, `AzureResourceManagerAuthenticationHandler`)
+- Authentication handlers (`FabricAuthenticationHandler`)
 - Centralized cross-cutting concerns in HTTP pipeline
 - Separation of authentication from business logic
 
