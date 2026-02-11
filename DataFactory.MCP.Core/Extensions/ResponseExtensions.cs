@@ -1,5 +1,4 @@
 using DataFactory.MCP.Models;
-using DataFactory.MCP.Models.Connection;
 using DataFactory.MCP.Models.Dataflow.Query;
 using DataFactory.MCP.Models.Common.Responses.Errors;
 
@@ -23,27 +22,6 @@ public static class ResponseExtensions
             WorkspaceId = workspaceId,
             DataflowId = dataflowId,
             QueryName = queryName
-        };
-    }
-
-    /// <summary>
-    /// Converts a Connection to a successful creation response with connection details
-    /// </summary>
-    public static object ToCreationSuccessResponse(this Connection connection, string message)
-    {
-        return new
-        {
-            Success = true,
-            Message = message,
-            Connection = new
-            {
-                Id = connection.Id,
-                DisplayName = connection.DisplayName,
-                ConnectivityType = connection.ConnectivityType.ToString(),
-                ConnectionType = connection.ConnectionDetails.Type,
-                Path = connection.ConnectionDetails.Path,
-                PrivacyLevel = connection.PrivacyLevel?.ToString()
-            }
         };
     }
 

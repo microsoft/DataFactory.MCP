@@ -224,12 +224,6 @@ MCP Tools are the public interface that AI assistants interact with. Each tool i
 #### ConnectionsTool
 - `ListConnectionsAsync()`: List all accessible connections
 - `GetConnectionAsync()`: Get connection details by ID
-- `CreateCloudSqlBasicAsync()`: Create cloud SQL connection with basic auth
-- `CreateCloudSqlWorkspaceIdentityAsync()`: Create cloud SQL with workspace identity
-- `CreateCloudWebAnonymousAsync()`: Create web connection with anonymous auth
-- `CreateCloudWebBasicAsync()`: Create web connection with basic auth
-- `CreateVNetSqlBasicAsync()`: Create VNet gateway SQL with basic auth
-- `CreateVNetSqlWorkspaceIdentityAsync()`: Create VNet gateway SQL with workspace identity
 
 #### WorkspacesTool
 - `ListWorkspacesAsync()`: List accessible workspaces with optional role filtering

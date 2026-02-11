@@ -25,8 +25,6 @@ public static class JsonSerializerOptionsProvider
         {
             new JsonStringEnumConverter(),
             new ConnectionJsonConverter(),
-            new CredentialsJsonConverter(),
-            new ConnectionDetailsParameterJsonConverter(),
             new GatewayJsonConverter()
         }
     };

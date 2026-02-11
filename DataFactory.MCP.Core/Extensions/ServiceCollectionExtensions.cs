@@ -5,7 +5,6 @@ using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Configuration;
 using DataFactory.MCP.Infrastructure.Http;
-using DataFactory.MCP.Models.Connection.Factories;
 using DataFactory.MCP.Services;
 using DataFactory.MCP.Services.Authentication;
 using DataFactory.MCP.Services.BackgroundTasks;
@@ -63,7 +62,6 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IFabricWorkspaceService, FabricWorkspaceService>()
             .AddSingleton<IFabricDataflowService, FabricDataflowService>()
             .AddSingleton<IFabricCapacityService, FabricCapacityService>()
-            .AddSingleton<FabricDataSourceConnectionFactory>()
             // Session accessor for background notifications
             .AddSingleton<IMcpSessionAccessor, McpSessionAccessor>()
             // Background task system (consolidated: monitor handles start, track, poll, notify)

@@ -1,7 +1,6 @@
 using DataFactory.MCP.Abstractions;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models.Connection;
-using DataFactory.MCP.Models.Connection.Create;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
 
@@ -50,52 +49,6 @@ public class FabricConnectionService : FabricServiceBase, IFabricConnectionServi
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error fetching connection {ConnectionId}", connectionId);
-            throw;
-        }
-    }
-
-    public async Task<ShareableCloudConnection> CreateCloudConnectionAsync(CreateCloudConnectionRequest request)
-    {
-        try
-        {
-            Logger.LogInformation("Creating cloud connection: {DisplayName}", request.DisplayName);
-
-            var response = await PostAsync<ShareableCloudConnection>("connections", request);
-
-            if (response == null)
-            {
-                throw new InvalidOperationException("Failed to create cloud connection - no response received");
-            }
-
-            Logger.LogInformation("Successfully created cloud connection {ConnectionId}", response.Id);
-            return response;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error creating cloud connection {DisplayName}", request.DisplayName);
-            throw;
-        }
-    }
-
-    public async Task<VirtualNetworkGatewayConnection> CreateVirtualNetworkGatewayConnectionAsync(CreateVirtualNetworkGatewayConnectionRequest request)
-    {
-        try
-        {
-            Logger.LogInformation("Creating virtual network gateway connection: {DisplayName}", request.DisplayName);
-
-            var response = await PostAsync<VirtualNetworkGatewayConnection>("connections", request);
-
-            if (response == null)
-            {
-                throw new InvalidOperationException("Failed to create virtual network gateway connection - no response received");
-            }
-
-            Logger.LogInformation("Successfully created virtual network gateway connection {ConnectionId}", response.Id);
-            return response;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error creating virtual network gateway connection {DisplayName}", request.DisplayName);
             throw;
         }
     }
