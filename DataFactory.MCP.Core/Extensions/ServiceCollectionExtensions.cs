@@ -5,6 +5,7 @@ using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Configuration;
 using DataFactory.MCP.Infrastructure.Http;
+using DataFactory.MCP.Resources.McpApps;
 using DataFactory.MCP.Services;
 using DataFactory.MCP.Services.Authentication;
 using DataFactory.MCP.Services.BackgroundTasks;
@@ -89,7 +90,9 @@ public static class ServiceCollectionExtensions
             .WithTools<DataflowTool>()
             .WithTools<DataflowRefreshTool>()
             .WithTools<CapacityTool>()
-            .WithTools<MDocumentTool>();
+            .WithTools<MDocumentTool>()
+            .WithTools<AddConnectionUITool>()            // MCP Apps: Add Connection UI
+            .WithResources<AddConnectionResourceHandler>();  // MCP Apps: Add Connection Resource
     }
 
     /// <summary>

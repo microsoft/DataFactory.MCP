@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Connection</title>
+    <link rel="stylesheet" href="add-connection.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Add Connection</h1>
+        <p class="subtitle">Create a new data connection for your dataflows.</p>
+        
+        <form id="connectionForm">
+            <div class="form-group">
+                <label for="connectionName">Connection Name</label>
+                <input type="text" id="connectionName" placeholder="My Connection" required>
+            </div>
+
+            <div class="form-group">
+                <label for="connectionType">Connection Type</label>
+                <select id="connectionType" required>
+                    <option value="">Select a type...</option>
+                    <option value="sql">SQL Server</option>
+                    <option value="lakehouse">Lakehouse</option>
+                    <option value="warehouse">Warehouse</option>
+                    <option value="blob">Azure Blob Storage</option>
+                    <option value="adls">Azure Data Lake Storage</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="server">Server / Endpoint</label>
+                <input type="text" id="server" placeholder="server.database.windows.net">
+            </div>
+
+            <div class="form-group">
+                <label for="database">Database / Container</label>
+                <input type="text" id="database" placeholder="mydb">
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn-primary">Create Connection</button>
+            </div>
+        </form>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script src="add-connection.js"></script>
+</body>
+</html>
