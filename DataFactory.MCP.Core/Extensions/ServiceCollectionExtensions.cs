@@ -63,6 +63,7 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IFabricWorkspaceService, FabricWorkspaceService>()
             .AddSingleton<IFabricDataflowService, FabricDataflowService>()
             .AddSingleton<IFabricCapacityService, FabricCapacityService>()
+            .AddSingleton<IDataSourceService, DataSourceService>()
             // Session accessor for background notifications
             .AddSingleton<IMcpSessionAccessor, McpSessionAccessor>()
             // Background task system (consolidated: monitor handles start, track, poll, notify)
@@ -92,7 +93,9 @@ public static class ServiceCollectionExtensions
             .WithTools<CapacityTool>()
             .WithTools<MDocumentTool>()
             .WithTools<AddConnectionUITool>()            // MCP Apps: Add Connection UI
-            .WithResources<AddConnectionResourceHandler>();  // MCP Apps: Add Connection Resource
+            .WithTools<UserInputUITool>()                // MCP Apps: User Input POC
+            .WithResources<AddConnectionResourceHandler>()   // MCP Apps: Add Connection Resource
+            .WithResources<UserInputResourceHandler>();      // MCP Apps: User Input Resource
     }
 
     /// <summary>

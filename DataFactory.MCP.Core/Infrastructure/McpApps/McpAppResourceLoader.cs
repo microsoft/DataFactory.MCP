@@ -14,6 +14,22 @@ public static partial class McpAppResourceLoader
     private const string ResourceBasePath = "DataFactory.MCP.Core.Resources.McpApps";
 
     /// <summary>
+    /// Loads a pre-bundled MCP App UI resource (built with Vite).
+    /// </summary>
+    /// <param name="resourceFolder">The resource folder name (e.g., "AddConnection")</param>
+    /// <param name="baseName">The base file name without extension (e.g., "add-connection")</param>
+    /// <returns>Complete HTML with all dependencies bundled</returns>
+    public static string LoadPreBundled(string resourceFolder, string baseName)
+    {
+        // Load from dist subfolder (Vite output)
+        var resourceName = $"{ResourceBasePath}.{resourceFolder}.dist.{baseName}.html";
+        using var stream = ResourceAssembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Pre-bundled resource not found: {resourceName}. Run 'npm run build' in the {resourceFolder} folder.");
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
+
+    /// <summary>
     /// Loads an MCP App UI resource by name, inlining CSS and JS.
     /// </summary>
     /// <param name="resourceFolder">The resource folder name (e.g., "AddConnection")</param>

@@ -3,3 +3,5 @@ bin/
 *.sln
 DataFactory.MCP.Tests/Infrastructure/.env
 *.vs
+**/node_modules/
+**/dist/
