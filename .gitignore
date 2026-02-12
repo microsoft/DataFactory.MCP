@@ -5,5 +5,5 @@ DataFactory.MCP.Tests/Infrastructure/.env
 *.vs
 **/node_modules/
 **/dist/
-**/UserInput/node_modules/
-**/UserInput/dist/
+**/McpApps/node_modules/
+**/McpApps/dist/

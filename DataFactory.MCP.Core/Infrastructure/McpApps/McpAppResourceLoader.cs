@@ -14,7 +14,24 @@ public static partial class McpAppResourceLoader
     private const string ResourceBasePath = "DataFactory.MCP.Core.Resources.McpApps";
 
     /// <summary>
+    /// Loads a pre-bundled MCP App UI resource from the monorepo dist folder.
+    /// The monorepo builds all apps into McpApps/dist/{appName}.html
+    /// </summary>
+    /// <param name="appName">The app name (e.g., "user-input")</param>
+    /// <returns>Complete HTML with all dependencies bundled</returns>
+    public static string LoadFromMonorepo(string appName)
+    {
+        // Load from monorepo dist folder: McpApps/dist/{appName}.html
+        var resourceName = $"{ResourceBasePath}.dist.{appName}.html";
+        using var stream = ResourceAssembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"MCP App resource not found: {resourceName}. Run 'npm run build' in the McpApps folder.");
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
+
+    /// <summary>
     /// Loads a pre-bundled MCP App UI resource (built with Vite).
+    /// For legacy per-app folder structure.
     /// </summary>
     /// <param name="resourceFolder">The resource folder name (e.g., "AddConnection")</param>
     /// <param name="baseName">The base file name without extension (e.g., "add-connection")</param>

@@ -27,7 +27,7 @@ public class UserInputResource : McpAppResourceBase
     /// <inheritdoc />
     public override string GetHtmlContent()
     {
-        return McpAppResourceLoader.LoadPreBundled("UserInput", "user-input");
+        return McpAppResourceLoader.LoadFromMonorepo("user-input");
     }
 }
 

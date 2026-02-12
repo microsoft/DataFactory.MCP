@@ -15,7 +15,13 @@
             "DOM",
             "DOM.Iterable"
         ],
-        "jsx": "react-jsx"
+        "jsx": "react-jsx",
+        "baseUrl": ".",
+        "paths": {
+            "@shared/*": [
+                "src/shared/*"
+            ]
+        }
     },
     "include": [
         "src/**/*.ts",
