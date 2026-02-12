@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { UserInputApp } from "./UserInputApp";
+import { CreateConnectionApp } from "./CreateConnectionApp";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <UserInputApp appName="User Input" />
+    <CreateConnectionApp appName="Create Connection" />
   </React.StrictMode>,
 );

@@ -8,9 +8,9 @@ import {
 } from "../shared";
 
 /**
- * State for UserInputApp
+ * State for CreateConnectionApp
  */
-interface UserInputAppState extends McpAppComponentState {
+interface CreateConnectionAppState extends McpAppComponentState {
   inputText: string;
   isSubmitting: boolean;
   statusMessage: string | null;
@@ -18,13 +18,13 @@ interface UserInputAppState extends McpAppComponentState {
 }
 
 /**
- * User Input MCP App - Class Component
+ * Create Connection MCP App - Class Component
  *
- * A simple form that takes user text input and sends it to the agent context.
+ * Form for creating data source connections.
  */
-export class UserInputApp extends McpAppComponent<
+export class CreateConnectionApp extends McpAppComponent<
   McpAppComponentProps,
-  UserInputAppState
+  CreateConnectionAppState
 > {
   constructor(props: McpAppComponentProps) {
     super(props);

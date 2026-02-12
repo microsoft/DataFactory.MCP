@@ -2,7 +2,13 @@ import { defineConfig } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
-import { readdirSync, existsSync, renameSync, mkdirSync, rmSync } from "node:fs";
+import {
+  readdirSync,
+  existsSync,
+  renameSync,
+  mkdirSync,
+  rmSync,
+} from "node:fs";
 
 // Automatically discover all apps in src/ that have an index.html
 function discoverApps(): Record<string, string> {
@@ -47,7 +53,7 @@ export default defineConfig({
       closeBundle() {
         const distDir = resolve(__dirname, "dist");
         const srcDir = resolve(distDir, "src");
-        
+
         if (!existsSync(srcDir)) return;
 
         // Move each app's index.html to dist/{appName}.html

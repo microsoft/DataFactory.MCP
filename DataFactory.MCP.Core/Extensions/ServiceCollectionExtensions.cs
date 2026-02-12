@@ -91,8 +91,8 @@ public static class ServiceCollectionExtensions
             .WithTools<DataflowRefreshTool>()
             .WithTools<CapacityTool>()
             .WithTools<MDocumentTool>()
-            .WithTools<UserInputUITool>()                // MCP Apps: User Input POC
-            .WithResources<UserInputResourceHandler>();  // MCP Apps: User Input Resource
+            .WithTools<CreateConnectionUITool>()                // MCP Apps: Create Connection UI
+            .WithResources<CreateConnectionResourceHandler>();  // MCP Apps: Create Connection Resource
     }
 
     /// <summary>
