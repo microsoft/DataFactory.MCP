@@ -52,4 +52,63 @@ public class FabricConnectionService : FabricServiceBase, IFabricConnectionServi
             throw;
         }
     }
+
+    public async Task<Connection?> CreateConnectionAsync(CreateConnectionRequest request)
+    {
+        try
+        {
+            Logger.LogInformation("Creating connection '{DisplayName}' with connectivity type '{ConnectivityType}'",
+                request.DisplayName, request.ConnectivityType);
+
+            var connection = await PostAsync<ShareableCloudConnection>("connections", request);
+
+            if (connection != null)
+            {
+                Logger.LogInformation("Successfully created connection '{DisplayName}' with ID '{Id}'",
+                    connection.DisplayName, connection.Id);
+            }
+
+            return connection;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating connection '{DisplayName}'", request.DisplayName);
+            throw;
+        }
+    }
+
+    public async Task<ListSupportedConnectionTypesResponse> ListSupportedConnectionTypesAsync(string? gatewayId = null)
+    {
+        try
+        {
+            var allValues = new List<ConnectionCreationMetadata>();
+            string? continuationToken = null;
+
+            do
+            {
+                var endpoint = "connections/supportedConnectionTypes";
+                if (!string.IsNullOrWhiteSpace(gatewayId))
+                {
+                    endpoint += $"?gatewayId={Uri.EscapeDataString(gatewayId)}";
+                }
+
+                var page = await GetAsync<ListSupportedConnectionTypesResponse>(endpoint, continuationToken);
+                if (page?.Value != null)
+                {
+                    allValues.AddRange(page.Value);
+                }
+                continuationToken = page?.ContinuationToken;
+            }
+            while (!string.IsNullOrEmpty(continuationToken));
+
+            Logger.LogInformation("Successfully retrieved {Count} supported connection types", allValues.Count);
+
+            return new ListSupportedConnectionTypesResponse { Value = allValues };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error fetching supported connection types");
+            throw;
+        }
+    }
 }

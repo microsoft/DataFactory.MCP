@@ -44,7 +44,11 @@ public static class ResponseExtensions
         {
             if (fabricEx.IsAuthenticationError)
             {
-                return new McpHttpErrorResponse($"Authentication error: {Messages.AuthenticationRequired}");
+                // Include the actual API response content for debugging
+                var detail = !string.IsNullOrWhiteSpace(fabricEx.ResponseContent)
+                    ? $" API response: {fabricEx.ResponseContent}"
+                    : string.Empty;
+                return new McpHttpErrorResponse($"Authentication error ({fabricEx.StatusCode}): {fabricEx.Message}{detail}");
             }
 
             if (fabricEx.IsRateLimited && fabricEx.RetryAfter.HasValue)

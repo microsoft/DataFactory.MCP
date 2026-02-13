@@ -62,6 +62,7 @@ public abstract class FabricServiceBase
         Logger.LogInformation("Posting to: {Url}", url);
 
         var jsonContent = JsonSerializer.Serialize(request, JsonOptions);
+        Logger.LogInformation("Request body: {Body}", jsonContent);
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         var response = await HttpClient.PostAsync(url, content);

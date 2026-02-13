@@ -98,7 +98,8 @@ export abstract class McpAppComponent<
   }
 
   /**
-   * Call an MCP server tool.
+   * Call an MCP server tool and extract the parsed result.
+   * Handles MCP CallToolResult shape: { content: [{ type: "text", text: "JSON" }] }
    */
   protected async callServerTool(
     toolName: string,
@@ -109,7 +110,35 @@ export abstract class McpAppComponent<
       name: toolName,
       arguments: args,
     });
-    return typeof result === "string" ? JSON.parse(result) : result;
+
+    // If SDK returned a string directly, parse it
+    if (typeof result === "string") {
+      try {
+        return JSON.parse(result);
+      } catch {
+        return result;
+      }
+    }
+
+    // If SDK returned a CallToolResult object with content array, extract text
+    if (result && typeof result === "object") {
+      const obj = result as Record<string, unknown>;
+      if (Array.isArray(obj.content) && obj.content.length > 0) {
+        const firstContent = obj.content[0] as Record<string, unknown>;
+        if (
+          firstContent?.type === "text" &&
+          typeof firstContent.text === "string"
+        ) {
+          try {
+            return JSON.parse(firstContent.text);
+          } catch {
+            return firstContent.text;
+          }
+        }
+      }
+    }
+
+    return result;
   }
 
   /**
