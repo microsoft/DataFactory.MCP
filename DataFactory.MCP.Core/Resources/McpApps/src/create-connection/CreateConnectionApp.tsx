@@ -513,13 +513,16 @@ export class CreateConnectionApp extends McpAppComponent<
 
   private getFilteredGateways(): Gateway[] {
     const { gateways, connectionMode } = this.state;
+    // Fabric API returns: "OnPremises", "OnPremisesPersonal", "VirtualNetwork"
     const gatewayTypeMap: Record<ConnectionMode, string> = {
-      OnPremises: "OnPremDataGateway",
+      OnPremises: "OnPremises",
       VirtualNetwork: "VirtualNetwork",
-      StreamingVirtualNetwork: "StreamingVirtualNetwork",
-      Cloud: "TenantCloud",
+      StreamingVirtualNetwork: "VirtualNetwork",
+      Cloud: "",
     };
-    return gateways.filter((gw) => gw.type === gatewayTypeMap[connectionMode]);
+    const targetType = gatewayTypeMap[connectionMode];
+    if (!targetType) return [];
+    return gateways.filter((gw) => gw.type === targetType);
   }
 
   private getSelectedTypeInfo(): SupportedDataSourceType | undefined {

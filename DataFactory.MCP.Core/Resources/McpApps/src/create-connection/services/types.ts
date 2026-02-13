@@ -14,10 +14,9 @@ export type ConnectionMode =
   | "Cloud";
 
 export type GatewayType =
-  | "OnPremDataGateway"
-  | "VirtualNetwork"
-  | "StreamingVirtualNetwork"
-  | "TenantCloud";
+  | "OnPremises"
+  | "OnPremisesPersonal"
+  | "VirtualNetwork";
 
 // =============================================================================
 // Gateway Types
