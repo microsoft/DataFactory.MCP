@@ -69,6 +69,24 @@ public abstract class FabricServiceBase
     }
 
     /// <summary>
+    /// Sends a PATCH request and deserializes the response
+    /// </summary>
+    protected async Task<T?> PatchAsync<T>(string endpoint, object request) where T : class
+    {
+        var url = FabricUrlBuilder.ForFabricApi()
+            .WithLiteralPath(endpoint)
+            .Build();
+        Logger.LogInformation("Patching: {Url}", url);
+
+        var jsonContent = JsonSerializer.Serialize(request, JsonOptions);
+        var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+        var httpRequest = new HttpRequestMessage(HttpMethod.Patch, url) { Content = content };
+        var response = await HttpClient.SendAsync(httpRequest);
+        return await response.ReadAsJsonAsync<T>(JsonOptions);
+    }
+
+    /// <summary>
     /// Posts a request and returns the response as a byte array (for binary responses like Arrow format)
     /// </summary>
     protected async Task<byte[]> PostAsBytesAsync(string endpoint, object request)

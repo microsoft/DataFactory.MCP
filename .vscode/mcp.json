@@ -8,7 +8,10 @@
 				"--project",
 				"./DataFactory.MCP/DataFactory.MCP.csproj",
 				"--",
-				"--dataflow-query"
+				"--pipeline",
+				"true",
+				"--dataflow-query",
+				"true"
 			]
 		}
 		// "DataFactory.MCP.Http": {

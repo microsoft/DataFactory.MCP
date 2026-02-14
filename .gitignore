@@ -3,3 +3,4 @@ bin/
 *.sln
 DataFactory.MCP.Tests/Infrastructure/.env
 *.vs
+tmpclaude-*
