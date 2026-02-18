@@ -22,6 +22,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 ## Available Tools
 
 - **Authentication**: `authenticate_interactive`, `authenticate_service_principal`, `get_authentication_status`, `get_access_token`, `get_azure_resource_manager_token`, `sign_out`
+- **Device Code Authentication** *(HTTP only)*: `start_device_code_auth`, `check_device_auth_status`
 - **Azure Resource Discovery**: `get_azure_subscriptions`, `get_azure_resource_groups`, `get_azure_virtual_networks`, `get_azure_subnets`
 - **Gateway Management**: `list_gateways`, `get_gateway`, `create_v_net_gateway`
 - **Connection Management**: `list_connections`, `get_connection`, `create_cloud_sql_basic`, `create_cloud_sql_workspace_identity`, `create_cloud_web_anonymous`, `create_cloud_web_basic`, `create_v_net_sql_basic`, `create_v_net_sql_workspace_identity`
@@ -30,6 +31,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 - **Dataflow Refresh**: `refresh_dataflow_background`, `refresh_dataflow_status`
 - **Dataflow Query Execution**: `execute_query` *(Preview)*
 - **Capacity Management**: `list_capacities`
+- **Windows System Info** *(Windows MCP only)*: `get_windows_system_info`, `get_installed_dot_net_versions`
 
 ## Quick Start
 
@@ -45,7 +47,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
      "servers": {
        "DataFactory.MCP": {
          "type": "stdio",
-         "command": "dnx",
+         "command": "npx",
          "args": [
            "Microsoft.DataFactory.MCP",
            "--version",
@@ -58,6 +60,37 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
    ```
 
 2. **Start using**: The server will be automatically downloaded and available in your IDE's MCP-enabled chat interface.
+
+### Windows MCP (Windows-only)
+
+Includes all core tools plus Windows-specific tools (system info, .NET version detection):
+
+```json
+{
+  "servers": {
+    "DataFactory.WindowsMCP": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "Microsoft.DataFactory.WindowsMCP",
+        "--version",
+        "#{VERSION}#",
+        "--yes"
+      ]
+    }
+  }
+}
+```
+
+### HTTP Transport
+
+For scenarios requiring HTTP/SSE transport instead of stdio, use the HTTP variant:
+
+```bash
+dotnet run --project path/to/DataFactory.MCP.Http
+```
+
+The HTTP server exposes MCP endpoints and a `/health` health-check endpoint. Device code authentication tools are available only with the HTTP transport.
 
 ### Development Setup
 
