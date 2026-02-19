@@ -2,6 +2,12 @@
  * Components barrel export
  */
 
+export { SearchableComboBox } from "./SearchableComboBox";
+export type {
+  SearchableComboBoxProps,
+  ComboBoxOption,
+} from "./SearchableComboBox";
+
 export { ConnectionModeSelector } from "./ConnectionModeSelector";
 export type { ConnectionModeSelectorProps } from "./ConnectionModeSelector";
 

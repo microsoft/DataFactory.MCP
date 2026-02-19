@@ -1,12 +1,12 @@
 /**
- * ConnectionTypeDropdown - Dropdown to select a data source type.
+ * ConnectionTypeDropdown - Searchable dropdown to select a data source type.
  * Populated from the list_supported_cloud_data_sources tool result.
  * Class component.
  */
 
 import { Component, ReactNode } from "react";
 import { SupportedDataSourceType } from "../services/types";
-import { baseStyles } from "../../shared";
+import { SearchableComboBox, ComboBoxOption } from "./SearchableComboBox";
 
 export interface ConnectionTypeDropdownProps {
   dataSourceTypes: SupportedDataSourceType[];
@@ -17,15 +17,6 @@ export interface ConnectionTypeDropdownProps {
 }
 
 export class ConnectionTypeDropdown extends Component<ConnectionTypeDropdownProps> {
-  constructor(props: ConnectionTypeDropdownProps) {
-    super(props);
-    this.handleChange = this.handleChange.bind(this);
-  }
-
-  private handleChange(e: React.ChangeEvent<HTMLSelectElement>): void {
-    this.props.onSelect(e.target.value);
-  }
-
   render(): ReactNode {
     const {
       dataSourceTypes,
@@ -34,47 +25,31 @@ export class ConnectionTypeDropdown extends Component<ConnectionTypeDropdownProp
       disabled = false,
     } = this.props;
 
-    // Sort alphabetically by display name
-    const sorted = [...dataSourceTypes].sort((a, b) =>
-      (a.displayName || a.dataSourceType).localeCompare(
-        b.displayName || b.dataSourceType,
-      ),
-    );
+    // Sort alphabetically by display name and map to ComboBoxOption
+    const options: ComboBoxOption[] = [...dataSourceTypes]
+      .sort((a, b) =>
+        (a.displayName || a.dataSourceType).localeCompare(
+          b.displayName || b.dataSourceType,
+        ),
+      )
+      .map((ds) => ({
+        value: ds.displayName || ds.dataSourceType,
+        label: ds.displayName || ds.dataSourceType,
+      }));
 
     return (
-      <div style={baseStyles.formGroup}>
-        <label htmlFor="connection-type" style={baseStyles.label}>
-          Connection type <span style={styles.required}>*</span>
-        </label>
-        <select
-          id="connection-type"
-          value={selectedType}
-          onChange={this.handleChange}
-          disabled={disabled || isLoading}
-          style={baseStyles.select}
-          aria-busy={isLoading}
-        >
-          {isLoading ? (
-            <option value="">Loading data source types...</option>
-          ) : (
-            <>
-              <option value="">Select a data source type</option>
-              {sorted.map((ds) => (
-                <option
-                  key={ds.displayName || ds.dataSourceType}
-                  value={ds.displayName || ds.dataSourceType}
-                >
-                  {ds.displayName || ds.dataSourceType}
-                </option>
-              ))}
-            </>
-          )}
-        </select>
-      </div>
+      <SearchableComboBox
+        id="connection-type"
+        label="Connection type"
+        required
+        options={options}
+        selectedValue={selectedType}
+        onSelect={this.props.onSelect}
+        isLoading={isLoading}
+        disabled={disabled}
+        placeholder="Search data source types..."
+        loadingText="Loading data source types..."
+      />
     );
   }
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  required: { color: "var(--vscode-errorForeground, #f48771)" },
-};
