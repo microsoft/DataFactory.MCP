@@ -1,15 +1,18 @@
 /**
- * CreateConnectionApp - Main Application Component
+ * CreateConnectionApp - Wizard orchestrator (3 steps).
  *
- * 3-step wizard:
- *   Step 0 — Mode:        pick connection mode (auto-advances on click)
+ *   Step 0 — Mode:        pick connectivity type (auto-advances on click)
  *   Step 1 — Details:     gateway, name, type, detail fields
  *   Step 2 — Credentials: auth method, credential fields, privacy, encryption
  *
- * All components are React class components.
+ * Responsibilities:
+ *   - Owns all wizard state
+ *   - Delegates data fetching to connectionDataService
+ *   - Delegates validation to connectionValidation
+ *   - Delegates rendering to ModeStep / DetailsStep / CredentialsStep
  */
 
-import { ReactNode, CSSProperties } from "react";
+import { ReactNode } from "react";
 import {
   McpAppComponent,
   McpAppComponentProps,
@@ -22,46 +25,42 @@ import {
   CredentialType,
   PrivacyLevel,
   SupportedDataSourceType,
-  SupportedConnectionType,
   CreateConnectionResult,
   Gateway,
   requiresGateway,
-  credentialFieldsMap,
 } from "./services/types";
-import { convertConnectionTypes } from "./services/convertConnectionTypes";
 import {
-  ConnectionModeSelector,
-  GatewayDropdown,
-  ConnectionNameInput,
-  ConnectionTypeDropdown,
-  ConnectionDetailFields,
-  CredentialSection,
-  FormButtons,
-  SuccessBanner,
-  ErrorBanner,
-  LoadingSpinner,
-} from "./components";
+  fetchGateways,
+  fetchSupportedConnectionTypes,
+} from "./services/connectionDataService";
+import {
+  validateDetails,
+  validateCredentials,
+} from "./validation/connectionValidation";
+import { WizardStep } from "./wizard/types";
+import { WizardStepIndicator } from "./wizard/WizardStepIndicator";
+import { ModeStep } from "./wizard/ModeStep";
+import { DetailsStep } from "./wizard/DetailsStep";
+import { CredentialsStep } from "./wizard/CredentialsStep";
+import { SuccessBanner, LoadingSpinner } from "./components";
 
 // =============================================================================
 // State
 // =============================================================================
 
-type WizardStep = 0 | 1 | 2;
-
 interface CreateConnectionAppState extends McpAppComponentState {
-  // Wizard
   currentStep: WizardStep;
 
-  // Form data - basic
+  // Form — basic
   connectionMode: ConnectionMode;
   connectionName: string;
   selectedGatewayId: string | null;
 
-  // Form data - data source type
+  // Form — data source type
   selectedDataSourceType: string;
   connectionDetailValues: Record<string, string>;
 
-  // Form data - credentials
+  // Form — credentials
   selectedCredentialType: CredentialType;
   credentialValues: Record<string, string>;
   privacyLevel: PrivacyLevel;
@@ -85,6 +84,21 @@ interface CreateConnectionAppState extends McpAppComponentState {
   createdConnectionName: string | null;
 }
 
+const INITIAL_FORM_STATE = {
+  currentStep: 0 as WizardStep,
+  connectionMode: "Cloud" as ConnectionMode,
+  connectionName: "",
+  selectedGatewayId: null,
+  selectedDataSourceType: "",
+  connectionDetailValues: {},
+  selectedCredentialType: "Anonymous" as CredentialType,
+  credentialValues: {},
+  privacyLevel: "None" as PrivacyLevel,
+  encryptedConnection: "NotEncrypted",
+  skipTestConnection: false,
+  submitError: null,
+};
+
 // =============================================================================
 // Component
 // =============================================================================
@@ -98,58 +112,41 @@ export class CreateConnectionApp extends McpAppComponent<
 
     this.state = {
       ...this.state,
-
-      currentStep: 0,
-
-      connectionMode: "Cloud",
-      connectionName: "",
-      selectedGatewayId: null,
-
-      selectedDataSourceType: "",
-      connectionDetailValues: {},
-
-      selectedCredentialType: "Anonymous",
-      credentialValues: {},
-      privacyLevel: "None",
-      encryptedConnection: "NotEncrypted",
-      skipTestConnection: false,
-
+      ...INITIAL_FORM_STATE,
       gateways: [],
       isLoadingGateways: false,
       gatewayError: null,
       supportedDataSourceTypes: [],
       isLoadingConnectionTypes: false,
       connectionTypesError: null,
-
       isSubmitting: false,
-      submitError: null,
-
       createdConnectionId: null,
       createdConnectionName: null,
     };
 
-    this.handleModeChange = this.handleModeChange.bind(this);
-    this.handleGatewaySelect = this.handleGatewaySelect.bind(this);
-    this.handleNameChange = this.handleNameChange.bind(this);
-    this.handleDataSourceTypeChange =
-      this.handleDataSourceTypeChange.bind(this);
-    this.handleConnectionDetailChange =
-      this.handleConnectionDetailChange.bind(this);
-    this.handleCredentialTypeChange =
-      this.handleCredentialTypeChange.bind(this);
-    this.handleCredentialValueChange =
-      this.handleCredentialValueChange.bind(this);
-    this.handlePrivacyLevelChange = this.handlePrivacyLevelChange.bind(this);
-    this.handleEncryptedConnectionChange =
-      this.handleEncryptedConnectionChange.bind(this);
-    this.handleSkipTestConnectionChange =
-      this.handleSkipTestConnectionChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleCancel = this.handleCancel.bind(this);
-    this.handleRetry = this.handleRetry.bind(this);
-    this.handleNext = this.handleNext.bind(this);
-    this.handleBack = this.handleBack.bind(this);
-    this.handleStepClick = this.handleStepClick.bind(this);
+    const methods = [
+      "handleModeChange",
+      "handleGatewaySelect",
+      "handleNameChange",
+      "handleDataSourceTypeChange",
+      "handleConnectionDetailChange",
+      "handleCredentialTypeChange",
+      "handleCredentialValueChange",
+      "handlePrivacyLevelChange",
+      "handleEncryptedConnectionChange",
+      "handleSkipTestConnectionChange",
+      "handleSubmit",
+      "handleCancel",
+      "handleRetry",
+      "handleNext",
+      "handleBack",
+      "handleStepClick",
+    ] as const;
+    methods.forEach((m) => {
+      (this as unknown as Record<string, unknown>)[m] = (
+        this as unknown as Record<string, (...args: unknown[]) => unknown>
+      )[m].bind(this);
+    });
   }
 
   componentDidMount(): void {
@@ -158,52 +155,23 @@ export class CreateConnectionApp extends McpAppComponent<
   }
 
   // ===========================================================================
-  // MCP Lifecycle
+  // MCP lifecycle
   // ===========================================================================
 
   protected onToolResult(_result: unknown): void {
-    // No token needed — all API calls happen server-side via callServerTool.
-    // FabricAuthenticationHandler handles auth automatically.
-    // Fetch gateways and supported connection types in parallel.
     console.log("[CreateConnection] Connected, fetching data...");
-    this.fetchGateways();
-    this.fetchSupportedConnectionTypes();
+    this.loadGateways();
+    this.loadConnectionTypes();
   }
 
   // ===========================================================================
-  // Data Fetching
+  // Data loading (delegates to connectionDataService)
   // ===========================================================================
 
-  private async fetchGateways(): Promise<void> {
+  private async loadGateways(): Promise<void> {
     this.setState({ isLoadingGateways: true, gatewayError: null });
-
     try {
-      const result = await this.callServerTool("list_gateways", {});
-      let parsed: {
-        gateways?: Array<{
-          id: string;
-          displayName?: string;
-          name?: string;
-          type: string;
-        }>;
-      } | null = null;
-
-      if (typeof result === "string") {
-        try {
-          parsed = JSON.parse(result);
-        } catch {
-          /* not JSON */
-        }
-      } else if (result && typeof result === "object") {
-        parsed = result as typeof parsed;
-      }
-
-      const gateways: Gateway[] = (parsed?.gateways || []).map((g) => ({
-        id: g.id,
-        name: g.displayName || g.name || g.id,
-        type: g.type as Gateway["type"],
-      }));
-
+      const gateways = await fetchGateways(this.callServerTool.bind(this));
       this.setState({ gateways, isLoadingGateways: false });
     } catch (error) {
       this.setState({
@@ -214,49 +182,20 @@ export class CreateConnectionApp extends McpAppComponent<
     }
   }
 
-  private async fetchSupportedConnectionTypes(): Promise<void> {
+  private async loadConnectionTypes(): Promise<void> {
     this.setState({
       isLoadingConnectionTypes: true,
       connectionTypesError: null,
     });
-
     try {
-      const result = await this.callServerTool(
-        "list_supported_connection_types",
-        {},
+      const supportedDataSourceTypes = await fetchSupportedConnectionTypes(
+        this.callServerTool.bind(this),
       );
-
-      let parsed: {
-        connectionTypes?: SupportedConnectionType[];
-      } | null = null;
-
-      if (typeof result === "string") {
-        try {
-          parsed = JSON.parse(result);
-        } catch {
-          /* not JSON */
-        }
-      } else if (result && typeof result === "object") {
-        parsed = result as typeof parsed;
-      }
-
-      const apiTypes: SupportedConnectionType[] = parsed?.connectionTypes || [];
-
-      const supportedDataSourceTypes = convertConnectionTypes(apiTypes);
-
-      console.log(
-        `[CreateConnection] Loaded ${supportedDataSourceTypes.length} connection types from ${apiTypes.length} API types`,
-      );
-
       this.setState({
         supportedDataSourceTypes,
         isLoadingConnectionTypes: false,
       });
     } catch (error) {
-      console.error(
-        "[CreateConnection] Error loading connection types:",
-        error,
-      );
       this.setState({
         connectionTypesError:
           error instanceof Error
@@ -268,7 +207,7 @@ export class CreateConnectionApp extends McpAppComponent<
   }
 
   // ===========================================================================
-  // Event Handlers
+  // Wizard navigation
   // ===========================================================================
 
   private handleModeChange(mode: ConnectionMode): void {
@@ -280,6 +219,53 @@ export class CreateConnectionApp extends McpAppComponent<
     });
   }
 
+  private handleNext(): void {
+    const error = validateDetails({
+      connectionName: this.state.connectionName,
+      connectionMode: this.state.connectionMode,
+      selectedGatewayId: this.state.selectedGatewayId,
+      selectedDataSourceType: this.state.selectedDataSourceType,
+      connectionDetailValues: this.state.connectionDetailValues,
+      selectedTypeInfo: this.getSelectedTypeInfo(),
+    });
+    if (error) {
+      this.setState({ submitError: error });
+    } else {
+      this.setState({ currentStep: 2, submitError: null });
+    }
+  }
+
+  private handleBack(): void {
+    this.setState((prev) => ({
+      currentStep: Math.max(0, prev.currentStep - 1) as WizardStep,
+      submitError: null,
+    }));
+  }
+
+  private handleStepClick(step: WizardStep): void {
+    if (step < this.state.currentStep) {
+      this.setState({ currentStep: step, submitError: null });
+    }
+  }
+
+  private handleCancel(): void {
+    this.setState({ ...INITIAL_FORM_STATE });
+  }
+
+  private handleRetry(): void {
+    this.setState({
+      submitError: null,
+      gatewayError: null,
+      connectionTypesError: null,
+    });
+    this.loadGateways();
+    this.loadConnectionTypes();
+  }
+
+  // ===========================================================================
+  // Field change handlers
+  // ===========================================================================
+
   private handleGatewaySelect(gatewayId: string): void {
     this.setState({ selectedGatewayId: gatewayId, submitError: null });
   }
@@ -289,15 +275,11 @@ export class CreateConnectionApp extends McpAppComponent<
   }
 
   private handleDataSourceTypeChange(dsType: string): void {
-    // dsType is the displayName which is unique per (type, creationMethod) pair
     const selectedType = this.state.supportedDataSourceTypes.find(
       (t) => t.displayName === dsType,
     );
-
-    // Pick first available credential type, or default to Anonymous
     const firstCredType =
       (selectedType?.credentialTypes?.[0] as CredentialType) || "Anonymous";
-
     this.setState({
       selectedDataSourceType: dsType,
       connectionDetailValues: {},
@@ -327,10 +309,7 @@ export class CreateConnectionApp extends McpAppComponent<
 
   private handleCredentialValueChange(fieldName: string, value: string): void {
     this.setState((prev) => ({
-      credentialValues: {
-        ...prev.credentialValues,
-        [fieldName]: value,
-      },
+      credentialValues: { ...prev.credentialValues, [fieldName]: value },
       submitError: null,
     }));
   }
@@ -347,86 +326,6 @@ export class CreateConnectionApp extends McpAppComponent<
     this.setState({ skipTestConnection: value });
   }
 
-  private handleCancel(): void {
-    this.setState({
-      currentStep: 0,
-      connectionMode: "Cloud",
-      connectionName: "",
-      selectedDataSourceType: "",
-      connectionDetailValues: {},
-      selectedCredentialType: "Anonymous",
-      credentialValues: {},
-      privacyLevel: "None",
-      encryptedConnection: "NotEncrypted",
-      skipTestConnection: false,
-      selectedGatewayId: null,
-      submitError: null,
-    });
-  }
-
-  private handleNext(): void {
-    if (this.isStep1Valid()) {
-      this.setState({ currentStep: 2, submitError: null });
-    } else {
-      // surface the first missing field as an error
-      const {
-        connectionName,
-        connectionMode,
-        selectedGatewayId,
-        selectedDataSourceType,
-        connectionDetailValues,
-      } = this.state;
-      if (!connectionName.trim()) {
-        this.setState({ submitError: "Connection name is required" });
-        return;
-      }
-      if (!selectedDataSourceType) {
-        this.setState({ submitError: "Please select a connection type" });
-        return;
-      }
-      if (requiresGateway(connectionMode) && !selectedGatewayId) {
-        this.setState({ submitError: "Please select a gateway" });
-        return;
-      }
-      const selectedType = this.getSelectedTypeInfo();
-      if (selectedType) {
-        for (const label of selectedType.labels) {
-          if (label.required && !connectionDetailValues[label.name]?.trim()) {
-            this.setState({ submitError: `${label.name} is required` });
-            return;
-          }
-        }
-      }
-    }
-  }
-
-  private handleBack(): void {
-    this.setState((prev) => ({
-      currentStep: Math.max(0, prev.currentStep - 1) as WizardStep,
-      submitError: null,
-    }));
-  }
-
-  private handleStepClick(step: WizardStep): void {
-    if (step < this.state.currentStep) {
-      this.setState({ currentStep: step, submitError: null });
-    }
-  }
-
-  private handleRetry(): void {
-    this.setState({
-      submitError: null,
-      gatewayError: null,
-      connectionTypesError: null,
-    });
-    this.fetchGateways();
-    this.fetchSupportedConnectionTypes();
-  }
-
-  // ===========================================================================
-  // Submit
-  // ===========================================================================
-
   private async handleSubmit(): Promise<void> {
     const {
       connectionName,
@@ -441,56 +340,19 @@ export class CreateConnectionApp extends McpAppComponent<
       selectedGatewayId,
     } = this.state;
 
-    // Validation
-    if (!connectionName.trim()) {
-      this.setState({ submitError: "Connection name is required" });
+    const credError = validateCredentials({
+      selectedCredentialType,
+      credentialValues,
+    });
+    if (credError) {
+      this.setState({ submitError: credError });
       return;
-    }
-    if (!selectedDataSourceType) {
-      this.setState({ submitError: "Please select a connection type" });
-      return;
-    }
-    if (requiresGateway(connectionMode) && !selectedGatewayId) {
-      this.setState({ submitError: "Please select a gateway cluster" });
-      return;
-    }
-
-    // Validate required connection detail fields
-    const selectedType = this.state.supportedDataSourceTypes.find(
-      (t) => t.displayName === selectedDataSourceType,
-    );
-    if (selectedType) {
-      for (const label of selectedType.labels) {
-        if (label.required && !connectionDetailValues[label.name]?.trim()) {
-          this.setState({ submitError: `${label.name} is required` });
-          return;
-        }
-      }
-    }
-
-    // Validate required credential fields
-    const credFields = credentialFieldsMap[selectedCredentialType] || [];
-    for (const field of credFields) {
-      if (!credentialValues[field.name]?.trim()) {
-        this.setState({ submitError: `${field.label} is required` });
-        return;
-      }
     }
 
     this.setState({ isSubmitting: true, submitError: null });
 
     try {
-      // Build connection parameters as JSON string of name:value pairs
-      const connectionParametersJson = JSON.stringify(connectionDetailValues);
-
-      // Build credentials as JSON string of name:value pairs (if any)
-      const hasCredentials =
-        credFields.length > 0 && Object.keys(credentialValues).length > 0;
-      const credentialsJson = hasCredentials
-        ? JSON.stringify(credentialValues)
-        : undefined;
-
-      // Map UI connection mode to Fabric API connectivity type
+      const selectedType = this.getSelectedTypeInfo();
       const connectivityTypeMap: Record<ConnectionMode, string> = {
         Cloud: "ShareableCloud",
         OnPremises: "OnPremisesGateway",
@@ -502,7 +364,7 @@ export class CreateConnectionApp extends McpAppComponent<
         connectionName: connectionName.trim(),
         connectionType: selectedType?.dataSourceType || selectedDataSourceType,
         creationMethod: selectedType?.creationMethod,
-        connectionParameters: connectionParametersJson,
+        connectionParameters: JSON.stringify(connectionDetailValues),
         credentialType: selectedCredentialType,
         privacyLevel,
         connectionEncryption: encryptedConnection,
@@ -510,17 +372,13 @@ export class CreateConnectionApp extends McpAppComponent<
         connectivityType: connectivityTypeMap[connectionMode],
       };
 
-      if (credentialsJson) {
-        toolArgs.credentials = credentialsJson;
+      if (Object.keys(credentialValues).length > 0) {
+        toolArgs.credentials = JSON.stringify(credentialValues);
       }
-
-      if (selectedGatewayId) {
-        toolArgs.gatewayId = selectedGatewayId;
-      }
+      if (selectedGatewayId) toolArgs.gatewayId = selectedGatewayId;
 
       console.log("[CreateConnection] Creating connection:", toolArgs);
 
-      // Uses Fabric REST API: POST https://api.fabric.microsoft.com/v1/connections
       const result = await this.callServerTool("create_connection", toolArgs);
 
       let parsed: CreateConnectionResult | null = null;
@@ -542,7 +400,6 @@ export class CreateConnectionApp extends McpAppComponent<
           connectionMode,
           timestamp: new Date().toISOString(),
         });
-
         this.setState({
           isSubmitting: false,
           createdConnectionId: parsed.connectionId,
@@ -589,246 +446,6 @@ export class CreateConnectionApp extends McpAppComponent<
     );
   }
 
-  private isStep1Valid(): boolean {
-    const {
-      connectionName,
-      connectionMode,
-      selectedGatewayId,
-      selectedDataSourceType,
-      connectionDetailValues,
-    } = this.state;
-    if (!connectionName.trim()) return false;
-    if (!selectedDataSourceType) return false;
-    if (requiresGateway(connectionMode) && !selectedGatewayId) return false;
-    const selectedType = this.getSelectedTypeInfo();
-    if (selectedType) {
-      for (const label of selectedType.labels) {
-        if (label.required && !connectionDetailValues[label.name]?.trim())
-          return false;
-      }
-    }
-    return true;
-  }
-
-  // ===========================================================================
-  // Render helpers
-  // ===========================================================================
-
-  private renderStepIndicator(): ReactNode {
-    const { currentStep } = this.state;
-    const steps: [WizardStep, string][] = [
-      [0, "Mode"],
-      [1, "Details"],
-      [2, "Credentials"],
-    ];
-    const dividerStyle: CSSProperties = {
-      color: "var(--vscode-descriptionForeground, #888)",
-      margin: "0 3px",
-      fontSize: "0.7rem",
-    };
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          marginBottom: "12px",
-          fontSize: "0.75rem",
-        }}
-      >
-        {steps.map(([idx, label], i) => (
-          <span key={idx} style={{ display: "flex", alignItems: "center" }}>
-            {i > 0 && <span style={dividerStyle}>›</span>}
-            <button
-              type="button"
-              onClick={() => this.handleStepClick(idx)}
-              disabled={idx >= currentStep}
-              style={{
-                background: "none",
-                border: "none",
-                padding: "2px 4px",
-                cursor: idx < currentStep ? "pointer" : "default",
-                color:
-                  idx === currentStep
-                    ? "var(--vscode-foreground, #ccc)"
-                    : idx < currentStep
-                      ? "var(--vscode-textLink-foreground, #3794ff)"
-                      : "var(--vscode-descriptionForeground, #888)",
-                fontWeight: idx === currentStep ? 600 : 400,
-                fontSize: "0.75rem",
-                textDecoration: idx < currentStep ? "underline" : "none",
-              }}
-            >
-              {label}
-            </button>
-          </span>
-        ))}
-      </div>
-    );
-  }
-
-  private renderStep0(): ReactNode {
-    return (
-      <>
-        <p
-          style={{
-            fontSize: "0.8rem",
-            color: "var(--vscode-descriptionForeground, #888)",
-            marginBottom: "10px",
-            marginTop: 0,
-          }}
-        >
-          Choose a connectivity type to get started.
-        </p>
-        <ConnectionModeSelector
-          selectedMode={this.state.connectionMode}
-          onModeChange={this.handleModeChange}
-          disabled={false}
-        />
-      </>
-    );
-  }
-
-  private renderStep1(): ReactNode {
-    const {
-      connectionMode,
-      connectionName,
-      selectedGatewayId,
-      selectedDataSourceType,
-      connectionDetailValues,
-      isLoadingGateways,
-      gatewayError,
-      supportedDataSourceTypes,
-      isLoadingConnectionTypes,
-      connectionTypesError,
-      isSubmitting,
-      submitError,
-    } = this.state;
-
-    const filteredGateways = this.getFilteredGateways();
-    const showGatewayDropdown = requiresGateway(connectionMode);
-    const selectedTypeInfo = this.getSelectedTypeInfo();
-    const hasTypeSelected = !!selectedDataSourceType && !!selectedTypeInfo;
-    const errorMessage =
-      submitError || gatewayError || connectionTypesError || null;
-
-    return (
-      <>
-        {errorMessage && (
-          <ErrorBanner
-            message={errorMessage}
-            onRetry={
-              gatewayError || connectionTypesError
-                ? this.handleRetry
-                : undefined
-            }
-          />
-        )}
-
-        {showGatewayDropdown && (
-          <GatewayDropdown
-            gateways={filteredGateways}
-            selectedGatewayId={selectedGatewayId}
-            onSelect={this.handleGatewaySelect}
-            isLoading={isLoadingGateways}
-            disabled={isSubmitting}
-            label={
-              connectionMode === "StreamingVirtualNetwork"
-                ? "Streaming data gateway name"
-                : "Gateway cluster name"
-            }
-          />
-        )}
-
-        <ConnectionNameInput
-          value={connectionName}
-          onChange={this.handleNameChange}
-          disabled={isSubmitting}
-        />
-
-        <ConnectionTypeDropdown
-          dataSourceTypes={supportedDataSourceTypes}
-          selectedType={selectedDataSourceType}
-          onSelect={this.handleDataSourceTypeChange}
-          isLoading={isLoadingConnectionTypes}
-          disabled={isSubmitting}
-        />
-
-        {hasTypeSelected && (
-          <ConnectionDetailFields
-            labels={selectedTypeInfo.labels}
-            values={connectionDetailValues}
-            onChange={this.handleConnectionDetailChange}
-            disabled={isSubmitting}
-          />
-        )}
-
-        <FormButtons
-          onBack={this.handleBack}
-          onSubmit={this.handleNext}
-          onCancel={this.handleCancel}
-          isSubmitting={false}
-          submitDisabled={false}
-          submitLabel="Next"
-        />
-      </>
-    );
-  }
-
-  private renderStep2(): ReactNode {
-    const {
-      selectedDataSourceType,
-      selectedCredentialType,
-      credentialValues,
-      privacyLevel,
-      encryptedConnection,
-      skipTestConnection,
-      isSubmitting,
-      submitError,
-    } = this.state;
-
-    const selectedTypeInfo = this.getSelectedTypeInfo();
-    if (!selectedTypeInfo) {
-      this.setState({ currentStep: 1 });
-      return null;
-    }
-
-    return (
-      <>
-        {submitError && <ErrorBanner message={submitError} />}
-
-        <CredentialSection
-          availableCredentialTypes={selectedTypeInfo.credentialTypes}
-          selectedCredentialType={selectedCredentialType}
-          credentialValues={credentialValues}
-          privacyLevel={privacyLevel}
-          encryptedConnection={encryptedConnection}
-          skipTestConnection={skipTestConnection}
-          isEncryptedConnectionSupported={
-            selectedTypeInfo.supportedEncryptionTypes.length > 0
-          }
-          isSkipTestConnectionSupported={
-            selectedTypeInfo.isSkipTestConnectionSupported
-          }
-          onCredentialTypeChange={this.handleCredentialTypeChange}
-          onCredentialValueChange={this.handleCredentialValueChange}
-          onPrivacyLevelChange={this.handlePrivacyLevelChange}
-          onEncryptedConnectionChange={this.handleEncryptedConnectionChange}
-          onSkipTestConnectionChange={this.handleSkipTestConnectionChange}
-          disabled={isSubmitting}
-        />
-
-        <FormButtons
-          onBack={this.handleBack}
-          onSubmit={this.handleSubmit}
-          onCancel={this.handleCancel}
-          isSubmitting={isSubmitting}
-          submitDisabled={false}
-          submitLabel="Create"
-        />
-      </>
-    );
-  }
-
   // ===========================================================================
   // Render
   // ===========================================================================
@@ -852,13 +469,70 @@ export class CreateConnectionApp extends McpAppComponent<
       );
     }
 
+    const selectedTypeInfo = this.getSelectedTypeInfo();
+
     return (
       <div style={baseStyles.container}>
         <h1 style={baseStyles.h1}>New Connection</h1>
-        {this.renderStepIndicator()}
-        {currentStep === 0 && this.renderStep0()}
-        {currentStep === 1 && this.renderStep1()}
-        {currentStep === 2 && this.renderStep2()}
+        <WizardStepIndicator
+          currentStep={currentStep}
+          onStepClick={this.handleStepClick}
+        />
+        {currentStep === 0 && (
+          <ModeStep
+            connectionMode={this.state.connectionMode}
+            onModeChange={this.handleModeChange}
+          />
+        )}
+        {currentStep === 1 && (
+          <DetailsStep
+            connectionMode={this.state.connectionMode}
+            connectionName={this.state.connectionName}
+            selectedGatewayId={this.state.selectedGatewayId}
+            selectedDataSourceType={this.state.selectedDataSourceType}
+            connectionDetailValues={this.state.connectionDetailValues}
+            selectedTypeInfo={selectedTypeInfo}
+            gateways={this.getFilteredGateways()}
+            isLoadingGateways={this.state.isLoadingGateways}
+            supportedDataSourceTypes={this.state.supportedDataSourceTypes}
+            isLoadingConnectionTypes={this.state.isLoadingConnectionTypes}
+            errorMessage={
+              this.state.submitError ||
+              this.state.gatewayError ||
+              this.state.connectionTypesError ||
+              null
+            }
+            isSubmitting={this.state.isSubmitting}
+            onGatewaySelect={this.handleGatewaySelect}
+            onNameChange={this.handleNameChange}
+            onDataSourceTypeChange={this.handleDataSourceTypeChange}
+            onConnectionDetailChange={this.handleConnectionDetailChange}
+            onNext={this.handleNext}
+            onBack={this.handleBack}
+            onCancel={this.handleCancel}
+            onRetry={this.handleRetry}
+          />
+        )}
+        {currentStep === 2 && selectedTypeInfo && (
+          <CredentialsStep
+            selectedTypeInfo={selectedTypeInfo}
+            selectedCredentialType={this.state.selectedCredentialType}
+            credentialValues={this.state.credentialValues}
+            privacyLevel={this.state.privacyLevel}
+            encryptedConnection={this.state.encryptedConnection}
+            skipTestConnection={this.state.skipTestConnection}
+            isSubmitting={this.state.isSubmitting}
+            submitError={this.state.submitError}
+            onCredentialTypeChange={this.handleCredentialTypeChange}
+            onCredentialValueChange={this.handleCredentialValueChange}
+            onPrivacyLevelChange={this.handlePrivacyLevelChange}
+            onEncryptedConnectionChange={this.handleEncryptedConnectionChange}
+            onSkipTestConnectionChange={this.handleSkipTestConnectionChange}
+            onSubmit={this.handleSubmit}
+            onBack={this.handleBack}
+            onCancel={this.handleCancel}
+          />
+        )}
       </div>
     );
   }
