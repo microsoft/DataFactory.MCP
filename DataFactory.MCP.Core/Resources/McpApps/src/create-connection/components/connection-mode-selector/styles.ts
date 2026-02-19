@@ -6,16 +6,17 @@ export const connectionModeSelectorStyles: Record<string, React.CSSProperties> =
   {
     container: {
       display: "flex",
-      gap: "8px",
-      marginBottom: "20px",
+      gap: "4px",
+      marginBottom: "14px",
       flexWrap: "wrap",
     },
     tab: {
       display: "flex",
-      flexDirection: "column",
+      flexDirection: "row",
       alignItems: "center",
-      padding: "12px 16px",
-      minWidth: "90px",
+      gap: "5px",
+      padding: "5px 10px",
+      minWidth: 0,
       border: "1px solid var(--vscode-input-border, #3c3c3c)",
       borderRadius: "4px",
       background: "var(--vscode-input-background, #3c3c3c)",
@@ -23,6 +24,7 @@ export const connectionModeSelectorStyles: Record<string, React.CSSProperties> =
       cursor: "pointer",
       fontSize: "0.75rem",
       transition: "all 0.15s ease",
+      whiteSpace: "nowrap" as const,
     },
     tabSelected: {
       borderColor: "var(--vscode-focusBorder, #007acc)",
@@ -34,11 +36,9 @@ export const connectionModeSelectorStyles: Record<string, React.CSSProperties> =
       cursor: "not-allowed",
     },
     icon: {
-      fontSize: "1.25rem",
-      marginBottom: "4px",
+      fontSize: "0.875rem",
     },
     label: {
-      textAlign: "center" as const,
       lineHeight: 1.2,
     },
   };

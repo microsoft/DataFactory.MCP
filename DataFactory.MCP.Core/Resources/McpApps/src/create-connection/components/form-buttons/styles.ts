@@ -5,7 +5,7 @@
 export const formButtonsStyles: Record<string, React.CSSProperties> = {
   container: {
     display: "flex",
-    gap: "10px",
-    marginTop: "20px",
+    gap: "8px",
+    marginTop: "14px",
   },
 };
