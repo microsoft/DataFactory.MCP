@@ -4,14 +4,9 @@
  */
 
 import { Component, ReactNode } from "react";
-import { baseStyles } from "../../shared";
-
-export interface FormButtonsProps {
-  onSubmit: () => void;
-  onCancel: () => void;
-  isSubmitting: boolean;
-  submitDisabled: boolean;
-}
+import { baseStyles } from "../../../shared";
+import { formButtonsStyles as styles } from "./styles";
+import type { FormButtonsProps } from "./types";
 
 export class FormButtons extends Component<FormButtonsProps> {
   render(): ReactNode {
@@ -47,11 +42,3 @@ export class FormButtons extends Component<FormButtonsProps> {
     );
   }
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    display: "flex",
-    gap: "10px",
-    marginTop: "20px",
-  },
-};

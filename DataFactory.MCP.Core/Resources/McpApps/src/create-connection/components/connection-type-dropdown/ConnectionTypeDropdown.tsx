@@ -5,16 +5,8 @@
  */
 
 import { Component, ReactNode } from "react";
-import { SupportedDataSourceType } from "../services/types";
-import { SearchableComboBox, ComboBoxOption } from "./SearchableComboBox";
-
-export interface ConnectionTypeDropdownProps {
-  dataSourceTypes: SupportedDataSourceType[];
-  selectedType: string;
-  onSelect: (dataSourceType: string) => void;
-  isLoading: boolean;
-  disabled?: boolean;
-}
+import { SearchableComboBox, ComboBoxOption } from "../searchable-combobox";
+import type { ConnectionTypeDropdownProps } from "./types";
 
 export class ConnectionTypeDropdown extends Component<ConnectionTypeDropdownProps> {
   render(): ReactNode {

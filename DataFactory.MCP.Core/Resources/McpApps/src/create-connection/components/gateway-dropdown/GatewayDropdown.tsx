@@ -4,17 +4,9 @@
  */
 
 import { Component, ReactNode } from "react";
-import { Gateway } from "../services/types";
-import { SearchableComboBox, ComboBoxOption } from "./SearchableComboBox";
-
-export interface GatewayDropdownProps {
-  gateways: Gateway[];
-  selectedGatewayId: string | null;
-  onSelect: (gatewayId: string) => void;
-  isLoading: boolean;
-  disabled?: boolean;
-  label?: string;
-}
+import { SearchableComboBox, ComboBoxOption } from "../searchable-combobox";
+import { gatewayDropdownStyles as styles } from "./styles";
+import type { GatewayDropdownProps } from "./types";
 
 export class GatewayDropdown extends Component<GatewayDropdownProps> {
   render(): ReactNode {
@@ -52,11 +44,3 @@ export class GatewayDropdown extends Component<GatewayDropdownProps> {
     );
   }
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  hint: {
-    marginTop: "-12px",
-    fontSize: "0.75rem",
-    color: "var(--vscode-descriptionForeground, #888)",
-  },
-};

@@ -6,15 +6,10 @@
  */
 
 import { Component, ReactNode } from "react";
-import { DataSourceLabel } from "../services/types";
-import { baseStyles } from "../../shared";
-
-export interface ConnectionDetailFieldsProps {
-  labels: DataSourceLabel[];
-  values: Record<string, string>;
-  onChange: (fieldName: string, value: string) => void;
-  disabled?: boolean;
-}
+import { baseStyles } from "../../../shared";
+import { connectionDetailFieldsStyles as styles } from "./styles";
+import { formatLabel } from "./helpers";
+import type { ConnectionDetailFieldsProps } from "./types";
 
 export class ConnectionDetailFields extends Component<ConnectionDetailFieldsProps> {
   private handleChange(fieldName: string, value: string): void {
@@ -36,7 +31,7 @@ export class ConnectionDetailFields extends Component<ConnectionDetailFieldsProp
               htmlFor={`conn-detail-${label.name}`}
               style={baseStyles.label}
             >
-              {this.formatLabel(label.name)}
+              {formatLabel(label.name)}
               {label.required && <span style={styles.required}> *</span>}
             </label>
             <input
@@ -53,13 +48,4 @@ export class ConnectionDetailFields extends Component<ConnectionDetailFieldsProp
       </div>
     );
   }
-
-  /** Capitalize first letter of field name for display */
-  private formatLabel(name: string): string {
-    return name.charAt(0).toUpperCase() + name.slice(1);
-  }
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  required: { color: "var(--vscode-errorForeground, #f48771)" },
-};

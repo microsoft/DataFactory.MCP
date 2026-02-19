@@ -4,12 +4,9 @@
  */
 
 import { Component, ReactNode } from "react";
-import { baseStyles } from "../../shared";
-
-export interface SuccessBannerProps {
-  connectionId: string;
-  connectionName: string;
-}
+import { baseStyles } from "../../../shared";
+import { successBannerStyles as styles } from "./styles";
+import type { SuccessBannerProps } from "./types";
 
 export class SuccessBanner extends Component<SuccessBannerProps> {
   render(): ReactNode {
@@ -28,16 +25,3 @@ export class SuccessBanner extends Component<SuccessBannerProps> {
     );
   }
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  title: {
-    fontWeight: 600,
-    marginBottom: "8px",
-    fontSize: "1rem",
-  },
-  detail: {
-    fontSize: "0.85rem",
-    marginBottom: "4px",
-    color: "var(--vscode-foreground, #cccccc)",
-  },
-};

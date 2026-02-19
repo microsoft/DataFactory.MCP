@@ -4,13 +4,9 @@
  */
 
 import { Component, ReactNode } from "react";
-import { baseStyles } from "../../shared";
-
-export interface ConnectionNameInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  disabled?: boolean;
-}
+import { baseStyles } from "../../../shared";
+import { connectionNameInputStyles as styles } from "./styles";
+import type { ConnectionNameInputProps } from "./types";
 
 export class ConnectionNameInput extends Component<ConnectionNameInputProps> {
   constructor(props: ConnectionNameInputProps) {
@@ -43,7 +39,3 @@ export class ConnectionNameInput extends Component<ConnectionNameInputProps> {
     );
   }
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  required: { color: "var(--vscode-errorForeground, #f48771)" },
-};

@@ -11,25 +11,10 @@ import {
   credentialFieldsMap,
   PrivacyLevel,
   privacyLevelOptions,
-} from "../services/types";
-import { baseStyles } from "../../shared";
-
-export interface CredentialSectionProps {
-  availableCredentialTypes: string[];
-  selectedCredentialType: CredentialType;
-  credentialValues: Record<string, string>;
-  privacyLevel: PrivacyLevel;
-  encryptedConnection: string;
-  skipTestConnection: boolean;
-  isEncryptedConnectionSupported: boolean;
-  isSkipTestConnectionSupported: boolean;
-  onCredentialTypeChange: (type: CredentialType) => void;
-  onCredentialValueChange: (fieldName: string, value: string) => void;
-  onPrivacyLevelChange: (level: PrivacyLevel) => void;
-  onEncryptedConnectionChange: (value: string) => void;
-  onSkipTestConnectionChange: (value: boolean) => void;
-  disabled?: boolean;
-}
+} from "../../services/types";
+import { baseStyles } from "../../../shared";
+import { credentialSectionStyles as styles } from "./styles";
+import type { CredentialSectionProps } from "./types";
 
 export class CredentialSection extends Component<CredentialSectionProps> {
   constructor(props: CredentialSectionProps) {
@@ -178,33 +163,3 @@ export class CredentialSection extends Component<CredentialSectionProps> {
     );
   }
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  section: {
-    marginTop: "16px",
-    padding: "16px",
-    border: "1px solid var(--vscode-input-border, #3c3c3c)",
-    borderRadius: "4px",
-  },
-  sectionHeader: {
-    fontSize: "0.9rem",
-    fontWeight: 600,
-    marginBottom: "12px",
-    color: "var(--vscode-foreground, #cccccc)",
-  },
-  required: { color: "var(--vscode-errorForeground, #f48771)" },
-  checkboxGroup: {
-    marginTop: "12px",
-  },
-  checkboxLabel: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    cursor: "pointer",
-    fontSize: "0.875rem",
-    color: "var(--vscode-foreground, #cccccc)",
-  },
-  checkbox: {
-    accentColor: "var(--vscode-focusBorder, #007acc)",
-  },
-};

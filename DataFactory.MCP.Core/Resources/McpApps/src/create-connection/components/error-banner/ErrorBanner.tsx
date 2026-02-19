@@ -4,12 +4,9 @@
  */
 
 import { Component, ReactNode } from "react";
-import { baseStyles } from "../../shared";
-
-export interface ErrorBannerProps {
-  message: string;
-  onRetry?: () => void;
-}
+import { baseStyles } from "../../../shared";
+import { errorBannerStyles as styles } from "./styles";
+import type { ErrorBannerProps } from "./types";
 
 export class ErrorBanner extends Component<ErrorBannerProps> {
   render(): ReactNode {
@@ -27,19 +24,3 @@ export class ErrorBanner extends Component<ErrorBannerProps> {
     );
   }
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  message: {
-    fontSize: "0.85rem",
-    marginBottom: "8px",
-  },
-  retryButton: {
-    padding: "4px 12px",
-    background: "var(--vscode-button-background, #0e639c)",
-    color: "var(--vscode-button-foreground, #ffffff)",
-    border: "none",
-    borderRadius: "4px",
-    fontSize: "0.8rem",
-    cursor: "pointer",
-  },
-};
