@@ -12,7 +12,6 @@ export const baseStyles = {
     padding: "12px",
     lineHeight: 1.4,
     margin: 0,
-    minHeight: "100vh",
     boxSizing: "border-box" as const,
   },
   container: {
