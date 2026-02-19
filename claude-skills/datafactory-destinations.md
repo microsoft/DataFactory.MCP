@@ -23,22 +23,6 @@ C) Output Query       → Same as B, with Data Destination attached
 
 **Attach the Data Destination to your final aggregated query.** The orchestration engine handles producing the destination table at refresh.
 
-### When to Use Action.Sequence Instead
-
-Only for unusual side-effect requirements:
-- Custom external writes (blob/ADLS files)
-- Multi-step writes that must be sequenced
-- Parallel file outputs
-
-For standard Lakehouse → Lakehouse, the platform already provides Replace/Append via destination settings.
-
-### Automatic vs Manual: Schema Stability Decision
-
-| Schema Behavior | Recommended Setting |
-|-----------------|---------------------|
-| Schema changes frequently | Automatic (managed mapping, drop/recreate) |
-| Schema is stable, downstream artifacts exist | Manual (explicit mapping, preserves relationships) |
-
 ---
 
 ## Data Destinations in Dataflow Gen2
@@ -89,11 +73,6 @@ in
 - **Warehouse destination**: Staging REQUIRED (enable on query)
 - **Lakehouse destination**: Staging disabled by default for performance
 
-### Validation Before Running
-1. Validate source connection with `execute_query`
-2. Validate destination lakehouse access with `execute_query`
-3. After `add_connection_to_dataflow`, verify with `execute_query`
-
 ---
 
 ## Programmatic Destination Configuration via MCP Tools
@@ -105,35 +84,27 @@ Output destinations CAN be configured programmatically using `validate_and_save_
 #### 1. DataDestinations Annotation
 Place immediately before the source query definition.
 
-**For NEW tables (don't exist yet):**
+**For NEW tables (don't exist yet) — use Automatic:**
 ```m
 [DataDestinations = {[
-  Definition = [Kind = "Reference", QueryName = "MyQuery_DataDestination", IsNewTarget = true], 
-  Settings = [
-    Kind = "Manual", 
-    AllowCreation = true, 
-    ColumnSettings = [Mappings = {
-      [SourceColumnName = "Col1", DestinationColumnName = "Col1"],
-      [SourceColumnName = "Col2", DestinationColumnName = "Col2"]
-    }], 
-    DynamicSchema = false, 
-    UpdateMethod = [Kind = "Replace"], 
-    TypeSettings = [Kind = "Table"]
-  ]
+  Definition = [Kind = "Reference", QueryName = "MyQuery_DataDestination", IsNewTarget = true],
+  Settings = [Kind = "Automatic", TypeSettings = [Kind = "Table"]]
 ]}]
 shared MyQuery = let ... in ...;
 ```
 
+**CRITICAL:** Do NOT use `Kind = "Manual"` with `ColumnSettings` for new tables. Manual validates column mappings against the destination table *before* creating it, causing `DestinationColumnNotFound` errors. Use `Automatic` to let the engine infer and create the schema on first refresh.
+
 **For EXISTING tables:**
 ```m
 [DataDestinations = {[
-  Definition = [Kind = "Reference", QueryName = "MyQuery_DataDestination", IsNewTarget = false], 
+  Definition = [Kind = "Reference", QueryName = "MyQuery_DataDestination", IsNewTarget = false],
   Settings = [
-    Kind = "Manual", 
-    AllowCreation = false, 
-    ColumnSettings = [Mappings = {...}], 
-    DynamicSchema = false, 
-    UpdateMethod = [Kind = "Replace"], 
+    Kind = "Manual",
+    AllowCreation = false,
+    ColumnSettings = [Mappings = {...}],
+    DynamicSchema = false,
+    UpdateMethod = [Kind = "Replace"],
     TypeSettings = [Kind = "Table"]
   ]
 ]}]
@@ -176,14 +147,41 @@ shared MyQuery = let ... in ...;
 shared MyQuery_DataDestination = let ... in ...;
 ```
 
+### Multi-Source Privacy: AllowCombine
+
+When a dataflow combines multiple source types (e.g. Lakehouse + SharePoint, Lakehouse + Web), the mashup engine's privacy firewall blocks cross-source queries by default. This causes instant "Validation failure" on refresh with no detailed error.
+
+**Fix:** Add `[AllowCombine = true]` as a section-level attribute in the M document:
+
+```m
+[AllowCombine = true]
+section Section1;
+
+shared LakehouseQuery = let ... in ...;
+shared SharePointQuery = let ... in ...;
+shared JoinedOutput = let ... in ...;
+```
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Instant refresh failure (0-3 seconds) | Privacy firewall blocking cross-source | Add `[AllowCombine = true]` before `section` |
+| "Validation failure" with no details | Same — pre-execution metadata check | Same |
+| Works in UI but fails via MCP | UI auto-prompts for privacy; API does not | Must set explicitly in M document |
+
+**Critical:** This is REQUIRED for any dataflow that mixes source types. Single-source dataflows (e.g. Lakehouse-only) do not need it.
+
 ### MCP Tool Workflow
 
 ```
 1. create_dataflow              → Create empty dataflow
-2. add_connection_to_dataflow   → Attach Lakehouse connection (use DatasourceId GUID)
+2. add_connection_to_dataflow   → Attach ALL source connections (one call per connection)
 3. execute_query                → Discover target lakehouse ID
 4. validate_and_save_m_document → Save complete M document with destination config
-5. get_decoded_dataflow_definition → Verify configuration
+                                   Include [AllowCombine = true] if multi-source
+5. add_connection_to_dataflow   → Re-add connections (validate_and_save may wipe them)
+6. get_decoded_dataflow_definition → Verify connections + destination config
+7. refresh_dataflow_background  → Materialize the table
+                                   MUST use executeOption="ApplyChangesIfNeeded" on first refresh
 ```
 
 ### Key Details
@@ -222,16 +220,19 @@ When using `add_connection_to_dataflow`:
 # 1. Create dataflow
 create_dataflow(displayName="My Dataflow", workspaceId="...")
 
-# 2. Add connection (use DatasourceId GUID)
+# 2. Add connections (use DatasourceId GUID, one per call)
 add_connection_to_dataflow(connectionIds="97b68bdf-...", dataflowId="...", workspaceId="...")
+add_connection_to_dataflow(connectionIds="58699886-...", dataflowId="...", workspaceId="...")  # if multi-source
 
 # 3. Save M document with destination (new table)
+#    Include [AllowCombine = true] if mixing source types
 validate_and_save_m_document(
   dataflowId="...",
   workspaceId="...",
   mDocument="""
+[AllowCombine = true]
 section Section1;
-[DataDestinations = {[Definition = [Kind = "Reference", QueryName = "Results_DataDestination", IsNewTarget = true], Settings = [Kind = "Manual", AllowCreation = true, ColumnSettings = [Mappings = {[SourceColumnName = "Year", DestinationColumnName = "Year"], [SourceColumnName = "Count", DestinationColumnName = "Count"]}], DynamicSchema = false, UpdateMethod = [Kind = "Replace"], TypeSettings = [Kind = "Table"]]]}]
+[DataDestinations = {[Definition = [Kind = "Reference", QueryName = "Results_DataDestination", IsNewTarget = true], Settings = [Kind = "Automatic", TypeSettings = [Kind = "Table"]]]}]
 shared Results = let
   Source = Lakehouse.Contents(null),
   // ... query logic
@@ -246,7 +247,58 @@ in
   TableNavigation;
 """
 )
+
+# 4. Re-add connections (validate_and_save may have wiped them)
+add_connection_to_dataflow(connectionIds="97b68bdf-...", dataflowId="...", workspaceId="...")
+add_connection_to_dataflow(connectionIds="58699886-...", dataflowId="...", workspaceId="...")
+
+# 5. Verify
+get_decoded_dataflow_definition(dataflowId="...", workspaceId="...")
+
+# 6. Refresh (MUST use ApplyChangesIfNeeded on first refresh of API-created dataflow)
+refresh_dataflow_background(dataflowId="...", workspaceId="...", executeOption="ApplyChangesIfNeeded")
 ```
+
+### Why `ApplyChangesIfNeeded` Is Required (Technical Detail)
+
+API-created dataflows start in an unpublished draft state. Additionally, `validate_and_save_m_document` sets `loadEnabled: false` in queryMetadata. The platform reconciles both issues on refresh ONLY when using `ApplyChangesIfNeeded`.
+
+| Refresh Option | Behavior on MCP-created dataflow |
+|---|---|
+| `SkipApplyChanges` (default) | **Instant failure** — stale metadata, draft never published |
+| `ApplyChangesIfNeeded` | Re-parses M annotations, publishes draft, reconciles metadata, then executes |
+
+After the first successful refresh, subsequent refreshes can use either option.
+
+---
+
+## SharePoint Excel Source Pattern
+
+To read an Excel file from SharePoint, use a Web connection (not SharePoint connector):
+
+```m
+Targets_WB = Excel.Workbook(Web.Contents("https://<tenant>.sharepoint.com/teams/<site>/Shared Documents/<file>.xlsx"), null, true),
+Targets_Sheet = Targets_WB{[Item = "<SheetName>", Kind = "Sheet"]}[Data],
+Targets_Headers = Table.PromoteHeaders(Targets_Sheet, [PromoteAllScalars = true]),
+Targets_Typed = Table.TransformColumnTypes(Targets_Headers, {{"col1", type text}, {"col2", type number}})
+```
+
+Requires a Web connection to the SharePoint site URL. Find via `list_connections` filtering for `type: "Web"` with a SharePoint path.
+
+---
+
+## Common Pitfalls Quick Reference
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `DataflowNeverPublishedError` | Default `SkipApplyChanges` on first run | `executeOption = "ApplyChangesIfNeeded"` |
+| `DestinationColumnNotFound` | Manual mappings for new table | Use `Kind = "Automatic"`, no `ColumnSettings` |
+| Credentials error on Lakehouse | Connection not bound | `add_connection_to_dataflow` then validate |
+| FastCopy fails with transforms | `Table.Group`, `NestedJoin`, etc. | Remove `[StagingDefinition]` |
+| Instant refresh fail (0-3s) | Privacy firewall or unpublished | `[AllowCombine = true]` and/or `ApplyChangesIfNeeded` |
+| `loadEnabled: false` in metadata | Normal MCP tool behavior | Not a problem with `DataDestinations` + `ApplyChangesIfNeeded` |
+
+---
 
 ### New Table vs Existing Table Summary
 
