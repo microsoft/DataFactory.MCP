@@ -4,10 +4,7 @@
  */
 
 import { Component, ReactNode } from "react";
-import {
-  connectionModeLabels,
-  connectionModeIcons,
-} from "../../services/types";
+import { connectionModeLabels } from "../../services/types";
 import { connectionModeSelectorStyles as styles } from "./styles";
 import type { ConnectionModeSelectorProps } from "./types";
 import { modes } from "./types";
@@ -31,8 +28,7 @@ export class ConnectionModeSelector extends Component<ConnectionModeSelectorProp
             }}
             aria-pressed={selectedMode === mode}
           >
-            <span style={styles.icon}>{connectionModeIcons[mode]}</span>
-            <span style={styles.label}>{connectionModeLabels[mode]}</span>
+            {connectionModeLabels[mode]}
           </button>
         ))}
       </div>

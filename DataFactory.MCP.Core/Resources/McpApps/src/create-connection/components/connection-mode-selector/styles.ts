@@ -35,10 +35,4 @@ export const connectionModeSelectorStyles: Record<string, React.CSSProperties> =
       opacity: 0.5,
       cursor: "not-allowed",
     },
-    icon: {
-      fontSize: "0.875rem",
-    },
-    label: {
-      lineHeight: 1.2,
-    },
   };
