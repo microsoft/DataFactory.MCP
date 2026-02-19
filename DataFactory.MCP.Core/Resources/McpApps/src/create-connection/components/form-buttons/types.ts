@@ -7,4 +7,8 @@ export interface FormButtonsProps {
   onCancel: () => void;
   isSubmitting: boolean;
   submitDisabled: boolean;
+  /** If provided, renders a Back button before the submit button */
+  onBack?: () => void;
+  /** Label for the submit button. Defaults to "Create" */
+  submitLabel?: string;
 }

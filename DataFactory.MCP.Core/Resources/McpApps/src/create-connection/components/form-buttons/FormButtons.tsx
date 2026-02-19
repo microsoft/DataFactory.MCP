@@ -10,10 +10,32 @@ import type { FormButtonsProps } from "./types";
 
 export class FormButtons extends Component<FormButtonsProps> {
   render(): ReactNode {
-    const { onSubmit, onCancel, isSubmitting, submitDisabled } = this.props;
+    const {
+      onSubmit,
+      onBack,
+      onCancel,
+      isSubmitting,
+      submitDisabled,
+      submitLabel = "Create",
+    } = this.props;
+
+    const submitText = isSubmitting ? "Creating..." : submitLabel;
 
     return (
       <div style={styles.container}>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={isSubmitting}
+            style={{
+              ...baseStyles.buttonSecondary,
+              ...(isSubmitting ? baseStyles.buttonDisabled : {}),
+            }}
+          >
+            Back
+          </button>
+        )}
         <button
           type="button"
           onClick={onSubmit}
@@ -25,7 +47,7 @@ export class FormButtons extends Component<FormButtonsProps> {
               : {}),
           }}
         >
-          {isSubmitting ? "Creating..." : "Create"}
+          {submitText}
         </button>
         <button
           type="button"

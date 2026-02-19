@@ -1,18 +1,15 @@
 /**
  * CreateConnectionApp - Main Application Component
  *
- * Orchestrates the full cloud connection creation flow following the GAP pattern:
- * 1. Receives access token from MCP tool result
- * 2. Fetches supported data source types (connection type dropdown)
- * 3. Renders dynamic connection detail fields per selected type
- * 4. Renders credential section (auth method, credential fields, privacy level)
- * 5. Creates cloud data source via MCP server tool
- * 6. Shows success banner on completion
+ * 3-step wizard:
+ *   Step 0 — Mode:        pick connection mode (auto-advances on click)
+ *   Step 1 — Details:     gateway, name, type, detail fields
+ *   Step 2 — Credentials: auth method, credential fields, privacy, encryption
  *
  * All components are React class components.
  */
 
-import { ReactNode } from "react";
+import { ReactNode, CSSProperties } from "react";
 import {
   McpAppComponent,
   McpAppComponentProps,
@@ -49,7 +46,12 @@ import {
 // State
 // =============================================================================
 
+type WizardStep = 0 | 1 | 2;
+
 interface CreateConnectionAppState extends McpAppComponentState {
+  // Wizard
+  currentStep: WizardStep;
+
   // Form data - basic
   connectionMode: ConnectionMode;
   connectionName: string;
@@ -97,6 +99,8 @@ export class CreateConnectionApp extends McpAppComponent<
     this.state = {
       ...this.state,
 
+      currentStep: 0,
+
       connectionMode: "Cloud",
       connectionName: "",
       selectedGatewayId: null,
@@ -143,6 +147,9 @@ export class CreateConnectionApp extends McpAppComponent<
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleCancel = this.handleCancel.bind(this);
     this.handleRetry = this.handleRetry.bind(this);
+    this.handleNext = this.handleNext.bind(this);
+    this.handleBack = this.handleBack.bind(this);
+    this.handleStepClick = this.handleStepClick.bind(this);
   }
 
   componentDidMount(): void {
@@ -269,6 +276,7 @@ export class CreateConnectionApp extends McpAppComponent<
       connectionMode: mode,
       selectedGatewayId: null,
       submitError: null,
+      currentStep: 1,
     });
   }
 
@@ -341,6 +349,8 @@ export class CreateConnectionApp extends McpAppComponent<
 
   private handleCancel(): void {
     this.setState({
+      currentStep: 0,
+      connectionMode: "Cloud",
       connectionName: "",
       selectedDataSourceType: "",
       connectionDetailValues: {},
@@ -352,6 +362,55 @@ export class CreateConnectionApp extends McpAppComponent<
       selectedGatewayId: null,
       submitError: null,
     });
+  }
+
+  private handleNext(): void {
+    if (this.isStep1Valid()) {
+      this.setState({ currentStep: 2, submitError: null });
+    } else {
+      // surface the first missing field as an error
+      const {
+        connectionName,
+        connectionMode,
+        selectedGatewayId,
+        selectedDataSourceType,
+        connectionDetailValues,
+      } = this.state;
+      if (!connectionName.trim()) {
+        this.setState({ submitError: "Connection name is required" });
+        return;
+      }
+      if (!selectedDataSourceType) {
+        this.setState({ submitError: "Please select a connection type" });
+        return;
+      }
+      if (requiresGateway(connectionMode) && !selectedGatewayId) {
+        this.setState({ submitError: "Please select a gateway" });
+        return;
+      }
+      const selectedType = this.getSelectedTypeInfo();
+      if (selectedType) {
+        for (const label of selectedType.labels) {
+          if (label.required && !connectionDetailValues[label.name]?.trim()) {
+            this.setState({ submitError: `${label.name} is required` });
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  private handleBack(): void {
+    this.setState((prev) => ({
+      currentStep: Math.max(0, prev.currentStep - 1) as WizardStep,
+      submitError: null,
+    }));
+  }
+
+  private handleStepClick(step: WizardStep): void {
+    if (step < this.state.currentStep) {
+      this.setState({ currentStep: step, submitError: null });
+    }
   }
 
   private handleRetry(): void {
@@ -513,7 +572,6 @@ export class CreateConnectionApp extends McpAppComponent<
 
   private getFilteredGateways(): Gateway[] {
     const { gateways, connectionMode } = this.state;
-    // Fabric API returns: "OnPremises", "OnPremisesPersonal", "VirtualNetwork"
     const gatewayTypeMap: Record<ConnectionMode, string> = {
       OnPremises: "OnPremises",
       VirtualNetwork: "VirtualNetwork",
@@ -531,37 +589,112 @@ export class CreateConnectionApp extends McpAppComponent<
     );
   }
 
-  private isFormValid(): boolean {
+  private isStep1Valid(): boolean {
     const {
       connectionName,
       connectionMode,
       selectedGatewayId,
       selectedDataSourceType,
+      connectionDetailValues,
     } = this.state;
-
     if (!connectionName.trim()) return false;
     if (!selectedDataSourceType) return false;
     if (requiresGateway(connectionMode) && !selectedGatewayId) return false;
-
+    const selectedType = this.getSelectedTypeInfo();
+    if (selectedType) {
+      for (const label of selectedType.labels) {
+        if (label.required && !connectionDetailValues[label.name]?.trim())
+          return false;
+      }
+    }
     return true;
   }
 
   // ===========================================================================
-  // Render
+  // Render helpers
   // ===========================================================================
 
-  protected renderContent(): ReactNode {
+  private renderStepIndicator(): ReactNode {
+    const { currentStep } = this.state;
+    const steps: [WizardStep, string][] = [
+      [0, "Mode"],
+      [1, "Details"],
+      [2, "Credentials"],
+    ];
+    const dividerStyle: CSSProperties = {
+      color: "var(--vscode-descriptionForeground, #888)",
+      margin: "0 3px",
+      fontSize: "0.7rem",
+    };
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          marginBottom: "12px",
+          fontSize: "0.75rem",
+        }}
+      >
+        {steps.map(([idx, label], i) => (
+          <span key={idx} style={{ display: "flex", alignItems: "center" }}>
+            {i > 0 && <span style={dividerStyle}>›</span>}
+            <button
+              type="button"
+              onClick={() => this.handleStepClick(idx)}
+              disabled={idx >= currentStep}
+              style={{
+                background: "none",
+                border: "none",
+                padding: "2px 4px",
+                cursor: idx < currentStep ? "pointer" : "default",
+                color:
+                  idx === currentStep
+                    ? "var(--vscode-foreground, #ccc)"
+                    : idx < currentStep
+                      ? "var(--vscode-textLink-foreground, #3794ff)"
+                      : "var(--vscode-descriptionForeground, #888)",
+                fontWeight: idx === currentStep ? 600 : 400,
+                fontSize: "0.75rem",
+                textDecoration: idx < currentStep ? "underline" : "none",
+              }}
+            >
+              {label}
+            </button>
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  private renderStep0(): ReactNode {
+    return (
+      <>
+        <p
+          style={{
+            fontSize: "0.8rem",
+            color: "var(--vscode-descriptionForeground, #888)",
+            marginBottom: "10px",
+            marginTop: 0,
+          }}
+        >
+          Choose a connectivity type to get started.
+        </p>
+        <ConnectionModeSelector
+          selectedMode={this.state.connectionMode}
+          onModeChange={this.handleModeChange}
+          disabled={false}
+        />
+      </>
+    );
+  }
+
+  private renderStep1(): ReactNode {
     const {
       connectionMode,
       connectionName,
       selectedGatewayId,
       selectedDataSourceType,
       connectionDetailValues,
-      selectedCredentialType,
-      credentialValues,
-      privacyLevel,
-      encryptedConnection,
-      skipTestConnection,
       isLoadingGateways,
       gatewayError,
       supportedDataSourceTypes,
@@ -569,26 +702,7 @@ export class CreateConnectionApp extends McpAppComponent<
       connectionTypesError,
       isSubmitting,
       submitError,
-      createdConnectionId,
-      createdConnectionName,
     } = this.state;
-
-    // Connecting state
-    if (!this.state.isConnected) {
-      return <LoadingSpinner message="Connecting to MCP host..." />;
-    }
-
-    // Success state
-    if (createdConnectionId && createdConnectionName) {
-      return (
-        <div style={baseStyles.container}>
-          <SuccessBanner
-            connectionId={createdConnectionId}
-            connectionName={createdConnectionName}
-          />
-        </div>
-      );
-    }
 
     const filteredGateways = this.getFilteredGateways();
     const showGatewayDropdown = requiresGateway(connectionMode);
@@ -598,10 +712,7 @@ export class CreateConnectionApp extends McpAppComponent<
       submitError || gatewayError || connectionTypesError || null;
 
     return (
-      <div style={baseStyles.container}>
-        <h1 style={baseStyles.h1}>New Connection</h1>
-
-        {/* Error banner */}
+      <>
         {errorMessage && (
           <ErrorBanner
             message={errorMessage}
@@ -613,14 +724,6 @@ export class CreateConnectionApp extends McpAppComponent<
           />
         )}
 
-        {/* Connection mode tabs */}
-        <ConnectionModeSelector
-          selectedMode={connectionMode}
-          onModeChange={this.handleModeChange}
-          disabled={isSubmitting}
-        />
-
-        {/* Gateway dropdown (for non-cloud modes) */}
         {showGatewayDropdown && (
           <GatewayDropdown
             gateways={filteredGateways}
@@ -636,14 +739,12 @@ export class CreateConnectionApp extends McpAppComponent<
           />
         )}
 
-        {/* Connection name */}
         <ConnectionNameInput
           value={connectionName}
           onChange={this.handleNameChange}
           disabled={isSubmitting}
         />
 
-        {/* Connection type dropdown */}
         <ConnectionTypeDropdown
           dataSourceTypes={supportedDataSourceTypes}
           selectedType={selectedDataSourceType}
@@ -652,7 +753,6 @@ export class CreateConnectionApp extends McpAppComponent<
           disabled={isSubmitting}
         />
 
-        {/* Dynamic connection detail fields (shown when type is selected) */}
         {hasTypeSelected && (
           <ConnectionDetailFields
             labels={selectedTypeInfo.labels}
@@ -662,37 +762,103 @@ export class CreateConnectionApp extends McpAppComponent<
           />
         )}
 
-        {/* Credential section (shown when type is selected) */}
-        {hasTypeSelected && (
-          <CredentialSection
-            availableCredentialTypes={selectedTypeInfo.credentialTypes}
-            selectedCredentialType={selectedCredentialType}
-            credentialValues={credentialValues}
-            privacyLevel={privacyLevel}
-            encryptedConnection={encryptedConnection}
-            skipTestConnection={skipTestConnection}
-            isEncryptedConnectionSupported={
-              selectedTypeInfo.supportedEncryptionTypes.length > 0
-            }
-            isSkipTestConnectionSupported={
-              selectedTypeInfo.isSkipTestConnectionSupported
-            }
-            onCredentialTypeChange={this.handleCredentialTypeChange}
-            onCredentialValueChange={this.handleCredentialValueChange}
-            onPrivacyLevelChange={this.handlePrivacyLevelChange}
-            onEncryptedConnectionChange={this.handleEncryptedConnectionChange}
-            onSkipTestConnectionChange={this.handleSkipTestConnectionChange}
-            disabled={isSubmitting}
-          />
-        )}
-
-        {/* Action buttons */}
         <FormButtons
+          onBack={this.handleBack}
+          onSubmit={this.handleNext}
+          onCancel={this.handleCancel}
+          isSubmitting={false}
+          submitDisabled={false}
+          submitLabel="Next"
+        />
+      </>
+    );
+  }
+
+  private renderStep2(): ReactNode {
+    const {
+      selectedDataSourceType,
+      selectedCredentialType,
+      credentialValues,
+      privacyLevel,
+      encryptedConnection,
+      skipTestConnection,
+      isSubmitting,
+      submitError,
+    } = this.state;
+
+    const selectedTypeInfo = this.getSelectedTypeInfo();
+    if (!selectedTypeInfo) {
+      this.setState({ currentStep: 1 });
+      return null;
+    }
+
+    return (
+      <>
+        {submitError && <ErrorBanner message={submitError} />}
+
+        <CredentialSection
+          availableCredentialTypes={selectedTypeInfo.credentialTypes}
+          selectedCredentialType={selectedCredentialType}
+          credentialValues={credentialValues}
+          privacyLevel={privacyLevel}
+          encryptedConnection={encryptedConnection}
+          skipTestConnection={skipTestConnection}
+          isEncryptedConnectionSupported={
+            selectedTypeInfo.supportedEncryptionTypes.length > 0
+          }
+          isSkipTestConnectionSupported={
+            selectedTypeInfo.isSkipTestConnectionSupported
+          }
+          onCredentialTypeChange={this.handleCredentialTypeChange}
+          onCredentialValueChange={this.handleCredentialValueChange}
+          onPrivacyLevelChange={this.handlePrivacyLevelChange}
+          onEncryptedConnectionChange={this.handleEncryptedConnectionChange}
+          onSkipTestConnectionChange={this.handleSkipTestConnectionChange}
+          disabled={isSubmitting}
+        />
+
+        <FormButtons
+          onBack={this.handleBack}
           onSubmit={this.handleSubmit}
           onCancel={this.handleCancel}
           isSubmitting={isSubmitting}
-          submitDisabled={!this.isFormValid()}
+          submitDisabled={false}
+          submitLabel="Create"
         />
+      </>
+    );
+  }
+
+  // ===========================================================================
+  // Render
+  // ===========================================================================
+
+  protected renderContent(): ReactNode {
+    const { currentStep, createdConnectionId, createdConnectionName } =
+      this.state;
+
+    if (!this.state.isConnected) {
+      return <LoadingSpinner message="Connecting to MCP host..." />;
+    }
+
+    if (createdConnectionId && createdConnectionName) {
+      return (
+        <div style={baseStyles.container}>
+          <SuccessBanner
+            connectionId={createdConnectionId}
+            connectionName={createdConnectionName}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div style={baseStyles.container}>
+        <h1 style={baseStyles.h1}>New Connection</h1>
+        {this.renderStepIndicator()}
+        {currentStep === 0 && this.renderStep0()}
+        {currentStep === 1 && this.renderStep1()}
+        {currentStep === 2 && this.renderStep2()}
       </div>
     );
   }
