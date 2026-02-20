@@ -87,7 +87,6 @@ public class McpTestFixture : IDisposable
                 services.AddScoped<IFabricDataflowService, FabricDataflowService>();
                 services.AddScoped<IFabricCapacityService, FabricCapacityService>();
                 services.AddScoped<IFabricPipelineService, FabricPipelineService>();
-                services.AddScoped<FabricDataSourceConnectionFactory>();
 
                 // Register background task services
                 services.AddSingleton<IMcpSessionAccessor, McpSessionAccessor>();

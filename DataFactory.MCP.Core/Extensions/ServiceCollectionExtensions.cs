@@ -64,7 +64,6 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IFabricWorkspaceService, FabricWorkspaceService>()
             .AddSingleton<IFabricDataflowService, FabricDataflowService>()
             .AddSingleton<IFabricCapacityService, FabricCapacityService>()
-            .AddSingleton<FabricDataSourceConnectionFactory>()
             // Pipeline service
             .AddSingleton<IFabricPipelineService, FabricPipelineService>()
             // Session accessor for background notifications
