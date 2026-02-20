@@ -9,6 +9,7 @@ This document provides a comprehensive overview of the Microsoft Data Factory MC
 - [Component Details](#component-details)
   - [Application Entry Point](#1-application-entry-point)
   - [MCP Tools Layer](#2-mcp-tools-layer)
+  - [MCP App Resources Layer](#2a-mcp-app-resources-layer)
   - [Core Services Layer](#3-core-services-layer)
   - [Abstractions Layer](#4-abstractions-layer)
   - [Models Layer](#5-models-layer)
@@ -222,8 +223,10 @@ MCP Tools are the public interface that AI assistants interact with. Each tool i
 - `CreateVNetGatewayAsync()`: Create a new VNet gateway with Azure resource configuration
 
 #### ConnectionsTool
-- `ListConnectionsAsync()`: List all accessible connections
+- `ListSupportedConnectionTypesAsync()`: Discover available connection types, creation methods, parameters, and credential kinds
+- `ListConnectionsAsync()`: List all accessible connections with pagination
 - `GetConnectionAsync()`: Get connection details by ID
+- `CreateConnectionAsync()`: Create a new cloud, on-premises (gateway), or virtual network connection
 
 #### WorkspacesTool
 - `ListWorkspacesAsync()`: List accessible workspaces with optional role filtering
@@ -240,6 +243,45 @@ MCP Tools are the public interface that AI assistants interact with. Each tool i
 
 #### CapacityTool
 - `ListCapacitiesAsync()`: List Fabric capacities user has access to
+
+### 2a. MCP App Resources Layer
+
+**Location**: `Resources/McpApps/`
+
+MCP App Resources expose interactive HTML UIs that render inside the VS Code chat window. They are registered alongside tools in the MCP server and served as `text/html;profile=mcp-app` MIME-typed resources.
+
+#### Base Infrastructure
+- **`McpAppResourceBase`** (`Infrastructure/McpApps/`): Abstract base class for all MCP App resources. Provides `ToReadResourceResult()` to wrap HTML content as an `ReadResourceResult`.
+- **`McpAppResourceLoader`** (`Infrastructure/McpApps/`): Loads compiled HTML from the monorepo build output (`dist/`) embedded inside the assembly.
+
+#### CreateConnectionResource
+- **URI**: `ui://datafactory/create-connection`
+- **MIME type**: `text/html;profile=mcp-app`
+- **Description**: Interactive form for creating a new data source connection
+- **Source**: `DataFactory.MCP.Core/Resources/McpApps/`
+- **UI project**: `DataFactory.MCP.Core/Resources/McpApps/src/create-connection/` (Vite + React build)
+
+The form:
+1. Calls `list_supported_connection_types` to populate the connection type dropdown
+2. Dynamically renders parameters and credential fields for the selected type
+3. Supports connectivity mode selection (Cloud / On-premises gateway / VNet gateway)
+4. Loads gateways via `list_gateways` when a non-cloud mode is selected
+5. Submits by calling `create_connection` with the collected values
+
+#### Registration Pattern
+```csharp
+[McpServerResourceType]
+public class CreateConnectionResourceHandler
+{
+    [McpServerResource(
+        UriTemplate = "ui://datafactory/create-connection",
+        Name = "Create Connection",
+        MimeType = "text/html;profile=mcp-app")]
+    [McpMeta("ui", JsonValue = """{"csp": {}, "prefersBorder": false}""")]
+    [Description("Form to create a new data source connection")]
+    public static ReadResourceResult GetCreateConnection() => _resource.ToReadResourceResult();
+}
+```
 
 ### 3. Core Services Layer
 
@@ -289,6 +331,7 @@ Implements `IFabricConnectionService` and handles:
 
 Key Methods:
 ```csharp
+Task<SupportedConnectionTypesResponse> ListSupportedConnectionTypesAsync(string? gatewayId = null)
 Task<ConnectionResponse> ListConnectionsAsync(string? continuationToken = null)
 Task<Connection> GetConnectionAsync(string connectionId)
 Task<Connection> CreateConnectionAsync(CreateConnectionRequest request)

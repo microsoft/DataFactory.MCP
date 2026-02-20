@@ -28,6 +28,10 @@ in
 - `execute_query` → run M, get results
 - `add_connection_to_dataflow` → attach connections
 - `add_or_update_query_in_dataflow` → add/update queries
+- `list_supported_connection_types` → discover connection types, parameters & credential kinds
+- `list_connections`, `get_connection` → browse existing connections
+- `create_connection` → create cloud, on-premises, or virtual network connections
+
 
 ## Load Additional Knowledge
 
