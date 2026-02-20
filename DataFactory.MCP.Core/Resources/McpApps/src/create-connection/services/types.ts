@@ -162,12 +162,23 @@ export const privacyLevelOptions: Array<{
 
 export interface CreateConnectionResult {
   success?: boolean;
-  connectionId?: string;
-  connectionName?: string;
-  connectivityType?: string;
-  connectionDetails?: {
-    type?: string;
-    path?: string;
+  connection?: {
+    id?: string;
+    displayName?: string;
+    connectivityType?: string;
+    connectionDetails?: {
+      type?: string;
+      path?: string;
+    };
+    privacyLevel?: string;
+    credentialDetails?: {
+      credentialType?: string;
+      singleSignOnType?: string;
+      connectionEncryption?: string;
+      skipTestConnection?: boolean;
+    };
+    gatewayId?: string;
+    allowConnectionUsageInGateway?: boolean;
   };
   error?: string;
   message?: string;

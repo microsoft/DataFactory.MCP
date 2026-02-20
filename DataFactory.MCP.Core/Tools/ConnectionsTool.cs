@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
 using DataFactory.MCP.Abstractions.Interfaces;
@@ -12,13 +13,16 @@ public class ConnectionsTool
 {
     private readonly IFabricConnectionService _connectionService;
     private readonly IValidationService _validationService;
+    private readonly ILogger<ConnectionsTool> _logger;
 
     public ConnectionsTool(
         IFabricConnectionService connectionService,
-        IValidationService validationService)
+        IValidationService validationService,
+        ILogger<ConnectionsTool> logger)
     {
         _connectionService = connectionService;
         _validationService = validationService;
+        _logger = logger;
     }
 
     [McpServerTool, Description(@"Lists supported connection types with their creation methods, parameters, and supported credential types. Used to populate the Create Connection form.")]
@@ -36,7 +40,7 @@ public class ConnectionsTool
 
             // Log the first few types to verify casing from the API
             var sampleTypes = string.Join(", ", response.Value.Take(5).Select(ct => ct.Type));
-            System.Console.Error.WriteLine($"[ListSupportedConnectionTypes] Sample types from API: {sampleTypes}");
+            _logger.LogDebug("[ListSupportedConnectionTypes] Sample types from API: {SampleTypes}", sampleTypes);
 
             var result = new
             {
@@ -163,7 +167,7 @@ public class ConnectionsTool
         try
         {
             _validationService.ValidateRequiredString(connectionName, nameof(connectionName));
-            System.Console.Error.WriteLine($"[CreateConnection] connectionType='{connectionType}', creationMethod='{creationMethod}'");
+            _logger.LogDebug("[CreateConnection] connectionType='{ConnectionType}', creationMethod='{CreationMethod}'", connectionType, creationMethod);
 
             // Validate gateway is provided for non-cloud types
             var needsGateway = connectivityType is "OnPremisesGateway" or "VirtualNetworkGateway";
@@ -237,14 +241,7 @@ public class ConnectionsTool
             var result = new
             {
                 Success = true,
-                ConnectionId = connection.Id,
-                ConnectionName = connection.DisplayName,
-                ConnectivityType = connection.ConnectivityType.ToString(),
-                ConnectionDetails = new
-                {
-                    Type = connection.ConnectionDetails.Type,
-                    Path = connection.ConnectionDetails.Path
-                }
+                Connection = connection.ToFormattedInfo()
             };
 
             return result.ToMcpJson();

@@ -401,9 +401,9 @@ export class CreateConnectionApp extends McpAppComponent<
         parsed = result as CreateConnectionResult;
       }
 
-      if (parsed?.success && parsed.connectionId) {
+      if (parsed?.success && parsed.connection?.id) {
         await this.updateModelContext({
-          connectionId: parsed.connectionId,
+          connectionId: parsed.connection.id,
           connectionName: connectionName.trim(),
           connectionType: selectedDataSourceType,
           connectionMode,
@@ -411,8 +411,9 @@ export class CreateConnectionApp extends McpAppComponent<
         });
         this.setState({
           isSubmitting: false,
-          createdConnectionId: parsed.connectionId,
-          createdConnectionName: parsed.connectionName || connectionName.trim(),
+          createdConnectionId: parsed.connection.id,
+          createdConnectionName:
+            parsed.connection.displayName || connectionName.trim(),
         });
       } else {
         this.setState({
