@@ -3,6 +3,7 @@ bin/
 *.sln
 DataFactory.MCP.Tests/Infrastructure/.env
 *.vs
+tmpclaude-*
 **/node_modules/
 **/dist/
 **/McpApps/node_modules/

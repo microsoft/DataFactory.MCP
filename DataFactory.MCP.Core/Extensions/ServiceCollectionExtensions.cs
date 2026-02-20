@@ -13,6 +13,7 @@ using DataFactory.MCP.Services.DMTSv2;
 using DataFactory.MCP.Services.Notifications;
 using DataFactory.MCP.Tools;
 using DataFactory.MCP.Tools.Dataflow;
+using DataFactory.MCP.Tools.Pipeline;
 
 namespace DataFactory.MCP.Extensions;
 
@@ -63,6 +64,9 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IFabricWorkspaceService, FabricWorkspaceService>()
             .AddSingleton<IFabricDataflowService, FabricDataflowService>()
             .AddSingleton<IFabricCapacityService, FabricCapacityService>()
+            .AddSingleton<FabricDataSourceConnectionFactory>()
+            // Pipeline service
+            .AddSingleton<IFabricPipelineService, FabricPipelineService>()
             // Session accessor for background notifications
             .AddSingleton<IMcpSessionAccessor, McpSessionAccessor>()
             // Background task system (consolidated: monitor handles start, track, poll, notify)
@@ -133,6 +137,14 @@ public static class ServiceCollectionExtensions
             args,
             FeatureFlags.InteractiveAuth,
             nameof(InteractiveAuthenticationTool),
+            logger);
+
+        // Conditionally enable PipelineTool based on feature flag
+        mcpBuilder.RegisterToolWithFeatureFlag<PipelineTool>(
+            configuration,
+            args,
+            FeatureFlags.Pipeline,
+            nameof(PipelineTool),
             logger);
 
         return mcpBuilder;

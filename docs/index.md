@@ -10,6 +10,7 @@ Comprehensive documentation for the Microsoft Data Factory MCP Server.
 - **[Connection Management Guide](connection-management.md)** - Managing Azure Data Factory connections
 - **[Workspace Management Guide](workspace-management.md)** - Managing Microsoft Fabric workspaces
 - **[Dataflow Management Guide](dataflow-management.md)** - Managing Microsoft Fabric dataflows
+- **[Pipeline Management Guide](pipeline-management.md)** - Managing Microsoft Fabric pipelines
 
 ## Technical Documentation
 

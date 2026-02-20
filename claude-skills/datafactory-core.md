@@ -28,15 +28,10 @@ in
 - `execute_query` → run M, get results
 - `add_connection_to_dataflow` → attach connections
 - `add_or_update_query_in_dataflow` → add/update queries
-- `list_supported_connection_types` → discover connection types, parameters & credential kinds
-- `list_connections`, `get_connection` → browse existing connections
-- `create_connection` → create cloud, on-premises, or virtual network connections
+- `refresh_dataflow_background` → trigger refresh
+- `refresh_dataflow_status` → poll for completion
+- `list_connections` → find connection GUIDs
 
+## Connection GUIDs
 
-## Load Additional Knowledge
-
-| When | Load |
-|------|------|
-| Query timeout, slow performance, chunking | `datafactory-performance.md` |
-| Output destinations, new tables, staging, programmatic config | `datafactory-destinations.md` |
-| Fast Copy, Action.Sequence, Modern Evaluator | `datafactory-advanced.md` |
+`add_connection_to_dataflow` accepts a single GUID string, not arrays or JSON.
