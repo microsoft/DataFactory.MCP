@@ -5,7 +5,7 @@
 
 import { Component, ReactNode } from "react";
 import { connectionModeLabels } from "../../services/types";
-import { connectionModeSelectorStyles as styles } from "./styles";
+import { ConnectionModeSelectorStyles as styles } from "./ConnectionModeSelector.styles";
 import type { ConnectionModeSelectorProps } from "./types";
 import { modes } from "./types";
 

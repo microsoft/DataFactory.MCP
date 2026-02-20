@@ -5,7 +5,7 @@
  */
 
 import { Component, ReactNode, createRef } from "react";
-import { baseStyles } from "../../shared";
+import { BaseStyles } from "../../shared";
 
 export interface ComboBoxOption {
   value: string;
@@ -172,8 +172,8 @@ export class SearchableComboBox extends Component<
     const showDropdown = isOpen && !isLoading && !disabled;
 
     return (
-      <div style={baseStyles.formGroup}>
-        <label htmlFor={id} style={baseStyles.label}>
+      <div style={BaseStyles.formGroup}>
+        <label htmlFor={id} style={BaseStyles.label}>
           {label} {required && <span style={styles.required}>*</span>}
         </label>
         <div ref={this.containerRef} style={styles.container}>
@@ -188,7 +188,7 @@ export class SearchableComboBox extends Component<
               onKeyDown={this.handleInputKeyDown}
               disabled={disabled || isLoading}
               placeholder={isLoading ? loadingText : placeholder}
-              style={baseStyles.input}
+              style={BaseStyles.input}
               aria-busy={isLoading}
               autoComplete="off"
             />

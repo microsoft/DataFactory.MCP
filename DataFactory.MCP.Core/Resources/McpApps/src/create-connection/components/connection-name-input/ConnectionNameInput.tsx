@@ -4,8 +4,8 @@
  */
 
 import { Component, ReactNode } from "react";
-import { baseStyles } from "../../../shared";
-import { connectionNameInputStyles as styles } from "./styles";
+import { BaseStyles } from "../../../shared";
+import { ConnectionNameInputStyles as styles } from "./ConnectionNameInput.styles";
 import type { ConnectionNameInputProps } from "./types";
 
 export class ConnectionNameInput extends Component<ConnectionNameInputProps> {
@@ -22,8 +22,8 @@ export class ConnectionNameInput extends Component<ConnectionNameInputProps> {
     const { value, disabled = false } = this.props;
 
     return (
-      <div style={baseStyles.formGroup}>
-        <label htmlFor="connection-name" style={baseStyles.label}>
+      <div style={BaseStyles.formGroup}>
+        <label htmlFor="connection-name" style={BaseStyles.label}>
           Connection name <span style={styles.required}>*</span>
         </label>
         <input
@@ -33,7 +33,7 @@ export class ConnectionNameInput extends Component<ConnectionNameInputProps> {
           onChange={this.handleChange}
           disabled={disabled}
           placeholder="Enter a display name for this connection"
-          style={baseStyles.input}
+          style={BaseStyles.input}
         />
       </div>
     );

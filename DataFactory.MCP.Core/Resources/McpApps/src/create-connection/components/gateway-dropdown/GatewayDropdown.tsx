@@ -5,7 +5,7 @@
 
 import { Component, ReactNode } from "react";
 import { SearchableComboBox, ComboBoxOption } from "../searchable-combobox";
-import { gatewayDropdownStyles as styles } from "./styles";
+import { GatewayDropdownStyles as styles } from "./GatewayDropdown.styles";
 import type { GatewayDropdownProps } from "./types";
 
 export class GatewayDropdown extends Component<GatewayDropdownProps> {

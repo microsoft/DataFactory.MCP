@@ -2,21 +2,23 @@
  * Styles for the LoadingSpinner component.
  */
 
-export const loadingSpinnerStyles: Record<string, React.CSSProperties> = {
-  container: {
+import { CSSProperties } from "react";
+
+export class LoadingSpinnerStyles {
+  static container: CSSProperties = {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     padding: "40px",
     color: "var(--vscode-foreground, #cccccc)",
-  },
-  spinner: {
+  };
+  static spinner: CSSProperties = {
     fontSize: "2rem",
     marginBottom: "12px",
-  },
-  message: {
+  };
+  static message: CSSProperties = {
     fontSize: "0.9rem",
     opacity: 0.8,
-  },
-};
+  };
+}

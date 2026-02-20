@@ -2,12 +2,14 @@
  * Styles for the ErrorBanner component.
  */
 
-export const errorBannerStyles: Record<string, React.CSSProperties> = {
-  message: {
+import { CSSProperties } from "react";
+
+export class ErrorBannerStyles {
+  static message: CSSProperties = {
     fontSize: "0.85rem",
     marginBottom: "8px",
-  },
-  retryButton: {
+  };
+  static retryButton: CSSProperties = {
     padding: "4px 12px",
     background: "var(--vscode-button-background, #0e639c)",
     color: "var(--vscode-button-foreground, #ffffff)",
@@ -15,5 +17,5 @@ export const errorBannerStyles: Record<string, React.CSSProperties> = {
     borderRadius: "4px",
     fontSize: "0.8rem",
     cursor: "pointer",
-  },
-};
+  };
+}

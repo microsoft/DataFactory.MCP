@@ -4,7 +4,7 @@
  */
 
 import { Component, ReactNode } from "react";
-import { loadingSpinnerStyles as styles } from "./styles";
+import { LoadingSpinnerStyles as styles } from "./LoadingSpinner.styles";
 import type { LoadingSpinnerProps } from "./types";
 
 export class LoadingSpinner extends Component<LoadingSpinnerProps> {

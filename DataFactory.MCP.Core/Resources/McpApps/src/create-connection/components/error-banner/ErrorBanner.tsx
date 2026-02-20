@@ -4,8 +4,8 @@
  */
 
 import { Component, ReactNode } from "react";
-import { baseStyles } from "../../../shared";
-import { errorBannerStyles as styles } from "./styles";
+import { BaseStyles } from "../../../shared";
+import { ErrorBannerStyles as styles } from "./ErrorBanner.styles";
 import type { ErrorBannerProps } from "./types";
 
 export class ErrorBanner extends Component<ErrorBannerProps> {
@@ -13,7 +13,7 @@ export class ErrorBanner extends Component<ErrorBannerProps> {
     const { message, onRetry } = this.props;
 
     return (
-      <div style={baseStyles.statusError}>
+      <div style={BaseStyles.statusError}>
         <div style={styles.message}>⚠️ {message}</div>
         {onRetry && (
           <button type="button" onClick={onRetry} style={styles.retryButton}>

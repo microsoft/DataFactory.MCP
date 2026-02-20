@@ -12,8 +12,8 @@ import {
   PrivacyLevel,
   privacyLevelOptions,
 } from "../../services/types";
-import { baseStyles } from "../../../shared";
-import { credentialSectionStyles as styles } from "./styles";
+import { BaseStyles } from "../../../shared";
+import { CredentialSectionStyles as styles } from "./CredentialSection.styles";
 import type { CredentialSectionProps } from "./types";
 
 export class CredentialSection extends Component<CredentialSectionProps> {
@@ -64,8 +64,8 @@ export class CredentialSection extends Component<CredentialSectionProps> {
         <div style={styles.sectionHeader}>Credentials</div>
 
         {/* Authentication method dropdown */}
-        <div style={baseStyles.formGroup}>
-          <label htmlFor="auth-method" style={baseStyles.label}>
+        <div style={BaseStyles.formGroup}>
+          <label htmlFor="auth-method" style={BaseStyles.label}>
             Authentication method <span style={styles.required}>*</span>
           </label>
           <select
@@ -73,7 +73,7 @@ export class CredentialSection extends Component<CredentialSectionProps> {
             value={selectedCredentialType}
             onChange={this.handleCredentialTypeChange}
             disabled={disabled}
-            style={baseStyles.select}
+            style={BaseStyles.select}
           >
             {availableCredentialTypes.map((ct) => (
               <option key={ct} value={ct}>
@@ -85,8 +85,8 @@ export class CredentialSection extends Component<CredentialSectionProps> {
 
         {/* Dynamic credential fields */}
         {fields.map((field) => (
-          <div key={field.name} style={baseStyles.formGroup}>
-            <label htmlFor={`cred-${field.name}`} style={baseStyles.label}>
+          <div key={field.name} style={BaseStyles.formGroup}>
+            <label htmlFor={`cred-${field.name}`} style={BaseStyles.label}>
               {field.label} <span style={styles.required}>*</span>
             </label>
             <input
@@ -98,15 +98,15 @@ export class CredentialSection extends Component<CredentialSectionProps> {
               }
               disabled={disabled}
               placeholder={`Enter ${field.label.toLowerCase()}`}
-              style={baseStyles.input}
+              style={BaseStyles.input}
               autoComplete={field.isSecret ? "new-password" : "off"}
             />
           </div>
         ))}
 
         {/* Privacy level dropdown */}
-        <div style={baseStyles.formGroup}>
-          <label htmlFor="privacy-level" style={baseStyles.label}>
+        <div style={BaseStyles.formGroup}>
+          <label htmlFor="privacy-level" style={BaseStyles.label}>
             Privacy level
           </label>
           <select
@@ -114,7 +114,7 @@ export class CredentialSection extends Component<CredentialSectionProps> {
             value={privacyLevel}
             onChange={this.handlePrivacyChange}
             disabled={disabled}
-            style={baseStyles.select}
+            style={BaseStyles.select}
           >
             {privacyLevelOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -126,8 +126,8 @@ export class CredentialSection extends Component<CredentialSectionProps> {
 
         {/* Encrypted connection dropdown */}
         {isEncryptedConnectionSupported && (
-          <div style={baseStyles.formGroup}>
-            <label htmlFor="encrypted-conn" style={baseStyles.label}>
+          <div style={BaseStyles.formGroup}>
+            <label htmlFor="encrypted-conn" style={BaseStyles.label}>
               Encrypted connection
             </label>
             <select
@@ -135,7 +135,7 @@ export class CredentialSection extends Component<CredentialSectionProps> {
               value={encryptedConnection}
               onChange={this.handleEncryptedChange}
               disabled={disabled}
-              style={baseStyles.select}
+              style={BaseStyles.select}
             >
               <option value="NotEncrypted">Not Encrypted</option>
               <option value="Encrypted">Encrypted</option>

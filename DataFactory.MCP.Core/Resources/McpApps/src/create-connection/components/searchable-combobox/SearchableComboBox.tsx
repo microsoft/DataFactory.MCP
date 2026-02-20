@@ -5,8 +5,8 @@
  */
 
 import { Component, ReactNode, createRef } from "react";
-import { baseStyles } from "../../../shared";
-import { comboBoxStyles as styles } from "./styles";
+import { BaseStyles } from "../../../shared";
+import { ComboBoxStyles as styles } from "./SearchableComboBox.styles";
 import { filterOptions, getDisplayText, clampIndex } from "./helpers";
 import type {
   ComboBoxOption,
@@ -138,8 +138,8 @@ export class SearchableComboBox extends Component<
     const showDropdown = isOpen && !isLoading && !disabled;
 
     return (
-      <div style={baseStyles.formGroup}>
-        <label htmlFor={id} style={baseStyles.label}>
+      <div style={BaseStyles.formGroup}>
+        <label htmlFor={id} style={BaseStyles.label}>
           {label} {required && <span style={styles.required}>*</span>}
         </label>
         <div ref={this.containerRef} style={styles.container}>
@@ -154,7 +154,7 @@ export class SearchableComboBox extends Component<
               onKeyDown={this.handleInputKeyDown}
               disabled={disabled || isLoading}
               placeholder={isLoading ? loadingText : placeholder}
-              style={baseStyles.input}
+              style={BaseStyles.input}
               aria-busy={isLoading}
               autoComplete="off"
             />

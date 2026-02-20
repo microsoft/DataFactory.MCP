@@ -4,8 +4,8 @@
  */
 
 import { Component, ReactNode } from "react";
-import { baseStyles } from "../../../shared";
-import { successBannerStyles as styles } from "./styles";
+import { BaseStyles } from "../../../shared";
+import { SuccessBannerStyles as styles } from "./SuccessBanner.styles";
 import type { SuccessBannerProps } from "./types";
 
 export class SuccessBanner extends Component<SuccessBannerProps> {
@@ -13,7 +13,7 @@ export class SuccessBanner extends Component<SuccessBannerProps> {
     const { connectionId, connectionName } = this.props;
 
     return (
-      <div style={baseStyles.statusSuccess}>
+      <div style={BaseStyles.statusSuccess}>
         <div style={styles.title}>✅ Connection Created Successfully</div>
         <div style={styles.detail}>
           <strong>Name:</strong> {connectionName}

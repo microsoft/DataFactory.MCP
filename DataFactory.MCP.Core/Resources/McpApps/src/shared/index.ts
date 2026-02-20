@@ -3,4 +3,4 @@ export type {
   McpAppComponentProps,
   McpAppComponentState,
 } from "./McpAppComponent";
-export { baseStyles, applyBodyStyles } from "./styles";
+export { BaseStyles, applyBodyStyles } from "./base.styles";

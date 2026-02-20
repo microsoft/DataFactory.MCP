@@ -3,19 +3,21 @@
  * Uses VS Code CSS variables for theme compatibility.
  */
 
-export const comboBoxStyles: Record<string, React.CSSProperties> = {
-  required: {
+import { CSSProperties } from "react";
+
+export class ComboBoxStyles {
+  static required: CSSProperties = {
     color: "var(--vscode-errorForeground, #f48771)",
-  },
-  container: {
+  };
+  static container: CSSProperties = {
     position: "relative",
-  },
-  inputWrapper: {
+  };
+  static inputWrapper: CSSProperties = {
     position: "relative",
     display: "flex",
     alignItems: "center",
-  },
-  clearButton: {
+  };
+  static clearButton: CSSProperties = {
     position: "absolute",
     right: "8px",
     background: "none",
@@ -26,8 +28,8 @@ export const comboBoxStyles: Record<string, React.CSSProperties> = {
     padding: "4px",
     opacity: 0.7,
     lineHeight: 1,
-  },
-  dropdown: {
+  };
+  static dropdown: CSSProperties = {
     position: "absolute",
     top: "100%",
     left: 0,
@@ -42,8 +44,8 @@ export const comboBoxStyles: Record<string, React.CSSProperties> = {
     listStyle: "none",
     zIndex: 1000,
     boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
-  },
-  option: {
+  };
+  static option: CSSProperties = {
     display: "block",
     width: "100%",
     padding: "5px 8px",
@@ -52,21 +54,21 @@ export const comboBoxStyles: Record<string, React.CSSProperties> = {
     color: "var(--vscode-dropdown-foreground, #cccccc)",
     background: "none",
     border: "none",
-    textAlign: "left" as const,
+    textAlign: "left",
     fontFamily: "inherit",
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
-    boxSizing: "border-box" as const,
-  },
-  optionHighlighted: {
+    boxSizing: "border-box",
+  };
+  static optionHighlighted: CSSProperties = {
     background: "var(--vscode-list-activeSelectionBackground, #094771)",
     color: "var(--vscode-list-activeSelectionForeground, #ffffff)",
-  },
-  noResults: {
+  };
+  static noResults: CSSProperties = {
     padding: "5px 8px",
     fontSize: "0.8rem",
     color: "var(--vscode-descriptionForeground, #888)",
     fontStyle: "italic",
-  },
-};
+  };
+}

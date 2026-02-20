@@ -6,8 +6,8 @@
  */
 
 import { Component, ReactNode } from "react";
-import { baseStyles } from "../../../shared";
-import { connectionDetailFieldsStyles as styles } from "./styles";
+import { BaseStyles } from "../../../shared";
+import { ConnectionDetailFieldsStyles as styles } from "./ConnectionDetailFields.styles";
 import { formatLabel } from "./helpers";
 import type { ConnectionDetailFieldsProps } from "./types";
 
@@ -26,10 +26,10 @@ export class ConnectionDetailFields extends Component<ConnectionDetailFieldsProp
     return (
       <div>
         {labels.map((label) => (
-          <div key={label.name} style={baseStyles.formGroup}>
+          <div key={label.name} style={BaseStyles.formGroup}>
             <label
               htmlFor={`conn-detail-${label.name}`}
-              style={baseStyles.label}
+              style={BaseStyles.label}
             >
               {formatLabel(label.name)}
               {label.required && <span style={styles.required}> *</span>}
@@ -41,7 +41,7 @@ export class ConnectionDetailFields extends Component<ConnectionDetailFieldsProp
               onChange={(e) => this.handleChange(label.name, e.target.value)}
               disabled={disabled}
               placeholder={`Enter ${label.name}`}
-              style={baseStyles.input}
+              style={BaseStyles.input}
             />
           </div>
         ))}

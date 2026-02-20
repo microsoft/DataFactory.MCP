@@ -3,8 +3,8 @@
  * Past steps are clickable links; current step is bold; future steps are muted.
  */
 
-import { CSSProperties } from "react";
-import { WizardStep } from "./types";
+import { WizardStep, WIZARD_STEPS } from "./types";
+import { WizardStepIndicatorStyles as styles } from "./WizardStepIndicator.styles";
 
 interface WizardStepIndicatorProps {
   currentStep: WizardStep;
@@ -12,57 +12,36 @@ interface WizardStepIndicatorProps {
 }
 
 const STEPS: [WizardStep, string][] = [
-  [0, "Mode"],
-  [1, "Details"],
-  [2, "Credentials"],
+  ["mode", "Mode"],
+  ["details", "Details"],
+  ["credentials", "Credentials"],
 ];
-
-const dividerStyle: CSSProperties = {
-  color: "var(--vscode-descriptionForeground, #888)",
-  margin: "0 3px",
-  fontSize: "0.7rem",
-};
 
 export function WizardStepIndicator({
   currentStep,
   onStepClick,
 }: WizardStepIndicatorProps) {
+  const currentIdx = WIZARD_STEPS.indexOf(currentStep);
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        marginBottom: "12px",
-        fontSize: "0.75rem",
-      }}
-    >
-      {STEPS.map(([idx, label], i) => (
-        <span key={idx} style={{ display: "flex", alignItems: "center" }}>
-          {i > 0 && <span style={dividerStyle}>›</span>}
-          <button
-            type="button"
-            onClick={() => onStepClick(idx)}
-            disabled={idx >= currentStep}
-            style={{
-              background: "none",
-              border: "none",
-              padding: "2px 4px",
-              cursor: idx < currentStep ? "pointer" : "default",
-              color:
-                idx === currentStep
-                  ? "var(--vscode-foreground, #ccc)"
-                  : idx < currentStep
-                    ? "var(--vscode-textLink-foreground, #3794ff)"
-                    : "var(--vscode-descriptionForeground, #888)",
-              fontWeight: idx === currentStep ? 600 : 400,
-              fontSize: "0.75rem",
-              textDecoration: idx < currentStep ? "underline" : "none",
-            }}
-          >
-            {label}
-          </button>
-        </span>
-      ))}
+    <div style={styles.container}>
+      {STEPS.map(([step, label], i) => {
+        const stepIdx = WIZARD_STEPS.indexOf(step);
+        const isCurrent = step === currentStep;
+        const isPast = stepIdx < currentIdx;
+        return (
+          <span key={step} style={styles.stepWrapper}>
+            {i > 0 && <span style={styles.divider}>›</span>}
+            <button
+              type="button"
+              onClick={() => onStepClick(step)}
+              disabled={!isPast}
+              style={styles.stepButton(isCurrent, isPast)}
+            >
+              {label}
+            </button>
+          </span>
+        );
+      })}
     </div>
   );
 }

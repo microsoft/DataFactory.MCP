@@ -4,8 +4,8 @@
  */
 
 import { Component, ReactNode } from "react";
-import { baseStyles } from "../../../shared";
-import { formButtonsStyles as styles } from "./styles";
+import { BaseStyles } from "../../../shared";
+import { FormButtonsStyles as styles } from "./FormButtons.styles";
 import type { FormButtonsProps } from "./types";
 
 export class FormButtons extends Component<FormButtonsProps> {
@@ -29,8 +29,8 @@ export class FormButtons extends Component<FormButtonsProps> {
             onClick={onBack}
             disabled={isSubmitting}
             style={{
-              ...baseStyles.buttonSecondary,
-              ...(isSubmitting ? baseStyles.buttonDisabled : {}),
+              ...BaseStyles.buttonSecondary,
+              ...(isSubmitting ? BaseStyles.buttonDisabled : {}),
             }}
           >
             Back
@@ -41,9 +41,9 @@ export class FormButtons extends Component<FormButtonsProps> {
           onClick={onSubmit}
           disabled={submitDisabled || isSubmitting}
           style={{
-            ...baseStyles.button,
+            ...BaseStyles.button,
             ...(submitDisabled || isSubmitting
-              ? baseStyles.buttonDisabled
+              ? BaseStyles.buttonDisabled
               : {}),
           }}
         >
@@ -54,8 +54,8 @@ export class FormButtons extends Component<FormButtonsProps> {
           onClick={onCancel}
           disabled={isSubmitting}
           style={{
-            ...baseStyles.buttonSecondary,
-            ...(isSubmitting ? baseStyles.buttonDisabled : {}),
+            ...BaseStyles.buttonSecondary,
+            ...(isSubmitting ? BaseStyles.buttonDisabled : {}),
           }}
         >
           Cancel

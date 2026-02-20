@@ -17,7 +17,7 @@ import {
   McpAppComponent,
   McpAppComponentProps,
   McpAppComponentState,
-  baseStyles,
+  BaseStyles,
   applyBodyStyles,
 } from "../shared";
 import {
@@ -27,17 +27,17 @@ import {
   SupportedDataSourceType,
   CreateConnectionResult,
   Gateway,
-  requiresGateway,
 } from "./services/types";
 import {
   fetchGateways,
   fetchSupportedConnectionTypes,
 } from "./services/connectionDataService";
+import { filterGatewaysByMode, findSelectedType } from "./helpers";
 import {
   validateDetails,
   validateCredentials,
 } from "./validation/connectionValidation";
-import { WizardStep } from "./wizard/types";
+import { WizardStep, WIZARD_STEPS } from "./wizard/types";
 import { WizardStepIndicator } from "./wizard/WizardStepIndicator";
 import { ModeStep } from "./wizard/ModeStep";
 import { DetailsStep } from "./wizard/DetailsStep";
@@ -85,7 +85,7 @@ interface CreateConnectionAppState extends McpAppComponentState {
 }
 
 const INITIAL_FORM_STATE = {
-  currentStep: 0 as WizardStep,
+  currentStep: "mode" as WizardStep,
   connectionMode: "Cloud" as ConnectionMode,
   connectionName: "",
   selectedGatewayId: null,
@@ -215,7 +215,7 @@ export class CreateConnectionApp extends McpAppComponent<
       connectionMode: mode,
       selectedGatewayId: null,
       submitError: null,
-      currentStep: 1,
+      currentStep: "details",
     });
   }
 
@@ -226,24 +226,30 @@ export class CreateConnectionApp extends McpAppComponent<
       selectedGatewayId: this.state.selectedGatewayId,
       selectedDataSourceType: this.state.selectedDataSourceType,
       connectionDetailValues: this.state.connectionDetailValues,
-      selectedTypeInfo: this.getSelectedTypeInfo(),
+      selectedTypeInfo: findSelectedType(
+        this.state.supportedDataSourceTypes,
+        this.state.selectedDataSourceType,
+      ),
     });
     if (error) {
       this.setState({ submitError: error });
     } else {
-      this.setState({ currentStep: 2, submitError: null });
+      this.setState({ currentStep: "credentials", submitError: null });
     }
   }
 
   private handleBack(): void {
     this.setState((prev) => ({
-      currentStep: Math.max(0, prev.currentStep - 1) as WizardStep,
+      currentStep:
+        WIZARD_STEPS[Math.max(0, WIZARD_STEPS.indexOf(prev.currentStep) - 1)],
       submitError: null,
     }));
   }
 
   private handleStepClick(step: WizardStep): void {
-    if (step < this.state.currentStep) {
+    if (
+      WIZARD_STEPS.indexOf(step) < WIZARD_STEPS.indexOf(this.state.currentStep)
+    ) {
       this.setState({ currentStep: step, submitError: null });
     }
   }
@@ -352,7 +358,10 @@ export class CreateConnectionApp extends McpAppComponent<
     this.setState({ isSubmitting: true, submitError: null });
 
     try {
-      const selectedType = this.getSelectedTypeInfo();
+      const selectedType = findSelectedType(
+        this.state.supportedDataSourceTypes,
+        this.state.selectedDataSourceType,
+      );
       const connectivityTypeMap: Record<ConnectionMode, string> = {
         Cloud: "ShareableCloud",
         OnPremises: "OnPremisesGateway",
@@ -424,29 +433,6 @@ export class CreateConnectionApp extends McpAppComponent<
   }
 
   // ===========================================================================
-  // Helpers
-  // ===========================================================================
-
-  private getFilteredGateways(): Gateway[] {
-    const { gateways, connectionMode } = this.state;
-    const gatewayTypeMap: Record<ConnectionMode, string> = {
-      OnPremises: "OnPremises",
-      VirtualNetwork: "VirtualNetwork",
-      StreamingVirtualNetwork: "VirtualNetwork",
-      Cloud: "",
-    };
-    const targetType = gatewayTypeMap[connectionMode];
-    if (!targetType) return [];
-    return gateways.filter((gw) => gw.type === targetType);
-  }
-
-  private getSelectedTypeInfo(): SupportedDataSourceType | undefined {
-    return this.state.supportedDataSourceTypes.find(
-      (t) => t.displayName === this.state.selectedDataSourceType,
-    );
-  }
-
-  // ===========================================================================
   // Render
   // ===========================================================================
 
@@ -460,7 +446,7 @@ export class CreateConnectionApp extends McpAppComponent<
 
     if (createdConnectionId && createdConnectionName) {
       return (
-        <div style={baseStyles.container}>
+        <div style={BaseStyles.container}>
           <SuccessBanner
             connectionId={createdConnectionId}
             connectionName={createdConnectionName}
@@ -469,22 +455,25 @@ export class CreateConnectionApp extends McpAppComponent<
       );
     }
 
-    const selectedTypeInfo = this.getSelectedTypeInfo();
+    const selectedTypeInfo = findSelectedType(
+      this.state.supportedDataSourceTypes,
+      this.state.selectedDataSourceType,
+    );
 
     return (
-      <div style={baseStyles.container}>
-        <h1 style={baseStyles.h1}>New Connection</h1>
+      <div style={BaseStyles.container}>
+        <h1 style={BaseStyles.h1}>New Connection</h1>
         <WizardStepIndicator
           currentStep={currentStep}
           onStepClick={this.handleStepClick}
         />
-        {currentStep === 0 && (
+        {currentStep === "mode" && (
           <ModeStep
             connectionMode={this.state.connectionMode}
             onModeChange={this.handleModeChange}
           />
         )}
-        {currentStep === 1 && (
+        {currentStep === "details" && (
           <DetailsStep
             connectionMode={this.state.connectionMode}
             connectionName={this.state.connectionName}
@@ -492,7 +481,10 @@ export class CreateConnectionApp extends McpAppComponent<
             selectedDataSourceType={this.state.selectedDataSourceType}
             connectionDetailValues={this.state.connectionDetailValues}
             selectedTypeInfo={selectedTypeInfo}
-            gateways={this.getFilteredGateways()}
+            gateways={filterGatewaysByMode(
+              this.state.gateways,
+              this.state.connectionMode,
+            )}
             isLoadingGateways={this.state.isLoadingGateways}
             supportedDataSourceTypes={this.state.supportedDataSourceTypes}
             isLoadingConnectionTypes={this.state.isLoadingConnectionTypes}
@@ -513,7 +505,7 @@ export class CreateConnectionApp extends McpAppComponent<
             onRetry={this.handleRetry}
           />
         )}
-        {currentStep === 2 && selectedTypeInfo && (
+        {currentStep === "credentials" && selectedTypeInfo && (
           <CredentialsStep
             selectedTypeInfo={selectedTypeInfo}
             selectedCredentialType={this.state.selectedCredentialType}

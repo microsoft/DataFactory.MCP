@@ -5,6 +5,7 @@
 
 import { ConnectionMode } from "../services/types";
 import { ConnectionModeSelector } from "../components";
+import { ModeStepStyles as styles } from "./ModeStep.styles";
 
 interface ModeStepProps {
   connectionMode: ConnectionMode;
@@ -14,16 +15,7 @@ interface ModeStepProps {
 export function ModeStep({ connectionMode, onModeChange }: ModeStepProps) {
   return (
     <>
-      <p
-        style={{
-          fontSize: "0.8rem",
-          color: "var(--vscode-descriptionForeground, #888)",
-          marginBottom: "10px",
-          marginTop: 0,
-        }}
-      >
-        Choose a connectivity type to get started.
-      </p>
+      <p style={styles.subtitle}>Choose a connectivity type to get started.</p>
       <ConnectionModeSelector
         selectedMode={connectionMode}
         onModeChange={onModeChange}
