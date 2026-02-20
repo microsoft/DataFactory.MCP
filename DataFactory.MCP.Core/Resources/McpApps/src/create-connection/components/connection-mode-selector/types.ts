@@ -5,7 +5,7 @@
 import { ConnectionMode } from "../../services/types";
 
 export interface ConnectionModeSelectorProps {
-  selectedMode: ConnectionMode;
+  selectedMode: ConnectionMode | null;
   onModeChange: (mode: ConnectionMode) => void;
   disabled?: boolean;
 }

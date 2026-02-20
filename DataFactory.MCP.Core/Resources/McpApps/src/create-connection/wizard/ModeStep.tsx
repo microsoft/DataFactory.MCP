@@ -8,7 +8,7 @@ import { ConnectionModeSelector } from "../components";
 import { ModeStepStyles as styles } from "./ModeStep.styles";
 
 interface ModeStepProps {
-  connectionMode: ConnectionMode;
+  connectionMode: ConnectionMode | null;
   onModeChange: (mode: ConnectionMode) => void;
 }
 

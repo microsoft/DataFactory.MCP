@@ -52,7 +52,7 @@ interface CreateConnectionAppState extends McpAppComponentState {
   currentStep: WizardStep;
 
   // Form — basic
-  connectionMode: ConnectionMode;
+  connectionMode: ConnectionMode | null;
   connectionName: string;
   selectedGatewayId: string | null;
 
@@ -89,7 +89,7 @@ interface CreateConnectionAppState extends McpAppComponentState {
 
 const INITIAL_FORM_STATE = {
   currentStep: "mode" as WizardStep,
-  connectionMode: "Cloud" as ConnectionMode,
+  connectionMode: null as ConnectionMode | null,
   connectionName: "",
   selectedGatewayId: null,
   selectedDataSourceType: "",
@@ -392,7 +392,7 @@ export class CreateConnectionApp extends McpAppComponent<
         privacyLevel,
         connectionEncryption: encryptedConnection,
         skipTestConnection,
-        connectivityType: connectivityTypeMap[connectionMode],
+        connectivityType: connectivityTypeMap[connectionMode!],
       };
 
       if (Object.keys(credentialValues).length > 0) {
@@ -420,7 +420,7 @@ export class CreateConnectionApp extends McpAppComponent<
           connectionId: parsed.connection.id,
           connectionName: connectionName.trim(),
           connectionType: selectedDataSourceType,
-          connectionMode,
+          connectionMode: connectionMode!,
           timestamp: new Date().toISOString(),
         });
         this.setState({
@@ -498,7 +498,7 @@ export class CreateConnectionApp extends McpAppComponent<
         )}
         {currentStep === "details" && (
           <DetailsStep
-            connectionMode={this.state.connectionMode}
+            connectionMode={this.state.connectionMode!}
             connectionName={this.state.connectionName}
             selectedGatewayId={this.state.selectedGatewayId}
             selectedDataSourceType={this.state.selectedDataSourceType}

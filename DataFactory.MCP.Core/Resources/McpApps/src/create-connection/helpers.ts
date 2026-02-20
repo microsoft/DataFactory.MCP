@@ -22,8 +22,9 @@ const gatewayTypeMap: Record<ConnectionMode, string> = {
  */
 export function filterGatewaysByMode(
   gateways: Gateway[],
-  connectionMode: ConnectionMode,
+  connectionMode: ConnectionMode | null,
 ): Gateway[] {
+  if (!connectionMode) return [];
   const targetType = gatewayTypeMap[connectionMode];
   if (!targetType) return [];
   return gateways.filter((gw) => gw.type === targetType);

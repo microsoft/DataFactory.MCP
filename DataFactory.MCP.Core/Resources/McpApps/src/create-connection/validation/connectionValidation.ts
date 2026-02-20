@@ -17,7 +17,7 @@ import {
 
 export interface DetailsValidationInput {
   connectionName: string;
-  connectionMode: ConnectionMode;
+  connectionMode: ConnectionMode | null;
   selectedGatewayId: string | null;
   selectedDataSourceType: string;
   connectionDetailValues: Record<string, string>;
@@ -45,7 +45,7 @@ export function validateDetails(input: DetailsValidationInput): string | null {
 
   if (!connectionName.trim()) return "Connection name is required";
   if (!selectedDataSourceType) return "Please select a connection type";
-  if (requiresGateway(connectionMode) && !selectedGatewayId)
+  if (connectionMode != null && requiresGateway(connectionMode) && !selectedGatewayId)
     return "Please select a gateway";
 
   if (selectedTypeInfo) {
