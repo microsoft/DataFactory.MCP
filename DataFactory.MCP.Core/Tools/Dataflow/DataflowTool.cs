@@ -3,6 +3,9 @@ using System.ComponentModel;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Models.Dataflow;
+using DataFactory.MCP.Models.Dataflow.Definition;
+using Apache.Arrow;
+using System.Text.Json;
 
 namespace DataFactory.MCP.Tools.Dataflow;
 
@@ -367,4 +370,176 @@ public class DataflowTool
             return ex.ToOperationError("adding/updating query in dataflow").ToMcpJson();
         }
     }
+
+    [McpServerTool, Description(@"Patch arbitrary fields in queryMetadata.json for a specific query within a dataflow. Think of it as jq for dataflow metadata — a general-purpose wrench, not a single-purpose screwdriver.")]
+    public async Task<string> UpdateQueryMetadata(
+        [Description("The workspace ID containing the dataflow (required)")] string workspaceId,
+        [Description("The dataflow ID to update the metadata for (required)")] string dataflowId,
+        [Description("The name of the query to update (required)")] string queryName,
+        [Description("JSON to deep-merge into the query's metadata")] object metadataPatchObject)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(dataflowId, nameof(dataflowId));
+            _validationService.ValidateRequiredString(queryName, nameof(queryName));
+
+            MetadataPatch? metadataPatch = ParseMetadataPatch(metadataPatchObject);
+            if (metadataPatch == null)
+            {
+                var errorResponse = new
+                {
+                    Success = false,
+                    DataflowId = dataflowId,
+                    WorkspaceId = workspaceId,
+                    QueryName = queryName,
+                    Message = "Invalid metadata patch format. Must be a JSON object with the fields to update."
+                };
+                return errorResponse.ToMcpJson();
+            }
+
+            // Step 1: Get the raw dataflow definition
+            var definition = await _dataflowService.GetDataflowDefinitionAsync(workspaceId, dataflowId);
+            var queryMetadataPart = definition.Parts?.FirstOrDefault(p =>
+                p.Path?.Equals("querymetadata.json", StringComparison.OrdinalIgnoreCase) == true);
+
+            if (queryMetadataPart?.Payload == null)
+            {
+                var errorResponse = new
+                {
+                    Success = false,
+                    DataflowId = dataflowId,
+                    WorkspaceId = workspaceId,
+                    QueryName = queryName,
+                    Message = "Dataflow definition does not contain queryMetadata.json"
+                };
+                return errorResponse.ToMcpJson();
+            }
+
+            // Step 2: Decode the queryMetadata.json from Base64
+            var decodedBytes = Convert.FromBase64String(queryMetadataPart.Payload);
+            var metadataJson = System.Text.Encoding.UTF8.GetString(decodedBytes);
+
+            using var document = JsonDocument.Parse(metadataJson);
+            var metadataDict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(metadataJson)
+                ?? new Dictionary<string, JsonElement>();
+
+            // Step 3: Find and update the query entry in queriesMetadata
+            if (!metadataDict.TryGetValue("queriesMetadata", out var queriesMetadataElement))
+            {
+                var errorResponse = new
+                {
+                    Success = false,
+                    DataflowId = dataflowId,
+                    WorkspaceId = workspaceId,
+                    QueryName = queryName,
+                    Message = "queryMetadata.json does not contain a queriesMetadata section"
+                };
+                return errorResponse.ToMcpJson();
+            }
+
+            var queriesMetadata = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(
+                queriesMetadataElement.GetRawText()) ?? new Dictionary<string, Dictionary<string, object>>();
+
+            if (!queriesMetadata.TryGetValue(queryName, out var queryEntry))
+            {
+                var errorResponse = new
+                {
+                    Success = false,
+                    DataflowId = dataflowId,
+                    WorkspaceId = workspaceId,
+                    QueryName = queryName,
+                    Message = $"Query '{queryName}' not found in queriesMetadata"
+                };
+                return errorResponse.ToMcpJson();
+            }
+
+            // Step 4: Apply the patch
+            if (metadataPatch.LoadEnabled.HasValue)
+            {
+                queryEntry["loadEnabled"] = metadataPatch.LoadEnabled.Value;
+            }
+
+            if (metadataPatch.IsHidden.HasValue)
+            {
+                queryEntry["isHidden"] = metadataPatch.IsHidden.Value;
+            }
+
+            if (metadataPatch.DestinationSettings != null)
+            {
+                queryEntry["destinationSettings"] = metadataPatch.DestinationSettings;
+            }
+
+            queriesMetadata[queryName] = queryEntry;
+
+            // Step 5: Reconstruct the full queryMetadata JSON
+            var fullMetadata = JsonSerializer.Deserialize<Dictionary<string, object>>(metadataJson)
+                ?? new Dictionary<string, object>();
+            fullMetadata["queriesMetadata"] = queriesMetadata;
+
+            var updatedMetadataJson = JsonSerializer.Serialize(fullMetadata, new JsonSerializerOptions { WriteIndented = true });
+            var updatedBytes = System.Text.Encoding.UTF8.GetBytes(updatedMetadataJson);
+            queryMetadataPart.Payload = Convert.ToBase64String(updatedBytes);
+
+            // Step 6: Save the updated definition
+            await _dataflowService.UpdateDataflowDefinitionAsync(workspaceId, dataflowId, definition);
+
+            var result = new
+            {
+                Success = true,
+                DataflowId = dataflowId,
+                WorkspaceId = workspaceId,
+                QueryName = queryName,
+                Message = $"Successfully updated metadata for query '{queryName}' in dataflow {dataflowId}",
+                AppliedPatch = new
+                {
+                    metadataPatch.LoadEnabled
+                }
+            };
+
+            return result.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("updating query metadata").ToMcpJson();
+        }
+    }
+
+    private static MetadataPatch? ParseMetadataPatch(object metadataPatch)
+    {
+        if (metadataPatch is System.Text.Json.JsonElement jsonElement)
+        {
+            if (jsonElement.ValueKind == System.Text.Json.JsonValueKind.Object)
+            {
+                return jsonElement.Deserialize<MetadataPatch>();
+            }
+            else if (jsonElement.ValueKind == System.Text.Json.JsonValueKind.String)
+            {
+                var value = jsonElement.GetString();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    return System.Text.Json.JsonSerializer.Deserialize<MetadataPatch>(value);
+                }
+            }
+        }
+        else if (metadataPatch is string jsonString && !string.IsNullOrWhiteSpace(jsonString))
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<MetadataPatch>(jsonString);
+        }
+
+        return null;
+    }
+
 }
