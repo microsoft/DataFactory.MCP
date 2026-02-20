@@ -1,7 +1,6 @@
 using DataFactory.MCP.Abstractions;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models.Connection;
-using DataFactory.MCP.Models.Connection.Create;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
 
@@ -54,48 +53,61 @@ public class FabricConnectionService : FabricServiceBase, IFabricConnectionServi
         }
     }
 
-    public async Task<ShareableCloudConnection> CreateCloudConnectionAsync(CreateCloudConnectionRequest request)
+    public async Task<Connection?> CreateConnectionAsync(CreateConnectionRequest request)
     {
         try
         {
-            Logger.LogInformation("Creating cloud connection: {DisplayName}", request.DisplayName);
+            Logger.LogInformation("Creating connection '{DisplayName}' with connectivity type '{ConnectivityType}'",
+                request.DisplayName, request.ConnectivityType);
 
-            var response = await PostAsync<ShareableCloudConnection>("connections", request);
+            var connection = await PostAsync<ShareableCloudConnection>("connections", request);
 
-            if (response == null)
+            if (connection != null)
             {
-                throw new InvalidOperationException("Failed to create cloud connection - no response received");
+                Logger.LogInformation("Successfully created connection '{DisplayName}' with ID '{Id}'",
+                    connection.DisplayName, connection.Id);
             }
 
-            Logger.LogInformation("Successfully created cloud connection {ConnectionId}", response.Id);
-            return response;
+            return connection;
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error creating cloud connection {DisplayName}", request.DisplayName);
+            Logger.LogError(ex, "Error creating connection '{DisplayName}'", request.DisplayName);
             throw;
         }
     }
 
-    public async Task<VirtualNetworkGatewayConnection> CreateVirtualNetworkGatewayConnectionAsync(CreateVirtualNetworkGatewayConnectionRequest request)
+    public async Task<ListSupportedConnectionTypesResponse> ListSupportedConnectionTypesAsync(string? gatewayId = null)
     {
         try
         {
-            Logger.LogInformation("Creating virtual network gateway connection: {DisplayName}", request.DisplayName);
+            var allValues = new List<ConnectionCreationMetadata>();
+            string? continuationToken = null;
 
-            var response = await PostAsync<VirtualNetworkGatewayConnection>("connections", request);
-
-            if (response == null)
+            do
             {
-                throw new InvalidOperationException("Failed to create virtual network gateway connection - no response received");
-            }
+                var endpoint = "connections/supportedConnectionTypes";
+                if (!string.IsNullOrWhiteSpace(gatewayId))
+                {
+                    endpoint += $"?gatewayId={Uri.EscapeDataString(gatewayId)}";
+                }
 
-            Logger.LogInformation("Successfully created virtual network gateway connection {ConnectionId}", response.Id);
-            return response;
+                var page = await GetAsync<ListSupportedConnectionTypesResponse>(endpoint, continuationToken);
+                if (page?.Value != null)
+                {
+                    allValues.AddRange(page.Value);
+                }
+                continuationToken = page?.ContinuationToken;
+            }
+            while (!string.IsNullOrEmpty(continuationToken));
+
+            Logger.LogInformation("Successfully retrieved {Count} supported connection types", allValues.Count);
+
+            return new ListSupportedConnectionTypesResponse { Value = allValues };
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error creating virtual network gateway connection {DisplayName}", request.DisplayName);
+            Logger.LogError(ex, "Error fetching supported connection types");
             throw;
         }
     }

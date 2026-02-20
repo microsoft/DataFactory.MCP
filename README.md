@@ -11,7 +11,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 
 - **Azure AD Authentication**: Interactive and service principal authentication
 - **Gateway Management**: List, retrieve, and create Microsoft Fabric gateways (including VNet gateways)
-- **Connection Management**: List, retrieve, and create Microsoft Fabric connections (cloud SQL and VNet gateway SQL)
+- **Connection Management**: List, retrieve, and create Microsoft Fabric connections (cloud, on-premises, and VNet)
 - **Workspace Management**: List and retrieve Microsoft Fabric workspaces
 - **Dataflow Management**: List, create, and retrieve Microsoft Fabric dataflows
 - **Pipeline Management**: List, create, update, and manage Microsoft Fabric pipeline definitions
@@ -24,13 +24,21 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 
 - **Authentication**: `authenticate_interactive`, `authenticate_service_principal`, `get_authentication_status`, `get_access_token`, `sign_out`
 - **Gateway Management**: `list_gateways`, `get_gateway`, `create_v_net_gateway`
-- **Connection Management**: `list_connections`, `get_connection`, `create_cloud_sql_basic`, `create_cloud_sql_workspace_identity`, `create_cloud_web_anonymous`, `create_cloud_web_basic`, `create_v_net_sql_basic`, `create_v_net_sql_workspace_identity`
+- **Connection Management**: `list_supported_connection_types`, `list_connections`, `get_connection`, `create_connection`
 - **Workspace Management**: `list_workspaces`
 - **Dataflow Management**: `list_dataflows`, `create_dataflow`, `get_decoded_dataflow_definition`, `add_connection_to_dataflow`, `add_or_update_query_in_dataflow`, `validate_and_save_m_document`
 - **Dataflow Refresh**: `refresh_dataflow_background`, `refresh_dataflow_status`
 - **Dataflow Query Execution**: `execute_query` *(Preview)*
 - **Capacity Management**: `list_capacities`
 - **Pipeline Management**: `list_pipelines`, `create_pipeline`, `get_pipeline`, `update_pipeline`, `get_pipeline_definition`, `update_pipeline_definition` *(Preview)*
+
+## Available Resources
+
+The server also exposes interactive UI forms as MCP App resources (rendered inside VS Code chat):
+
+| Resource URI | Description |
+|---|---|
+| `ui://datafactory/create-connection` | Guided form for creating a new data source connection |
 
 ## Quick Start
 
@@ -141,7 +149,7 @@ Upload the skill files from the [`claude-skills/`](claude-skills/) folder to you
 
 | Skill | Topics |
 |-------|--------|
-| **Core** | M (Power Query) fundamentals, Dataflow Gen2 overview, MCP tool reference |
+| **Core** | M (Power Query) fundamentals, Dataflow Gen2 overview, MCP tool reference, connection management |
 | **Performance** | Query timeouts, chunking strategies, filter optimization, connector selection |
 | **Destinations** | Lakehouse architecture, schema settings, programmatic destination configuration |
 | **Advanced** | `Action.Sequence` for writes, Fast Copy, Modern Evaluator |

@@ -1,5 +1,4 @@
 using DataFactory.MCP.Models;
-using DataFactory.MCP.Models.Connection;
 using DataFactory.MCP.Models.Dataflow.Query;
 using DataFactory.MCP.Models.Common.Responses.Errors;
 
@@ -27,27 +26,6 @@ public static class ResponseExtensions
     }
 
     /// <summary>
-    /// Converts a Connection to a successful creation response with connection details
-    /// </summary>
-    public static object ToCreationSuccessResponse(this Connection connection, string message)
-    {
-        return new
-        {
-            Success = true,
-            Message = message,
-            Connection = new
-            {
-                Id = connection.Id,
-                DisplayName = connection.DisplayName,
-                ConnectivityType = connection.ConnectivityType.ToString(),
-                ConnectionType = connection.ConnectionDetails.Type,
-                Path = connection.ConnectionDetails.Path,
-                PrivacyLevel = connection.PrivacyLevel?.ToString()
-            }
-        };
-    }
-
-    /// <summary>
     /// Converts an UnauthorizedAccessException to a standardized authentication error response
     /// </summary>
     public static McpAuthenticationErrorResponse ToAuthenticationError(this UnauthorizedAccessException ex)
@@ -66,7 +44,11 @@ public static class ResponseExtensions
         {
             if (fabricEx.IsAuthenticationError)
             {
-                return new McpHttpErrorResponse($"Authentication error: {Messages.AuthenticationRequired}");
+                // Include the actual API response content for debugging
+                var detail = !string.IsNullOrWhiteSpace(fabricEx.ResponseContent)
+                    ? $" API response: {fabricEx.ResponseContent}"
+                    : string.Empty;
+                return new McpHttpErrorResponse($"Authentication error ({fabricEx.StatusCode}): {fabricEx.Message}{detail}");
             }
 
             if (fabricEx.IsRateLimited && fabricEx.RetryAfter.HasValue)

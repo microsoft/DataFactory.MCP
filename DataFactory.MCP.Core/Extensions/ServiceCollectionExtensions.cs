@@ -5,7 +5,7 @@ using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Configuration;
 using DataFactory.MCP.Infrastructure.Http;
-using DataFactory.MCP.Models.Connection.Factories;
+using DataFactory.MCP.Resources.McpApps;
 using DataFactory.MCP.Services;
 using DataFactory.MCP.Services.Authentication;
 using DataFactory.MCP.Services.BackgroundTasks;
@@ -64,7 +64,6 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IFabricWorkspaceService, FabricWorkspaceService>()
             .AddSingleton<IFabricDataflowService, FabricDataflowService>()
             .AddSingleton<IFabricCapacityService, FabricCapacityService>()
-            .AddSingleton<FabricDataSourceConnectionFactory>()
             // Pipeline service
             .AddSingleton<IFabricPipelineService, FabricPipelineService>()
             // Session accessor for background notifications
@@ -94,7 +93,9 @@ public static class ServiceCollectionExtensions
             .WithTools<DataflowTool>()
             .WithTools<DataflowRefreshTool>()
             .WithTools<CapacityTool>()
-            .WithTools<MDocumentTool>();
+            .WithTools<MDocumentTool>()
+            .WithTools<CreateConnectionUITool>()                // MCP Apps: Create Connection UI
+            .WithResources<CreateConnectionResourceHandler>();  // MCP Apps: Create Connection Resource
     }
 
     /// <summary>

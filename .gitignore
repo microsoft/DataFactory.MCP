@@ -4,3 +4,8 @@ bin/
 DataFactory.MCP.Tests/Infrastructure/.env
 *.vs
 tmpclaude-*
+**/node_modules/
+**/dist/
+**/McpApps/node_modules/
+**/McpApps/dist/
+**/build-output.txt

@@ -1,5 +1,4 @@
 using DataFactory.MCP.Models.Connection;
-using DataFactory.MCP.Models.Connection.Create;
 
 namespace DataFactory.MCP.Abstractions.Interfaces;
 
@@ -23,16 +22,17 @@ public interface IFabricConnectionService
     Task<Connection?> GetConnectionAsync(string connectionId);
 
     /// <summary>
-    /// Creates a new cloud connection
+    /// Creates a new connection via the Fabric Connections API
     /// </summary>
-    /// <param name="request">The create cloud connection request</param>
+    /// <param name="request">The create connection request</param>
     /// <returns>The created connection</returns>
-    Task<ShareableCloudConnection> CreateCloudConnectionAsync(CreateCloudConnectionRequest request);
+    Task<Connection?> CreateConnectionAsync(CreateConnectionRequest request);
 
     /// <summary>
-    /// Creates a new virtual network gateway connection
+    /// Lists supported connection types from the Fabric Connections API.
+    /// Fetches all pages and returns the combined result.
     /// </summary>
-    /// <param name="request">The create virtual network gateway connection request</param>
-    /// <returns>The created connection</returns>
-    Task<VirtualNetworkGatewayConnection> CreateVirtualNetworkGatewayConnectionAsync(CreateVirtualNetworkGatewayConnectionRequest request);
+    /// <param name="gatewayId">Optional gateway ID to filter by</param>
+    /// <returns>List of supported connection types with creation methods and parameters</returns>
+    Task<ListSupportedConnectionTypesResponse> ListSupportedConnectionTypesAsync(string? gatewayId = null);
 }
