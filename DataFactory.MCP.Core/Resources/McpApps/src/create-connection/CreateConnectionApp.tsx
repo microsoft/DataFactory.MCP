@@ -42,7 +42,7 @@ import { WizardStepIndicator } from "./wizard/WizardStepIndicator";
 import { ModeStep } from "./wizard/ModeStep";
 import { DetailsStep } from "./wizard/DetailsStep";
 import { CredentialsStep } from "./wizard/CredentialsStep";
-import { SuccessBanner, LoadingSpinner } from "./components";
+import { SuccessBanner, LoadingSpinner, ErrorBanner } from "./components";
 
 // =============================================================================
 // State
@@ -79,6 +79,9 @@ interface CreateConnectionAppState extends McpAppComponentState {
   isSubmitting: boolean;
   submitError: string | null;
 
+  // Tool-level error (e.g. authentication failure)
+  toolError: string | null;
+
   // Success
   createdConnectionId: string | null;
   createdConnectionName: string | null;
@@ -97,6 +100,7 @@ const INITIAL_FORM_STATE = {
   encryptedConnection: "NotEncrypted",
   skipTestConnection: false,
   submitError: null,
+  toolError: null,
 };
 
 // =============================================================================
@@ -158,7 +162,17 @@ export class CreateConnectionApp extends McpAppComponent<
   // MCP lifecycle
   // ===========================================================================
 
-  protected onToolResult(_result: unknown): void {
+  protected onToolResult(result: unknown): void {
+    const r = result as { isError?: boolean; content?: { type?: string; text?: string }[] } | null;
+    if (r?.isError) {
+      const message =
+        r.content?.find((c) => c.type === "text")?.text ??
+        "An error occurred. Please try again.";
+      console.warn("[CreateConnection] Tool error:", message);
+      this.setState({ toolError: message });
+      return;
+    }
+
     console.log("[CreateConnection] Connected, fetching data...");
     this.loadGateways();
     this.loadConnectionTypes();
@@ -443,6 +457,14 @@ export class CreateConnectionApp extends McpAppComponent<
 
     if (!this.state.isConnected) {
       return <LoadingSpinner message="Connecting to MCP host..." />;
+    }
+
+    if (this.state.toolError) {
+      return (
+        <div style={BaseStyles.container}>
+          <ErrorBanner message={this.state.toolError} />
+        </div>
+      );
     }
 
     if (createdConnectionId && createdConnectionName) {

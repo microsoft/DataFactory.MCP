@@ -50,7 +50,14 @@ public class CreateConnectionUITool
             return new CallToolResult
             {
                 Content = [new TextContentBlock { Text = "Authentication required. Please sign in first using the interactive or device code authentication tool before creating a connection." }],
-                IsError = true
+                IsError = true,
+                Meta = new JsonObject
+                {
+                    ["ui"] = new JsonObject
+                    {
+                        ["resourceUri"] = CreateConnectionResource.ResourceUri
+                    }
+                }
             };
         }
 
