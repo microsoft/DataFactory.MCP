@@ -77,7 +77,7 @@ in
 
 ## Programmatic Destination Configuration via MCP Tools
 
-Output destinations CAN be configured programmatically using `validate_and_save_m_document`. This requires constructing a complete M section document with all components.
+Output destinations CAN be configured programmatically using `save_dataflow_definition`. This requires constructing a complete M section document with all components.
 
 ### Required Components
 
@@ -139,7 +139,7 @@ in
 **Critical:** Using direct navigation `[Data]` for a non-existent table causes error: "The key didn't match any rows in the table"
 
 #### 3. Complete Section Document
-Submit the full document via `validate_and_save_m_document`:
+Submit the full document via `save_dataflow_definition`:
 ```m
 section Section1;
 [DataDestinations = {...}]
@@ -176,10 +176,10 @@ shared JoinedOutput = let ... in ...;
 1. create_dataflow              → Create empty dataflow
 2. add_connection_to_dataflow   → Attach ALL source connections (one call per connection)
 3. execute_query                → Discover target lakehouse ID
-4. validate_and_save_m_document → Save complete M document with destination config
+4. save_dataflow_definition    → Save complete M document with destination config
                                    Include [AllowCombine = true] if multi-source
-5. add_connection_to_dataflow   → Re-add connections (validate_and_save may wipe them)
-6. get_decoded_dataflow_definition → Verify connections + destination config
+5. add_connection_to_dataflow   → Re-add connections (save_dataflow_definition may wipe them)
+6. get_dataflow_definition → Verify connections + destination config
 7. refresh_dataflow_background  → Materialize the table
                                    MUST use executeOption="ApplyChangesIfNeeded" on first refresh
 ```
@@ -226,7 +226,7 @@ add_connection_to_dataflow(connectionIds="58699886-...", dataflowId="...", works
 
 # 3. Save M document with destination (new table)
 #    Include [AllowCombine = true] if mixing source types
-validate_and_save_m_document(
+save_dataflow_definition(
   dataflowId="...",
   workspaceId="...",
   mDocument="""
@@ -253,7 +253,7 @@ add_connection_to_dataflow(connectionIds="97b68bdf-...", dataflowId="...", works
 add_connection_to_dataflow(connectionIds="58699886-...", dataflowId="...", workspaceId="...")
 
 # 5. Verify
-get_decoded_dataflow_definition(dataflowId="...", workspaceId="...")
+get_dataflow_definition(dataflowId="...", workspaceId="...")
 
 # 6. Refresh (MUST use ApplyChangesIfNeeded on first refresh of API-created dataflow)
 refresh_dataflow_background(dataflowId="...", workspaceId="...", executeOption="ApplyChangesIfNeeded")
@@ -261,7 +261,7 @@ refresh_dataflow_background(dataflowId="...", workspaceId="...", executeOption="
 
 ### Why `ApplyChangesIfNeeded` Is Required (Technical Detail)
 
-API-created dataflows start in an unpublished draft state. Additionally, `validate_and_save_m_document` sets `loadEnabled: false` in queryMetadata. The platform reconciles both issues on refresh ONLY when using `ApplyChangesIfNeeded`.
+API-created dataflows start in an unpublished draft state. Additionally, `save_dataflow_definition` sets `loadEnabled: false` in queryMetadata. The platform reconciles both issues on refresh ONLY when using `ApplyChangesIfNeeded`.
 
 | Refresh Option | Behavior on MCP-created dataflow |
 |---|---|

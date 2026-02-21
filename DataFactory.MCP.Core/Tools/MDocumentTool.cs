@@ -27,7 +27,7 @@ public class MDocumentTool
         _parser = new Parsing.MDocumentParser();
     }
 
-    [McpServerTool, Description(@"Validates and saves an M section document to a dataflow.
+    [McpServerTool(Name = "save_dataflow_definition"), Description(@"Saves a dataflow definition by validating and persisting an M section document.
 
 This tool:
 1. Validates the M document syntax and structure
@@ -36,7 +36,7 @@ This tool:
 
 The M document should be a complete section document with all queries needed for the data flow.
 If validation fails, it returns detailed error information to help fix the document.")]
-    public async Task<string> ValidateAndSaveMDocumentAsync(
+    public async Task<string> SaveDataflowDefinitionAsync(
         [Description("The workspace ID containing the target dataflow (required)")] string workspaceId,
         [Description("The dataflow ID to save the document to (required)")] string dataflowId,
         [Description("The complete M section document to validate and save (required). Should start with 'section Section1;' and contain all shared queries.")] string mDocument,
@@ -142,7 +142,7 @@ If validation fails, it returns detailed error information to help fix the docum
         }
         catch (Exception ex)
         {
-            return ex.ToOperationError("validating and saving M document").ToMcpJson();
+            return ex.ToOperationError("saving dataflow definition").ToMcpJson();
         }
     }
 }

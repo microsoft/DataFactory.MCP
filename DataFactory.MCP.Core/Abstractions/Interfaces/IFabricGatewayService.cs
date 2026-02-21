@@ -22,9 +22,9 @@ public interface IFabricGatewayService
     Task<Gateway?> GetGatewayAsync(string gatewayId);
 
     /// <summary>
-    /// Creates a new VNet gateway
+    /// Creates a new virtual network gateway
     /// </summary>
-    /// <param name="request">VNet gateway creation request</param>
+    /// <param name="request">Virtual network gateway creation request</param>
     /// <returns>Created gateway details</returns>
-    Task<CreateVNetGatewayResponse> CreateVNetGatewayAsync(CreateVNetGatewayRequest request);
+    Task<CreateVirtualnetworkGatewayResponse> CreateVirtualnetworkGatewayAsync(CreateVirtualnetworkGatewayRequest request);
 }

@@ -136,4 +136,4 @@ In queryMetadata.json (observed in working dataflows):
 }
 ```
 
-Note: MCP `validate_and_save_m_document` updates M code but may not set computeEngineSettings. Enable via UI if needed.
+Note: MCP `save_dataflow_definition` updates M code but may not set computeEngineSettings. Enable via UI if needed.

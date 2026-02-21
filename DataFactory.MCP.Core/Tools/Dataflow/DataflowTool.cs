@@ -129,7 +129,7 @@ public class DataflowTool
         }
     }
 
-    [McpServerTool, Description(@"Gets the decoded definition of a dataflow with human-readable content (queryMetadata.json, mashup.pq M code, and .platform metadata).")]
+    [McpServerTool(Name = "get_dataflow_definition"), Description(@"Gets the definition of a dataflow with human-readable content (queryMetadata.json, mashup.pq M code, and .platform metadata).")]
     public async Task<string> GetDecodedDataflowDefinitionAsync(
         [Description("The workspace ID containing the dataflow (required)")] string workspaceId,
         [Description("The dataflow ID to get the decoded definition for (required)")] string dataflowId)
@@ -174,7 +174,7 @@ public class DataflowTool
         }
         catch (Exception ex)
         {
-            return ex.ToOperationError("getting decoded dataflow definition").ToMcpJson();
+            return ex.ToOperationError("getting dataflow definition").ToMcpJson();
         }
     }
 

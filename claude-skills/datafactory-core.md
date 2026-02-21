@@ -22,9 +22,9 @@ in
 ## MCP Tools
 
 - `list_workspaces`, `list_dataflows` → discover resources
-- `get_decoded_dataflow_definition` → read M code
+- `get_dataflow_definition` → read M code
 - `create_dataflow` → create new dataflow
-- `validate_and_save_m_document` → save M code (including destination config)
+- `save_dataflow_definition` → save M code (including destination config)
 - `execute_query` → run M, get results
 - `add_connection_to_dataflow` → attach connections
 - `add_or_update_query_in_dataflow` → add/update queries

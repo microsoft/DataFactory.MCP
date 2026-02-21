@@ -3,9 +3,9 @@ using System.Text.Json.Serialization;
 namespace DataFactory.MCP.Models.Gateway;
 
 /// <summary>
-/// Request model for creating a VNet gateway in Microsoft Fabric
+/// Request model for creating a virtual network gateway in Microsoft Fabric
 /// </summary>
-public class CreateVNetGatewayRequest
+public class CreateVirtualnetworkGatewayRequest
 {
     /// <summary>
     /// The type of gateway. For VNet gateways, this should be "VirtualNetwork"
@@ -46,9 +46,9 @@ public class CreateVNetGatewayRequest
 }
 
 /// <summary>
-/// Response model for VNet gateway creation
+/// Response model for virtual network gateway creation
 /// </summary>
-public class CreateVNetGatewayResponse
+public class CreateVirtualnetworkGatewayResponse
 {
     /// <summary>
     /// ID of the created gateway

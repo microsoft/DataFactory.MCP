@@ -23,10 +23,10 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 ## Available Tools
 
 - **Authentication**: `authenticate_interactive`, `authenticate_service_principal`, `get_authentication_status`, `get_access_token`, `sign_out`
-- **Gateway Management**: `list_gateways`, `get_gateway`, `create_v_net_gateway`
+- **Gateway Management**: `list_gateways`, `get_gateway`, `create_virtualnetwork_gateway`
 - **Connection Management**: `list_supported_connection_types`, `list_connections`, `get_connection`, `create_connection`
 - **Workspace Management**: `list_workspaces`
-- **Dataflow Management**: `list_dataflows`, `create_dataflow`, `get_decoded_dataflow_definition`, `add_connection_to_dataflow`, `add_or_update_query_in_dataflow`, `validate_and_save_m_document`
+- **Dataflow Management**: `list_dataflows`, `create_dataflow`, `get_dataflow_definition`, `add_connection_to_dataflow`, `add_or_update_query_in_dataflow`, `save_dataflow_definition`
 - **Dataflow Refresh**: `refresh_dataflow_background`, `refresh_dataflow_status`
 - **Dataflow Query Execution**: `execute_query` *(Preview)*
 - **Capacity Management**: `list_capacities`

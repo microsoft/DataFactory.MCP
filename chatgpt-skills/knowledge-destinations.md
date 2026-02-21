@@ -110,7 +110,7 @@ Settings = [Kind = "Manual", UpdateMethod = [Kind = "Append"], ...]
 
 ## Programmatic Destination Configuration
 
-Output destinations CAN be configured programmatically using `validate_and_save_m_document`.
+Output destinations CAN be configured programmatically using `save_dataflow_definition`.
 
 ### Complete M Section Document Example
 
@@ -181,8 +181,8 @@ This returns a table with `workspaceId` for each lakehouse. Navigate further to 
 1. **Create empty dataflow**: `create_dataflow`
 2. **Attach connection**: `add_connection_to_dataflow` (use DatasourceId GUID)
 3. **Discover target IDs**: `execute_query` to get workspace/lakehouse IDs
-4. **Save M document**: `validate_and_save_m_document` with complete section document
-5. **Verify**: `get_decoded_dataflow_definition` to confirm configuration
+4. **Save M document**: `save_dataflow_definition` with complete section document
+5. **Verify**: `get_dataflow_definition` to confirm configuration
 
 ## Common Mistakes
 

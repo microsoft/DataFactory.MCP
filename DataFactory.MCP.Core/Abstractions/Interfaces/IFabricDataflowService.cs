@@ -53,7 +53,7 @@ public interface IFabricDataflowService
         string dataflowId);
 
     /// <summary>
-    /// Gets the decoded definition of a dataflow with human-readable content
+    /// Gets the definition of a dataflow with human-readable content
     /// </summary>
     /// <param name="workspaceId">The workspace ID containing the dataflow</param>
     /// <param name="dataflowId">The dataflow ID to get the definition for</param>
