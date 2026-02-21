@@ -186,6 +186,7 @@ var mcpBuilder = builder.Services
     .WithTools<ConnectionsTool>()
     .WithTools<WorkspacesTool>()
     .WithTools<DataflowTool>()
+    .WithTools<DataflowDefinitionTool>()
     .WithTools<CapacityTool>();
 
 // Conditionally enable DataflowQueryTool based on feature flag
@@ -234,9 +235,12 @@ MCP Tools are the public interface that AI assistants interact with. Each tool i
 #### DataflowTool
 - `ListDataflowsAsync()`: List dataflows in a workspace
 - `CreateDataflowAsync()`: Create a new dataflow
-- `GetDataflowDefinitionAsync()`: Get dataflow definition (queryMetadata.json, mashup.pq, .platform)
 - `AddConnectionToDataflowAsync()`: Add a connection to an existing dataflow
 - `AddOrUpdateQueryInDataflowAsync()`: Add or update a query in an existing dataflow
+
+#### DataflowDefinitionTool
+- `GetDecodedDataflowDefinitionAsync()` (`get_dataflow_definition`): Get dataflow definition (queryMetadata.json, mashup.pq, .platform)
+- `SaveDataflowDefinitionAsync()` (`save_dataflow_definition`): Validate and persist an M section document to a dataflow
 
 #### DataflowQueryTool (Feature Flag: `--dataflow-query`)
 - `ExecuteQueryAsync()`: Execute M (Power Query) queries against dataflows with Apache Arrow response parsing
