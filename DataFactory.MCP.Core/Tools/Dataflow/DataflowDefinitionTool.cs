@@ -5,7 +5,7 @@ using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Validation;
 using DataFactory.MCP.Parsing;
 
-namespace DataFactory.MCP.Tools;
+namespace DataFactory.MCP.Tools.Dataflow;
 
 /// <summary>
 /// MCP Tool for saving dataflow definitions — validates and persists M (Power Query) section documents for Fabric Dataflows.
