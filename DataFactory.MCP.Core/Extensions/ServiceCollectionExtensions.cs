@@ -93,7 +93,7 @@ public static class ServiceCollectionExtensions
             .WithTools<DataflowTool>()
             .WithTools<DataflowRefreshTool>()
             .WithTools<CapacityTool>()
-            .WithTools<MDocumentTool>()
+            .WithTools<DataflowDefinitionTool>()
             .WithTools<CreateConnectionUITool>()                // MCP Apps: Create Connection UI
             .WithResources<CreateConnectionResourceHandler>();  // MCP Apps: Create Connection Resource
     }

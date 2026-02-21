@@ -129,55 +129,6 @@ public class DataflowTool
         }
     }
 
-    [McpServerTool(Name = "get_dataflow_definition"), Description(@"Gets the definition of a dataflow with human-readable content (queryMetadata.json, mashup.pq M code, and .platform metadata).")]
-    public async Task<string> GetDecodedDataflowDefinitionAsync(
-        [Description("The workspace ID containing the dataflow (required)")] string workspaceId,
-        [Description("The dataflow ID to get the decoded definition for (required)")] string dataflowId)
-    {
-        try
-        {
-            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
-            _validationService.ValidateRequiredString(dataflowId, nameof(dataflowId));
-
-            var decoded = await _dataflowService.GetDecodedDataflowDefinitionAsync(workspaceId, dataflowId);
-
-            var result = new
-            {
-                Success = true,
-                DataflowId = dataflowId,
-                WorkspaceId = workspaceId,
-                QueryMetadata = decoded.QueryMetadata,
-                MashupQuery = decoded.MashupQuery,
-                PlatformMetadata = decoded.PlatformMetadata,
-                RawPartsCount = decoded.RawParts.Count,
-                RawParts = decoded.RawParts.Select(p => new
-                {
-                    Path = p.Path,
-                    PayloadType = p.PayloadType.ToString(),
-                    PayloadSize = p.Payload?.Length ?? 0
-                })
-            };
-
-            return result.ToMcpJson();
-        }
-        catch (ArgumentException ex)
-        {
-            return ex.ToValidationError().ToMcpJson();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return ex.ToAuthenticationError().ToMcpJson();
-        }
-        catch (HttpRequestException ex)
-        {
-            return ex.ToHttpError().ToMcpJson();
-        }
-        catch (Exception ex)
-        {
-            return ex.ToOperationError("getting dataflow definition").ToMcpJson();
-        }
-    }
-
     [McpServerTool, Description(@"Adds one or more connections to an existing dataflow by updating its definition. Retrieves the current dataflow definition, gets connection details, and updates the queryMetadata.json to include the new connections.")]
     public async Task<string> AddConnectionToDataflowAsync(
         [Description("The workspace ID containing the dataflow (required)")] string workspaceId,

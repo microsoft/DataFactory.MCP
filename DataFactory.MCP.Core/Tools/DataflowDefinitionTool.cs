@@ -8,23 +8,72 @@ using DataFactory.MCP.Parsing;
 namespace DataFactory.MCP.Tools;
 
 /// <summary>
-/// MCP Tool for validating and saving M (Power Query) section documents for Fabric Dataflows.
+/// MCP Tool for saving dataflow definitions — validates and persists M (Power Query) section documents for Fabric Dataflows.
 /// Uses dedicated services for validation and parsing.
 /// </summary>
 [McpServerToolType]
-public class MDocumentTool
+public class DataflowDefinitionTool
 {
     private readonly IFabricDataflowService _dataflowService;
     private readonly IValidationService _validationService;
     private readonly Validation.MDocumentValidator _validator;
     private readonly Parsing.MDocumentParser _parser;
 
-    public MDocumentTool(IFabricDataflowService dataflowService, IValidationService validationService)
+    public DataflowDefinitionTool(IFabricDataflowService dataflowService, IValidationService validationService)
     {
         _dataflowService = dataflowService ?? throw new ArgumentNullException(nameof(dataflowService));
         _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
         _validator = new Validation.MDocumentValidator();
         _parser = new Parsing.MDocumentParser();
+    }
+
+    [McpServerTool(Name = "get_dataflow_definition"), Description(@"Gets the definition of a dataflow with human-readable content (queryMetadata.json, mashup.pq M code, and .platform metadata).")]
+    public async Task<string> GetDecodedDataflowDefinitionAsync(
+        [Description("The workspace ID containing the dataflow (required)")] string workspaceId,
+        [Description("The dataflow ID to get the definition for (required)")] string dataflowId)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(dataflowId, nameof(dataflowId));
+
+            var decoded = await _dataflowService.GetDecodedDataflowDefinitionAsync(workspaceId, dataflowId);
+
+            var result = new
+            {
+                Success = true,
+                DataflowId = dataflowId,
+                WorkspaceId = workspaceId,
+                QueryMetadata = decoded.QueryMetadata,
+                MashupQuery = decoded.MashupQuery,
+                PlatformMetadata = decoded.PlatformMetadata,
+                RawPartsCount = decoded.RawParts.Count,
+                RawParts = decoded.RawParts.Select(p => new
+                {
+                    Path = p.Path,
+                    PayloadType = p.PayloadType.ToString(),
+                    PayloadSize = p.Payload?.Length ?? 0
+                })
+            };
+
+            return result.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("getting dataflow definition").ToMcpJson();
+        }
     }
 
     [McpServerTool(Name = "save_dataflow_definition"), Description(@"Saves a dataflow definition by validating and persisting an M section document.
