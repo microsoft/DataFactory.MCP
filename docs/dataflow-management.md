@@ -254,13 +254,13 @@ create_dataflow(
 }
 ```
 
-### get_decoded_dataflow_definition
+### get_dataflow_definition
 
-Gets the decoded definition of a dataflow with human-readable content (queryMetadata.json, mashup.pq M code, and .platform metadata).
+Gets the definition of a dataflow with human-readable content (queryMetadata.json, mashup.pq M code, and .platform metadata).
 
 #### Usage
 ```
-get_decoded_dataflow_definition(
+get_dataflow_definition(
   workspaceId: "12345678-1234-1234-1234-123456789012",
   dataflowId: "87654321-4321-4321-4321-210987654321"
 )
@@ -395,7 +395,7 @@ add_or_update_query_in_dataflow(
 )
 ```
 
-### validate_and_save_m_document
+### save_dataflow_definition
 
 **SAVE TOOL** - Use this AFTER authoring the M document to validate and save it to a dataflow.
 
@@ -412,7 +412,7 @@ If validation fails, it returns detailed error information to help fix the docum
 
 #### Usage
 ```
-validate_and_save_m_document(
+save_dataflow_definition(
   workspaceId: "12345678-1234-1234-1234-123456789012",
   dataflowId: "87654321-4321-4321-4321-210987654321",
   mDocument: "section Section1;\n\nshared GetCustomers = let\n    Source = Sql.Database(\"server\", \"db\"),\n    Customers = Source{[Schema=\"dbo\", Item=\"Customers\"]}[Data]\nin\n    Customers;"
@@ -421,7 +421,7 @@ validate_and_save_m_document(
 
 #### Validate Only (without saving)
 ```
-validate_and_save_m_document(
+save_dataflow_definition(
   workspaceId: "12345678-1234-1234-1234-123456789012",
   dataflowId: "87654321-4321-4321-4321-210987654321",
   mDocument: "section Section1;\n\nshared MyQuery = let Source = ... in Source;",
@@ -499,7 +499,7 @@ validate_and_save_m_document(
 
 **Save a complete M document with multiple queries:**
 ```
-validate_and_save_m_document(
+save_dataflow_definition(
   workspaceId: "12345678-1234-1234-1234-123456789012",
   dataflowId: "87654321-4321-4321-4321-210987654321",
   mDocument: "section Section1;\n\nshared Source = Sql.Database(\"server.database.windows.net\", \"mydb\");\n\nshared Customers = let\n    Data = Source{[Schema=\"dbo\", Item=\"Customers\"]}[Data],\n    Filtered = Table.SelectRows(Data, each [IsActive] = true)\nin\n    Filtered;\n\nshared Orders = let\n    Data = Source{[Schema=\"dbo\", Item=\"Orders\"]}[Data]\nin\n    Data;"
@@ -508,7 +508,7 @@ validate_and_save_m_document(
 
 **Validate a document before saving:**
 ```
-validate_and_save_m_document(
+save_dataflow_definition(
   workspaceId: "12345678-1234-1234-1234-123456789012",
   dataflowId: "87654321-4321-4321-4321-210987654321",
   mDocument: "section Section1;\n\nshared MyQuery = let Source = Web.Contents(\"https://api.example.com/data\") in Source;",

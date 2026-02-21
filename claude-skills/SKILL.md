@@ -10,17 +10,19 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 ## Must / Prefer / Avoid
 
 ### MUST DO
+
 - Use `executeOption = "ApplyChangesIfNeeded"` on first refresh of API-created dataflows (default causes `DataflowNeverPublishedError`)
 - Include both a `DataDestinations` annotation AND a companion `_DataDestination` query for Lakehouse output
 - Use `Kind = "Automatic"` (not Manual) when creating new destination tables — Manual causes `DestinationColumnNotFound`
 - Use `?` null-safe operators in the `_DataDestination` query for new tables (table doesn't exist yet)
 - Add `[AllowCombine = true]` section attribute when combining multiple source types (Lakehouse + SharePoint, etc.)
-- Re-add connections via `add_connection_to_dataflow` after `validate_and_save_m_document` (save may wipe them)
+- Re-add connections via `add_connection_to_dataflow` after `save_dataflow_definition` (save may wipe them)
 - Add connections one at a time — array format not supported
 - Validate each connection with `execute_query` after adding
 - Use `list_workspaces` and filter by name — there is no `find_workspace` tool
 
 ### PREFER
+
 - Filter early in M queries to enable query folding (push filters to source)
 - Expensive operations (sorting, aggregation) last — streaming operations (filter, select) first
 - Native connectors (SQL Server, Lakehouse) over generic ones (ODBC/OLEDB) for better query folding
@@ -32,6 +34,7 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 - `execute_query` with `customMashupDocument` to iterate on M code before saving
 
 ### AVOID
+
 - `get_authoring_guidance` — deprecated, author M directly
 - Fast Copy with `Table.Group`, `Table.NestedJoin`, or any schema-changing transform
 - Manual column mappings (`ColumnSettings`) for new tables
@@ -42,9 +45,9 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 
 ## Knowledge Files
 
-| File | When to Use |
-|------|-------------|
-| `datafactory-core.md` | MCP tools, M basics, first-refresh rule, deprecated tools |
+| File                          | When to Use                                                                      |
+| ----------------------------- | -------------------------------------------------------------------------------- |
+| `datafactory-core.md`         | MCP tools, M basics, first-refresh rule, deprecated tools                        |
 | `datafactory-destinations.md` | Creating/configuring output destinations, DataDestination patterns, AllowCombine |
-| `datafactory-performance.md` | Query timeouts, chunking, query folding, connector selection |
-| `datafactory-advanced.md` | Fast Copy limits, Action.Sequence, Modern Evaluator |
+| `datafactory-performance.md`  | Query timeouts, chunking, query folding, connector selection                     |
+| `datafactory-advanced.md`     | Fast Copy limits, Action.Sequence, Modern Evaluator                              |

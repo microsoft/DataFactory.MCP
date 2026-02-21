@@ -88,8 +88,8 @@ public class GatewayTool
         }
     }
 
-    [McpServerTool, Description(@"Creates a new VNet gateway in Microsoft Fabric")]
-    public async Task<string> CreateVNetGatewayAsync(
+    [McpServerTool(Name = "create_virtualnetwork_gateway"), Description(@"Creates a new virtual network gateway in Microsoft Fabric")]
+    public async Task<string> CreateVirtualnetworkGatewayAsync(
         [Description("Display name for the gateway")] string displayName,
         [Description("The capacity ID where the gateway will be created")] string capacityId,
         [Description("Azure subscription ID containing the virtual network")] string subscriptionId,
@@ -115,7 +115,7 @@ public class GatewayTool
                 throw new ArgumentException($"inactivityMinutesBeforeSleep must be one of: {string.Join(", ", validValues)}");
             }
 
-            var request = new CreateVNetGatewayRequest
+            var request = new CreateVirtualnetworkGatewayRequest
             {
                 Type = "VirtualNetwork",
                 DisplayName = displayName,
@@ -131,7 +131,7 @@ public class GatewayTool
                 }
             };
 
-            var response = await _gatewayService.CreateVNetGatewayAsync(request);
+            var response = await _gatewayService.CreateVirtualnetworkGatewayAsync(request);
 
             var result = new
             {
@@ -167,7 +167,7 @@ public class GatewayTool
         }
         catch (Exception ex)
         {
-            return ex.ToOperationError($"creating VNet gateway '{displayName}'").ToMcpJson();
+            return ex.ToOperationError($"creating virtual network gateway '{displayName}'").ToMcpJson();
         }
     }
 }

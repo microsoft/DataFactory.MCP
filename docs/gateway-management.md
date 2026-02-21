@@ -17,7 +17,7 @@ Create a new Virtual Network (VNet) gateway in Microsoft Fabric.
 
 #### Usage
 ```
-create_v_net_gateway(
+create_virtualnetwork_gateway(
   displayName: "My Production Gateway",
   capacityId: "12345678-1234-1234-1234-123456789012",
   subscriptionId: "87654321-1234-1234-1234-123456789012",

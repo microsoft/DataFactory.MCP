@@ -186,6 +186,7 @@ var mcpBuilder = builder.Services
     .WithTools<ConnectionsTool>()
     .WithTools<WorkspacesTool>()
     .WithTools<DataflowTool>()
+    .WithTools<DataflowDefinitionTool>()
     .WithTools<CapacityTool>();
 
 // Conditionally enable DataflowQueryTool based on feature flag
@@ -220,7 +221,7 @@ MCP Tools are the public interface that AI assistants interact with. Each tool i
 #### GatewayTool
 - `ListGatewaysAsync()`: List accessible gateways (on-premises, personal, VNet)
 - `GetGatewayAsync()`: Get gateway details by ID
-- `CreateVNetGatewayAsync()`: Create a new VNet gateway with Azure resource configuration
+- `CreateVirtualnetworkGatewayAsync()`: Create a new virtual network gateway with Azure resource configuration
 
 #### ConnectionsTool
 - `ListSupportedConnectionTypesAsync()`: Discover available connection types, creation methods, parameters, and credential kinds
@@ -234,9 +235,12 @@ MCP Tools are the public interface that AI assistants interact with. Each tool i
 #### DataflowTool
 - `ListDataflowsAsync()`: List dataflows in a workspace
 - `CreateDataflowAsync()`: Create a new dataflow
-- `GetDecodedDataflowDefinitionAsync()`: Get decoded dataflow definition (queryMetadata.json, mashup.pq, .platform)
 - `AddConnectionToDataflowAsync()`: Add a connection to an existing dataflow
 - `AddOrUpdateQueryInDataflowAsync()`: Add or update a query in an existing dataflow
+
+#### DataflowDefinitionTool
+- `GetDecodedDataflowDefinitionAsync()` (`get_dataflow_definition`): Get dataflow definition (queryMetadata.json, mashup.pq, .platform)
+- `SaveDataflowDefinitionAsync()` (`save_dataflow_definition`): Validate and persist an M section document to a dataflow
 
 #### DataflowQueryTool (Feature Flag: `--dataflow-query`)
 - `ExecuteQueryAsync()`: Execute M (Power Query) queries against dataflows with Apache Arrow response parsing
@@ -318,7 +322,7 @@ Key Methods:
 ```csharp
 Task<GatewayResponse> ListGatewaysAsync(string? continuationToken = null)
 Task<Gateway> GetGatewayAsync(string gatewayId)
-Task<VirtualNetworkGateway> CreateVNetGatewayAsync(CreateVNetGatewayRequest request)
+Task<VirtualNetworkGateway> CreateVirtualnetworkGatewayAsync(CreateVirtualnetworkGatewayRequest request)
 ```
 
 #### FabricConnectionService
@@ -362,7 +366,7 @@ Key Methods:
 ```csharp
 Task<ListDataflowsResponse> ListDataflowsAsync(string workspaceId, string? continuationToken = null)
 Task<CreateDataflowResponse> CreateDataflowAsync(string workspaceId, CreateDataflowRequest request)
-Task<DecodedDataflowDefinition> GetDecodedDataflowDefinitionAsync(string workspaceId, string dataflowId)
+Task<DecodedDataflowDefinition> GetDataflowDefinitionAsync(string workspaceId, string dataflowId)
 Task<ExecuteDataflowQueryResponse> ExecuteQueryAsync(string workspaceId, string dataflowId, ExecuteDataflowQueryRequest request)
 ```
 
@@ -528,7 +532,7 @@ Data Transfer Objects (DTOs) and configuration models organized by domain:
 - `OnPremisesGateway`: On-premises gateway specific data
 - `OnPremisesGatewayPersonal`: Personal gateway data
 - `VirtualNetworkGateway`: Virtual network gateway data
-- `CreateVNetGatewayRequest`: VNet gateway creation request
+- `CreateVirtualnetworkGatewayRequest`: Virtual network gateway creation request
 - `VirtualNetworkAzureResource`: Azure resource reference for VNet
 - `GatewayResponse`: API response wrapper with pagination
 

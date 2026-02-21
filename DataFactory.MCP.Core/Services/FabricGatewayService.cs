@@ -53,25 +53,25 @@ public class FabricGatewayService : FabricServiceBase, IFabricGatewayService
         }
     }
 
-    public async Task<CreateVNetGatewayResponse> CreateVNetGatewayAsync(CreateVNetGatewayRequest request)
+    public async Task<CreateVirtualnetworkGatewayResponse> CreateVirtualnetworkGatewayAsync(CreateVirtualnetworkGatewayRequest request)
     {
         try
         {
             ValidateGuids((request.CapacityId, nameof(request.CapacityId)));
 
-            Logger.LogInformation("Creating VNet gateway '{DisplayName}' in capacity '{CapacityId}'",
+            Logger.LogInformation("Creating virtual network gateway '{DisplayName}' in capacity '{CapacityId}'",
                 request.DisplayName, request.CapacityId);
 
-            var response = await PostAsync<CreateVNetGatewayResponse>("gateways", request);
+            var response = await PostAsync<CreateVirtualnetworkGatewayResponse>("gateways", request);
 
-            Logger.LogInformation("Successfully created VNet gateway '{DisplayName}' with ID '{Id}'",
+            Logger.LogInformation("Successfully created virtual network gateway '{DisplayName}' with ID '{Id}'",
                 response?.DisplayName, response?.Id);
 
-            return response ?? new CreateVNetGatewayResponse();
+            return response ?? new CreateVirtualnetworkGatewayResponse();
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error creating VNet gateway '{DisplayName}'", request.DisplayName);
+            Logger.LogError(ex, "Error creating virtual network gateway '{DisplayName}'", request.DisplayName);
             throw;
         }
     }

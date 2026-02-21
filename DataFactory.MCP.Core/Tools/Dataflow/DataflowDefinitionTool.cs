@@ -5,21 +5,21 @@ using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Validation;
 using DataFactory.MCP.Parsing;
 
-namespace DataFactory.MCP.Tools;
+namespace DataFactory.MCP.Tools.Dataflow;
 
 /// <summary>
-/// MCP Tool for validating and saving M (Power Query) section documents for Fabric Dataflows.
+/// MCP Tool for saving dataflow definitions — validates and persists M (Power Query) section documents for Fabric Dataflows.
 /// Uses dedicated services for validation and parsing.
 /// </summary>
 [McpServerToolType]
-public class MDocumentTool
+public class DataflowDefinitionTool
 {
     private readonly IFabricDataflowService _dataflowService;
     private readonly IValidationService _validationService;
     private readonly Validation.MDocumentValidator _validator;
     private readonly Parsing.MDocumentParser _parser;
 
-    public MDocumentTool(IFabricDataflowService dataflowService, IValidationService validationService)
+    public DataflowDefinitionTool(IFabricDataflowService dataflowService, IValidationService validationService)
     {
         _dataflowService = dataflowService ?? throw new ArgumentNullException(nameof(dataflowService));
         _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
@@ -27,7 +27,56 @@ public class MDocumentTool
         _parser = new Parsing.MDocumentParser();
     }
 
-    [McpServerTool, Description(@"Validates and saves an M section document to a dataflow.
+    [McpServerTool(Name = "get_dataflow_definition"), Description(@"Gets the definition of a dataflow with human-readable content (queryMetadata.json, mashup.pq M code, and .platform metadata).")]
+    public async Task<string> GetDecodedDataflowDefinitionAsync(
+        [Description("The workspace ID containing the dataflow (required)")] string workspaceId,
+        [Description("The dataflow ID to get the definition for (required)")] string dataflowId)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(dataflowId, nameof(dataflowId));
+
+            var decoded = await _dataflowService.GetDecodedDataflowDefinitionAsync(workspaceId, dataflowId);
+
+            var result = new
+            {
+                Success = true,
+                DataflowId = dataflowId,
+                WorkspaceId = workspaceId,
+                QueryMetadata = decoded.QueryMetadata,
+                MashupQuery = decoded.MashupQuery,
+                PlatformMetadata = decoded.PlatformMetadata,
+                RawPartsCount = decoded.RawParts.Count,
+                RawParts = decoded.RawParts.Select(p => new
+                {
+                    Path = p.Path,
+                    PayloadType = p.PayloadType.ToString(),
+                    PayloadSize = p.Payload?.Length ?? 0
+                })
+            };
+
+            return result.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("getting dataflow definition").ToMcpJson();
+        }
+    }
+
+    [McpServerTool(Name = "save_dataflow_definition"), Description(@"Saves a dataflow definition by validating and persisting an M section document.
 
 This tool:
 1. Validates the M document syntax and structure
@@ -36,7 +85,7 @@ This tool:
 
 The M document should be a complete section document with all queries needed for the data flow.
 If validation fails, it returns detailed error information to help fix the document.")]
-    public async Task<string> ValidateAndSaveMDocumentAsync(
+    public async Task<string> SaveDataflowDefinitionAsync(
         [Description("The workspace ID containing the target dataflow (required)")] string workspaceId,
         [Description("The dataflow ID to save the document to (required)")] string dataflowId,
         [Description("The complete M section document to validate and save (required). Should start with 'section Section1;' and contain all shared queries.")] string mDocument,
@@ -142,7 +191,7 @@ If validation fails, it returns detailed error information to help fix the docum
         }
         catch (Exception ex)
         {
-            return ex.ToOperationError("validating and saving M document").ToMcpJson();
+            return ex.ToOperationError("saving dataflow definition").ToMcpJson();
         }
     }
 }
