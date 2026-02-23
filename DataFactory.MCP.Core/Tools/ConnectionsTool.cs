@@ -157,7 +157,7 @@ public class ConnectionsTool
         [Description("Creation method name from ListSupportedConnectionTypes (e.g. 'SQL', 'Web', 'AzureBlobs'). Defaults to connectionType if not specified.")] string? creationMethod = null,
         [Description("Connection parameters as JSON string of name:value pairs, e.g. '{\"server\":\"myserver.com\",\"database\":\"mydb\"}' ")] string? connectionParameters = null,
         [Description("Credential type: Anonymous, Basic, Windows, OAuth2, Key, SharedAccessSignature, ServicePrincipal, WorkspaceIdentity, KeyPair")] string credentialType = "Anonymous",
-        [Description("Credentials as JSON name-value pairs (e.g., '{\"username\":\"user\",\"password\":\"pass\"}')")] string? credentials = null,
+        [Description("Credentials as JSON name-value pairs matching the credentialType (e.g., '{\"credentialKey\":\"credentialValue\"}')")] string? credentials = null,
         [Description("Privacy level: None, Organizational, Public, or Private")] string privacyLevel = "None",
         [Description("Connection encryption: NotEncrypted, Encrypted, or Any")] string connectionEncryption = "NotEncrypted",
         [Description("Whether to skip test connection")] bool skipTestConnection = false,
