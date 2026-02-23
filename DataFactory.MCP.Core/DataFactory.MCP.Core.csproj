@@ -24,10 +24,7 @@
         <McpAppsDir>$(MSBuildThisFileDirectory)Resources\McpApps</McpAppsDir>
     </PropertyGroup>
 
-    <Target Name="BuildMcpApps" BeforeTargets="BeforeBuild"
-            Inputs="$(McpAppsDir)\package.json;$(McpAppsDir)\vite.config.ts;$(McpAppsDir)\src\**"
-            Outputs="$(McpAppsDir)\dist\.build-stamp"
-            Condition="Exists('$(McpAppsDir)\package.json')">
+    <Target Name="BuildMcpApps" BeforeTargets="BeforeBuild" Inputs="$(McpAppsDir)\package.json;$(McpAppsDir)\vite.config.ts;$(McpAppsDir)\src\**" Outputs="$(McpAppsDir)\dist\.build-stamp" Condition="Exists('$(McpAppsDir)\package.json')">
         <Message Importance="high" Text="Building MCP Apps UI..." />
         <Exec Command="npm ci --prefer-offline" WorkingDirectory="$(McpAppsDir)" />
         <Exec Command="npm run build" WorkingDirectory="$(McpAppsDir)" />
