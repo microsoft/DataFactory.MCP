@@ -108,6 +108,11 @@ extends:
                 inputs:
                   versionSpec: "20.x"
 
+              - task: npmAuthenticate@0
+                displayName: "NPM Authenticate"
+                inputs:
+                  workingFile: "$(Build.SourcesDirectory)/DataFactory.MCP.Core/Resources/McpApps/.npmrc"
+
               - task: PowerShell@2
                 displayName: "Build MCP Apps UI (npm ci + vite build)"
                 inputs:
