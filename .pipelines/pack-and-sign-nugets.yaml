@@ -104,24 +104,9 @@ extends:
                 continueOnError: false
 
               - task: NodeTool@0
-                displayName: "Install Node.js"
+                displayName: "Install Node.js (required by MCP Apps build)"
                 inputs:
                   versionSpec: "20.x"
-
-              - task: PowerShell@2
-                displayName: "Build MCP Apps UI (npm ci + vite build)"
-                inputs:
-                  targetType: inline
-                  script: |
-                    $mcpAppsDir = "$(Build.SourcesDirectory)/DataFactory.MCP.Core/Resources/McpApps"
-                    Write-Host "Building MCP Apps in: $mcpAppsDir"
-                    Push-Location $mcpAppsDir
-                    npm ci
-                    npm run build
-                    Pop-Location
-                    Write-Host "MCP Apps dist contents:"
-                    Get-ChildItem "$mcpAppsDir/dist" -Recurse | Select-Object FullName | Format-Table -AutoSize | Out-String | Write-Host
-                  pwsh: true
 
               - task: DotNetCoreCLI@2
                 displayName: "Restore packages"
