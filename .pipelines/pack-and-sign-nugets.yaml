@@ -116,8 +116,24 @@ extends:
                     $mcpAppsDir = "$(Build.SourcesDirectory)/DataFactory.MCP.Core/Resources/McpApps"
                     Write-Host "Building MCP Apps in: $mcpAppsDir"
                     Push-Location $mcpAppsDir
+
+                    Write-Host "Node version: $(node --version)"
+                    Write-Host "npm version: $(npm --version)"
+
+                    Write-Host "Running npm ci..."
                     npm ci
+                    if ($LASTEXITCODE -ne 0) {
+                      Write-Error "npm ci failed with exit code $LASTEXITCODE"
+                      exit $LASTEXITCODE
+                    }
+
+                    Write-Host "Running npm run build..."
                     npm run build
+                    if ($LASTEXITCODE -ne 0) {
+                      Write-Error "npm run build failed with exit code $LASTEXITCODE"
+                      exit $LASTEXITCODE
+                    }
+
                     Pop-Location
                     Write-Host "MCP Apps dist contents:"
                     Get-ChildItem "$mcpAppsDir/dist" -Recurse | Select-Object FullName | Format-Table -AutoSize | Out-String | Write-Host
