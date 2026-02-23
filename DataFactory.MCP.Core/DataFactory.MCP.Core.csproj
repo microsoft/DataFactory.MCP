@@ -19,24 +19,11 @@
         <None Include="..\assets\Microsoft-Fabric.png" Pack="true" PackagePath="/" />
     </ItemGroup>
 
-    <!-- MCP Apps UI: build with Vite before compiling -->
-    <PropertyGroup>
-        <McpAppsDir>$(MSBuildThisFileDirectory)Resources\McpApps</McpAppsDir>
-    </PropertyGroup>
-
-    <Target Name="BuildMcpApps" BeforeTargets="BeforeBuild"
-            Inputs="$(McpAppsDir)\package.json;$(McpAppsDir)\vite.config.ts;$(McpAppsDir)\src\**"
-            Outputs="$(McpAppsDir)\dist\.build-stamp"
-            Condition="Exists('$(McpAppsDir)\package.json')">
-        <Message Importance="high" Text="Building MCP Apps UI..." />
-        <Exec Command="npm ci --prefer-offline" WorkingDirectory="$(McpAppsDir)" />
-        <Exec Command="npm run build" WorkingDirectory="$(McpAppsDir)" />
-        <Touch Files="$(McpAppsDir)\dist\.build-stamp" AlwaysCreate="true" />
-    </Target>
-
-    <!-- MCP Apps UI Resources (HTML, CSS, JS) — only embed dist output -->
+    <!-- MCP Apps UI Resources (HTML, CSS, JS) -->
     <ItemGroup>
-        <EmbeddedResource Include="Resources\McpApps\dist\**\*.html" />
+        <EmbeddedResource Include="Resources\McpApps\**\*.html" />
+        <EmbeddedResource Include="Resources\McpApps\**\*.css" />
+        <EmbeddedResource Include="Resources\McpApps\**\*.js" />
     </ItemGroup>
 
     <ItemGroup>
