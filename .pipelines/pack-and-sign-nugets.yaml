@@ -103,6 +103,58 @@ extends:
                   pwsh: true
                 continueOnError: false
 
+              - task: NodeTool@0
+                displayName: "Install Node.js"
+                inputs:
+                  versionSpec: "20.x"
+
+              - task: npmAuthenticate@0
+                displayName: "NPM Authenticate"
+                inputs:
+                  workingFile: "$(Build.SourcesDirectory)/DataFactory.MCP.Core/Resources/McpApps/.npmrc"
+
+              - task: PowerShell@2
+                displayName: "Build MCP Apps UI (npm ci + vite build)"
+                inputs:
+                  targetType: inline
+                  script: |
+                    $ErrorActionPreference = 'Stop'
+                    $mcpAppsDir = "$(Build.SourcesDirectory)/DataFactory.MCP.Core/Resources/McpApps"
+                    Write-Host "Building MCP Apps in: $mcpAppsDir"
+                    Push-Location $mcpAppsDir
+
+                    Write-Host "Node version: $(node --version)"
+                    Write-Host "npm version: $(npm --version)"
+
+                    # Clean npm cache to avoid 'Exit handler never called' bug on Windows containers
+                    Write-Host "Cleaning npm cache..."
+                    npm cache clean --force
+
+                    Write-Host "Running npm ci..."
+                    npm ci --verbose 2>&1 | Write-Host
+                    if ($LASTEXITCODE -ne 0) {
+                      Write-Error "npm ci failed with exit code $LASTEXITCODE"
+                      exit $LASTEXITCODE
+                    }
+
+                    # Verify node_modules was actually populated (npm ci can silently fail with exit code 0)
+                    if (-not (Test-Path "$mcpAppsDir/node_modules/.package-lock.json")) {
+                      Write-Error "npm ci appeared to succeed but node_modules was not populated. Check npm logs above."
+                      exit 1
+                    }
+
+                    Write-Host "Running npm run build..."
+                    npx vite build
+                    if ($LASTEXITCODE -ne 0) {
+                      Write-Error "vite build failed with exit code $LASTEXITCODE"
+                      exit $LASTEXITCODE
+                    }
+
+                    Pop-Location
+                    Write-Host "MCP Apps dist contents:"
+                    Get-ChildItem "$mcpAppsDir/dist" -Recurse | Select-Object FullName | Format-Table -AutoSize | Out-String | Write-Host
+                  pwsh: true
+
               - task: DotNetCoreCLI@2
                 displayName: "Restore packages"
                 inputs:
