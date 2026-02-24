@@ -11,6 +11,10 @@ The pipeline management tools allow you to:
 - **Update** pipeline metadata (display name and description)
 - **Get** pipeline definitions with decoded base64 content
 - **Update** pipeline definitions with JSON content
+- **Run** pipelines on demand (with optional execution data)
+- **Check** pipeline run status by job instance ID
+- **Create** pipeline schedules (Cron, Daily, Weekly, Monthly)
+- **List** schedules configured for a pipeline
 - Navigate paginated results for large pipeline collections
 
 ## MCP Tools
@@ -254,6 +258,192 @@ update_pipeline_definition(
 }
 ```
 
+### run_pipeline
+
+Runs a Pipeline on demand. Returns a job instance ID that can be used to track the run status.
+
+#### Usage
+```
+run_pipeline(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  pipelineId: "87654321-4321-4321-4321-210987654321"
+)
+```
+
+#### With Optional Execution Data
+```
+run_pipeline(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  pipelineId: "87654321-4321-4321-4321-210987654321",
+  executionDataJson: "{\"parameters\":{\"loadDate\":\"2026-02-24\"}}"
+)
+```
+
+#### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `workspaceId` | Yes | The workspace ID containing the pipeline |
+| `pipelineId` | Yes | The pipeline ID to run |
+| `executionDataJson` | No | Optional execution data as JSON string |
+
+#### Response Format
+```json
+{
+  "success": true,
+  "message": "Pipeline run triggered successfully",
+  "pipelineId": "87654321-4321-4321-4321-210987654321",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "jobInstanceId": "34147f60-c8f1-4bb7-8b7e-24557a6bfeed",
+  "locationUrl": "https://api.fabric.microsoft.com/v1/workspaces/.../jobs/instances/34147f60-c8f1-4bb7-8b7e-24557a6bfeed",
+  "hint": "Use get_pipeline_run_status with the jobInstanceId to check the run status"
+}
+```
+
+### get_pipeline_run_status
+
+Gets the status of a pipeline run (job instance).
+
+#### Usage
+```
+get_pipeline_run_status(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  pipelineId: "87654321-4321-4321-4321-210987654321",
+  jobInstanceId: "34147f60-c8f1-4bb7-8b7e-24557a6bfeed"
+)
+```
+
+#### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `workspaceId` | Yes | The workspace ID containing the pipeline |
+| `pipelineId` | Yes | The pipeline ID |
+| `jobInstanceId` | Yes | The job instance ID returned by `run_pipeline` |
+
+#### Response Format
+```json
+{
+  "success": true,
+  "jobInstanceId": "34147f60-c8f1-4bb7-8b7e-24557a6bfeed",
+  "pipelineId": "87654321-4321-4321-4321-210987654321",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "jobType": "Pipeline",
+  "invokeType": "Manual",
+  "status": "Completed",
+  "startTimeUtc": "2026-02-24T08:15:00Z",
+  "endTimeUtc": "2026-02-24T08:16:32Z",
+  "failureReason": null
+}
+```
+
+Possible `status` values include: `NotStarted`, `InProgress`, `Completed`, `Failed`, `Cancelled`, `Deduped`.
+
+### create_pipeline_schedule
+
+Creates a schedule for a pipeline.
+
+#### Usage
+```
+create_pipeline_schedule(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  pipelineId: "87654321-4321-4321-4321-210987654321",
+  enabled: true,
+  configurationJson: "{\"type\":\"Cron\",\"startDateTime\":\"2026-02-24T00:00:00\",\"endDateTime\":\"2026-03-24T23:59:59\",\"localTimeZoneId\":\"UTC\",\"interval\":30}"
+)
+```
+
+#### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `workspaceId` | Yes | The workspace ID containing the pipeline |
+| `pipelineId` | Yes | The pipeline ID to schedule |
+| `enabled` | Yes | Whether the schedule is enabled |
+| `configurationJson` | Yes | Schedule configuration as JSON |
+
+#### Supported Schedule Types
+
+- `Cron` (interval-based)
+- `Daily`
+- `Weekly`
+- `Monthly`
+
+#### Response Format
+```json
+{
+  "success": true,
+  "message": "Pipeline schedule created successfully",
+  "scheduleId": "f36bc1bb-7007-4c15-b175-f63101609f95",
+  "pipelineId": "87654321-4321-4321-4321-210987654321",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "enabled": true,
+  "createdDateTime": "2026-02-24T08:20:11Z",
+  "configuration": {
+    "type": "Cron",
+    "interval": 30
+  },
+  "owner": {
+    "id": "owner-id"
+  }
+}
+```
+
+### list_pipeline_schedules
+
+Lists all schedules configured for a pipeline. This API supports pagination.
+
+#### Usage
+```
+list_pipeline_schedules(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  pipelineId: "87654321-4321-4321-4321-210987654321"
+)
+```
+
+#### With Pagination
+```
+list_pipeline_schedules(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  pipelineId: "87654321-4321-4321-4321-210987654321",
+  continuationToken: "next-page-token"
+)
+```
+
+#### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `workspaceId` | Yes | The workspace ID containing the pipeline |
+| `pipelineId` | Yes | The pipeline ID to list schedules for |
+| `continuationToken` | No | A token for retrieving the next page of results |
+
+#### Response Format
+```json
+{
+  "pipelineId": "87654321-4321-4321-4321-210987654321",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "scheduleCount": 2,
+  "continuationToken": null,
+  "continuationUri": null,
+  "hasMoreResults": false,
+  "schedules": [
+    {
+      "id": "f36bc1bb-7007-4c15-b175-f63101609f95",
+      "enabled": true,
+      "createdDateTime": "2026-02-24T08:20:11Z",
+      "configuration": {
+        "type": "Cron",
+        "interval": 30
+      },
+      "owner": {
+        "id": "owner-id"
+      }
+    }
+  ]
+}
+```
+
 ## Pipeline Properties
 
 Pipelines in Microsoft Fabric include several key properties:
@@ -301,4 +491,19 @@ Pipelines in Microsoft Fabric include several key properties:
 
 # Update pipeline definition
 > update the definition of pipeline 87654321-4321-4321-4321-210987654321 with the following JSON activities configuration
+```
+
+### Pipeline Run and Schedule Operations
+```
+# Trigger a pipeline run
+> run pipeline 87654321-4321-4321-4321-210987654321 in workspace 12345678-1234-1234-1234-123456789012
+
+# Check pipeline run status
+> get run status for pipeline 87654321-4321-4321-4321-210987654321 with job instance 34147f60-c8f1-4bb7-8b7e-24557a6bfeed
+
+# Create a pipeline schedule
+> create a daily schedule for pipeline 87654321-4321-4321-4321-210987654321 in workspace 12345678-1234-1234-1234-123456789012
+
+# List pipeline schedules
+> list schedules for pipeline 87654321-4321-4321-4321-210987654321 in workspace 12345678-1234-1234-1234-123456789012
 ```

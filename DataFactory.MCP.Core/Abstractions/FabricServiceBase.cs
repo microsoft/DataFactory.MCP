@@ -105,6 +105,26 @@ public abstract class FabricServiceBase
     }
 
     /// <summary>
+    /// Posts a request expecting a 202 Accepted response with a Location header.
+    /// Returns the Location header value for tracking the async operation.
+    /// </summary>
+    protected async Task<string?> PostAndGetLocationAsync(string endpoint, object? request = null)
+    {
+        var url = FabricUrlBuilder.ForFabricApi()
+            .WithLiteralPath(endpoint)
+            .Build();
+        Logger.LogInformation("Posting to: {Url}", url);
+
+        var jsonContent = request != null ? JsonSerializer.Serialize(request, JsonOptions) : null;
+        var content = jsonContent != null ? new StringContent(jsonContent, Encoding.UTF8, "application/json") : null;
+
+        var response = await HttpClient.PostAsync(url, content);
+        await response.EnsureSuccessOrThrowAsync();
+
+        return response.Headers.Location?.ToString();
+    }
+
+    /// <summary>
     /// Posts a request expecting no content response (204). Returns true on success, false on failure.
     /// Logs errors but does not throw on failure.
     /// </summary>

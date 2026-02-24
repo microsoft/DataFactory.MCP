@@ -3,6 +3,7 @@ using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Infrastructure.Http;
 using DataFactory.MCP.Models.Pipeline;
 using DataFactory.MCP.Models.Pipeline.Definition;
+using DataFactory.MCP.Models.Pipeline.Schedule;
 using Microsoft.Extensions.Logging;
 
 namespace DataFactory.MCP.Services;
@@ -190,5 +191,133 @@ public class FabricPipelineService : FabricServiceBase, IFabricPipelineService
         }
 
         Logger.LogInformation("Successfully updated pipeline definition for {PipelineId}", pipelineId);
+    }
+
+    private const string PipelineJobType = "Pipeline";
+
+    public async Task<string?> RunPipelineAsync(
+        string workspaceId,
+        string pipelineId,
+        object? executionData = null)
+    {
+        try
+        {
+            ValidateGuids(
+                (workspaceId, nameof(workspaceId)),
+                (pipelineId, nameof(pipelineId)));
+
+            var endpoint = FabricUrlBuilder.ForFabricApi()
+                .WithLiteralPath($"workspaces/{workspaceId}/items/{pipelineId}/jobs/{PipelineJobType}/instances")
+                .BuildEndpoint();
+            Logger.LogInformation("Running pipeline {PipelineId} on demand in workspace {WorkspaceId}",
+                pipelineId, workspaceId);
+
+            var request = executionData != null ? new { executionData } : null;
+            var location = await PostAndGetLocationAsync(endpoint, request);
+
+            Logger.LogInformation("Pipeline {PipelineId} run triggered successfully. Location: {Location}",
+                pipelineId, location);
+            return location;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error running pipeline {PipelineId} in workspace {WorkspaceId}",
+                pipelineId, workspaceId);
+            throw;
+        }
+    }
+
+    public async Task<ItemJobInstance> GetPipelineJobInstanceAsync(
+        string workspaceId,
+        string pipelineId,
+        string jobInstanceId)
+    {
+        try
+        {
+            ValidateGuids(
+                (workspaceId, nameof(workspaceId)),
+                (pipelineId, nameof(pipelineId)),
+                (jobInstanceId, nameof(jobInstanceId)));
+
+            var endpoint = FabricUrlBuilder.ForFabricApi()
+                .WithLiteralPath($"workspaces/{workspaceId}/items/{pipelineId}/jobs/instances/{jobInstanceId}")
+                .BuildEndpoint();
+            Logger.LogInformation("Getting job instance {JobInstanceId} for pipeline {PipelineId} in workspace {WorkspaceId}",
+                jobInstanceId, pipelineId, workspaceId);
+
+            var jobInstance = await GetAsync<ItemJobInstance>(endpoint);
+
+            Logger.LogInformation("Successfully retrieved job instance {JobInstanceId} with status {Status}",
+                jobInstanceId, jobInstance?.Status);
+            return jobInstance ?? throw new InvalidOperationException($"Job instance {jobInstanceId} not found");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error getting job instance {JobInstanceId} for pipeline {PipelineId} in workspace {WorkspaceId}",
+                jobInstanceId, pipelineId, workspaceId);
+            throw;
+        }
+    }
+
+    public async Task<ItemSchedule> CreatePipelineScheduleAsync(
+        string workspaceId,
+        string pipelineId,
+        CreateScheduleRequest request)
+    {
+        try
+        {
+            ValidateGuids(
+                (workspaceId, nameof(workspaceId)),
+                (pipelineId, nameof(pipelineId)));
+
+            var endpoint = FabricUrlBuilder.ForFabricApi()
+                .WithLiteralPath($"workspaces/{workspaceId}/items/{pipelineId}/jobs/{PipelineJobType}/schedules")
+                .BuildEndpoint();
+            Logger.LogInformation("Creating schedule for pipeline {PipelineId} in workspace {WorkspaceId}",
+                pipelineId, workspaceId);
+
+            var schedule = await PostAsync<ItemSchedule>(endpoint, request);
+
+            Logger.LogInformation("Successfully created schedule {ScheduleId} for pipeline {PipelineId}",
+                schedule?.Id, pipelineId);
+            return schedule ?? throw new InvalidOperationException("Failed to create pipeline schedule");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating schedule for pipeline {PipelineId} in workspace {WorkspaceId}",
+                pipelineId, workspaceId);
+            throw;
+        }
+    }
+
+    public async Task<ListSchedulesResponse> ListPipelineSchedulesAsync(
+        string workspaceId,
+        string pipelineId,
+        string? continuationToken = null)
+    {
+        try
+        {
+            ValidateGuids(
+                (workspaceId, nameof(workspaceId)),
+                (pipelineId, nameof(pipelineId)));
+
+            var endpoint = FabricUrlBuilder.ForFabricApi()
+                .WithLiteralPath($"workspaces/{workspaceId}/items/{pipelineId}/jobs/{PipelineJobType}/schedules")
+                .BuildEndpoint();
+            Logger.LogInformation("Listing schedules for pipeline {PipelineId} in workspace {WorkspaceId}",
+                pipelineId, workspaceId);
+
+            var response = await GetAsync<ListSchedulesResponse>(endpoint, continuationToken);
+
+            Logger.LogInformation("Successfully retrieved {Count} schedules for pipeline {PipelineId}",
+                response?.Value?.Count ?? 0, pipelineId);
+            return response ?? new ListSchedulesResponse();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error listing schedules for pipeline {PipelineId} in workspace {WorkspaceId}",
+                pipelineId, workspaceId);
+            throw;
+        }
     }
 }

@@ -6,6 +6,7 @@ using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Models.Pipeline;
 using DataFactory.MCP.Models.Pipeline.Definition;
+using DataFactory.MCP.Models.Pipeline.Schedule;
 
 namespace DataFactory.MCP.Tools.Pipeline;
 
@@ -319,6 +320,244 @@ public class PipelineTool
         catch (Exception ex)
         {
             return ex.ToOperationError("updating pipeline definition").ToMcpJson();
+        }
+    }
+
+    [McpServerTool, Description(@"Runs a Pipeline on demand. Returns a job instance ID that can be used to track the run status with GetPipelineRunStatusAsync.")]
+    public async Task<string> RunPipelineAsync(
+        [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
+        [Description("The pipeline ID to run (required)")] string pipelineId,
+        [Description("Optional execution data as JSON string for parameterized pipeline runs (optional)")] string? executionDataJson = null)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
+
+            object? executionData = null;
+            if (!string.IsNullOrEmpty(executionDataJson))
+            {
+                try
+                {
+                    executionData = JsonSerializer.Deserialize<object>(executionDataJson);
+                }
+                catch (JsonException ex)
+                {
+                    throw new ArgumentException($"Invalid executionData JSON format: {ex.Message}");
+                }
+            }
+
+            var location = await _pipelineService.RunPipelineAsync(workspaceId, pipelineId, executionData);
+
+            // Extract job instance ID from the Location header URL
+            string? jobInstanceId = null;
+            if (!string.IsNullOrEmpty(location))
+            {
+                var segments = new Uri(location).Segments;
+                jobInstanceId = segments.LastOrDefault()?.TrimEnd('/');
+            }
+
+            var result = new
+            {
+                Success = true,
+                Message = $"Pipeline run triggered successfully",
+                PipelineId = pipelineId,
+                WorkspaceId = workspaceId,
+                JobInstanceId = jobInstanceId,
+                LocationUrl = location,
+                Hint = "Use GetPipelineRunStatusAsync with the jobInstanceId to check the run status"
+            };
+
+            return result.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("running pipeline").ToMcpJson();
+        }
+    }
+
+    [McpServerTool, Description(@"Gets the status of a Pipeline run (job instance). Use the jobInstanceId returned from RunPipelineAsync to check the run status. Possible statuses: NotStarted, InProgress, Completed, Failed, Cancelled, Deduped.")]
+    public async Task<string> GetPipelineRunStatusAsync(
+        [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
+        [Description("The pipeline ID (required)")] string pipelineId,
+        [Description("The job instance ID returned from RunPipelineAsync (required)")] string jobInstanceId)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
+            _validationService.ValidateRequiredString(jobInstanceId, nameof(jobInstanceId));
+
+            var jobInstance = await _pipelineService.GetPipelineJobInstanceAsync(workspaceId, pipelineId, jobInstanceId);
+
+            var result = new
+            {
+                Success = true,
+                JobInstanceId = jobInstance.Id,
+                PipelineId = pipelineId,
+                WorkspaceId = workspaceId,
+                JobType = jobInstance.JobType,
+                InvokeType = jobInstance.InvokeType,
+                Status = jobInstance.Status,
+                StartTimeUtc = jobInstance.StartTimeUtc,
+                EndTimeUtc = jobInstance.EndTimeUtc,
+                FailureReason = jobInstance.FailureReason
+            };
+
+            return result.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("getting pipeline run status").ToMcpJson();
+        }
+    }
+
+    [McpServerTool, Description(@"Creates a schedule for a Pipeline. Supports Cron (interval-based), Daily, Weekly, and Monthly schedule types. An item can have up to 20 schedules.")]
+    public async Task<string> CreatePipelineScheduleAsync(
+        [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
+        [Description("The pipeline ID to schedule (required)")] string pipelineId,
+        [Description("Whether the schedule is enabled (required)")] bool enabled,
+        [Description(@"The schedule configuration as JSON string (required). Supported types:
+- Cron: {""type"":""Cron"",""startDateTime"":""2024-04-28T00:00:00"",""endDateTime"":""2024-04-30T23:59:00"",""localTimeZoneId"":""Central Standard Time"",""interval"":10}
+- Daily: {""type"":""Daily"",""startDateTime"":""..."",""endDateTime"":""..."",""localTimeZoneId"":""..."",""times"":[""08:00"",""16:00""]}
+- Weekly: {""type"":""Weekly"",""startDateTime"":""..."",""endDateTime"":""..."",""localTimeZoneId"":""..."",""weekdays"":[""Monday"",""Wednesday""],""times"":[""09:00""]}
+- Monthly: {""type"":""Monthly"",""startDateTime"":""..."",""endDateTime"":""..."",""localTimeZoneId"":""..."",""occurrence"":{""occurrenceType"":""DayOfMonth"",""dayOfMonth"":15},""recurrence"":1,""times"":[""10:00""]}")] string configurationJson)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
+            _validationService.ValidateRequiredString(configurationJson, nameof(configurationJson));
+
+            object configuration;
+            try
+            {
+                configuration = JsonSerializer.Deserialize<object>(configurationJson)
+                    ?? throw new ArgumentException("Configuration JSON cannot be null");
+            }
+            catch (JsonException ex)
+            {
+                throw new ArgumentException($"Invalid configuration JSON format: {ex.Message}");
+            }
+
+            var request = new CreateScheduleRequest
+            {
+                Enabled = enabled,
+                Configuration = configuration
+            };
+
+            var schedule = await _pipelineService.CreatePipelineScheduleAsync(workspaceId, pipelineId, request);
+
+            var result = new
+            {
+                Success = true,
+                Message = "Pipeline schedule created successfully",
+                ScheduleId = schedule.Id,
+                PipelineId = pipelineId,
+                WorkspaceId = workspaceId,
+                Enabled = schedule.Enabled,
+                CreatedDateTime = schedule.CreatedDateTime,
+                Configuration = schedule.Configuration,
+                Owner = schedule.Owner
+            };
+
+            return result.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("creating pipeline schedule").ToMcpJson();
+        }
+    }
+
+    [McpServerTool, Description(@"Lists all schedules for a Pipeline. Returns the schedule configurations, status, and owner information.")]
+    public async Task<string> ListPipelineSchedulesAsync(
+        [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
+        [Description("The pipeline ID to list schedules for (required)")] string pipelineId,
+        [Description("A token for retrieving the next page of results (optional)")] string? continuationToken = null)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
+
+            var response = await _pipelineService.ListPipelineSchedulesAsync(workspaceId, pipelineId, continuationToken);
+
+            if (!response.Value.Any())
+            {
+                return $"No schedules found for pipeline '{pipelineId}' in workspace '{workspaceId}'.";
+            }
+
+            var result = new
+            {
+                PipelineId = pipelineId,
+                WorkspaceId = workspaceId,
+                ScheduleCount = response.Value.Count,
+                ContinuationToken = response.ContinuationToken,
+                ContinuationUri = response.ContinuationUri,
+                HasMoreResults = !string.IsNullOrEmpty(response.ContinuationToken),
+                Schedules = response.Value.Select(s => new
+                {
+                    Id = s.Id,
+                    Enabled = s.Enabled,
+                    CreatedDateTime = s.CreatedDateTime,
+                    Configuration = s.Configuration,
+                    Owner = s.Owner
+                })
+            };
+
+            return result.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("listing pipeline schedules").ToMcpJson();
         }
     }
 

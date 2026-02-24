@@ -1,5 +1,6 @@
 using DataFactory.MCP.Models.Pipeline;
 using DataFactory.MCP.Models.Pipeline.Definition;
+using DataFactory.MCP.Models.Pipeline.Schedule;
 
 namespace DataFactory.MCP.Abstractions.Interfaces;
 
@@ -51,4 +52,36 @@ public interface IFabricPipelineService
         string workspaceId,
         string pipelineId,
         PipelineDefinition definition);
+
+    /// <summary>
+    /// Runs a pipeline on demand. Returns the Location header URL for tracking the job instance.
+    /// </summary>
+    Task<string?> RunPipelineAsync(
+        string workspaceId,
+        string pipelineId,
+        object? executionData = null);
+
+    /// <summary>
+    /// Gets the status of a pipeline job instance
+    /// </summary>
+    Task<ItemJobInstance> GetPipelineJobInstanceAsync(
+        string workspaceId,
+        string pipelineId,
+        string jobInstanceId);
+
+    /// <summary>
+    /// Creates a new schedule for a pipeline
+    /// </summary>
+    Task<ItemSchedule> CreatePipelineScheduleAsync(
+        string workspaceId,
+        string pipelineId,
+        CreateScheduleRequest request);
+
+    /// <summary>
+    /// Lists all schedules for a pipeline
+    /// </summary>
+    Task<ListSchedulesResponse> ListPipelineSchedulesAsync(
+        string workspaceId,
+        string pipelineId,
+        string? continuationToken = null);
 }
