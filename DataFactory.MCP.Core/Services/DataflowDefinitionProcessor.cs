@@ -440,17 +440,14 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
         // mark that referenced query as hidden (it's a destination helper query)
         if (!string.IsNullOrEmpty(referencedDestinationQuery))
         {
-            if (queriesMetadata.TryGetValue(referencedDestinationQuery, out var destEntryObj))
+            if (queriesMetadata.ContainsKey(referencedDestinationQuery) &&
+                queriesMetadata[referencedDestinationQuery] is Dictionary<string, object> destEntry)
             {
-                if (destEntryObj is Dictionary<string, object> destEntry)
-                {   
-                    destEntry["isHidden"] = true;
-                    destEntry["loadEnabled"] = true;
-                }
+                destEntry["isHidden"] = true;
             }
             // If the destination query doesn't exist yet, create a placeholder that will be hidden
             // (it will be fully populated when the destination query is added)
-            else
+            else if (!queriesMetadata.ContainsKey(referencedDestinationQuery))
             {
                 queriesMetadata[referencedDestinationQuery] = new Dictionary<string, object>
                 {
