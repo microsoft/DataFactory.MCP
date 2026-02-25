@@ -10,7 +10,7 @@ The dataflow management tools allow you to:
 - **Get** decoded dataflow definitions with M code and metadata
 - **Execute** M (Power Query) queries against dataflows
 - **Refresh** dataflows in the background with automatic notifications
-- **Add** connections to existing dataflows
+- **Add** connections to existing dataflows (single, multiple, replace, or clear)
 - **Add or update** queries in existing dataflows
 - **Validate and save** complete M section documents to dataflows
 - Navigate paginated results for large dataflow collections
@@ -320,14 +320,44 @@ execute_query(
 
 ### add_connection_to_dataflow
 
-Adds a connection to an existing dataflow by updating its definition. Retrieves the current dataflow definition, gets connection details, and updates the queryMetadata.json to include the new connection.
+Adds, replaces, or clears connections in an existing dataflow by updating its definition. Supports single or multiple connection IDs, and can optionally clear existing connections before adding new ones.
 
 #### Usage
+
+**Add a single connection:**
 ```
 add_connection_to_dataflow(
   workspaceId: "12345678-1234-1234-1234-123456789012",
   dataflowId: "87654321-4321-4321-4321-210987654321",
-  connectionId: "a0b9fa12-60f5-4f95-85ca-565d34abcea1"
+  connectionIds: "a0b9fa12-60f5-4f95-85ca-565d34abcea1"
+)
+```
+
+**Add multiple connections:**
+```
+add_connection_to_dataflow(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  dataflowId: "87654321-4321-4321-4321-210987654321",
+  connectionIds: ["a0b9fa12-60f5-4f95-85ca-565d34abcea1", "b1c2d3e4-1234-5678-9abc-def012345678"]
+)
+```
+
+**Replace all connections (clear existing, then add new):**
+```
+add_connection_to_dataflow(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  dataflowId: "87654321-4321-4321-4321-210987654321",
+  connectionIds: ["a0b9fa12-60f5-4f95-85ca-565d34abcea1"],
+  clearExisting: true
+)
+```
+
+**Clear all connections:**
+```
+add_connection_to_dataflow(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  dataflowId: "87654321-4321-4321-4321-210987654321",
+  clearExisting: true
 )
 ```
 
@@ -337,7 +367,31 @@ add_connection_to_dataflow(
 |-----------|----------|-------------|
 | `workspaceId` | Yes | The workspace ID containing the dataflow |
 | `dataflowId` | Yes | The dataflow ID to update |
-| `connectionId` | Yes | The connection ID to add to the dataflow |
+| `connectionIds` | No* | A single connection ID string or an array of connection IDs. Required unless `clearExisting` is true. |
+| `clearExisting` | No | When `true`, clears all existing connections before adding new ones. If no `connectionIds` are provided, all connections are removed. Defaults to `false`. |
+
+\* `connectionIds` is required when `clearExisting` is `false`.
+
+#### Behavior Summary
+
+| `clearExisting` | `connectionIds` | Behavior |
+|-----------------|-----------------|----------|
+| `false` (default) | provided | **Appends** — adds connections to existing ones |
+| `true` | provided | **Replaces** — clears existing, then adds new connections (atomic) |
+| `true` | omitted | **Clears** — removes all connections from the dataflow |
+
+#### Response Format
+```json
+{
+  "success": true,
+  "dataflowId": "87654321-4321-4321-4321-210987654321",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "connectionIds": ["a0b9fa12-60f5-4f95-85ca-565d34abcea1"],
+  "connectionCount": 1,
+  "clearedExisting": true,
+  "message": "Successfully replaced connections with 1 new connection(s) in dataflow 87654321-4321-4321-4321-210987654321"
+}
+```
 
 ### add_or_update_query_in_dataflow
 
@@ -569,8 +623,17 @@ Dataflows in Microsoft Fabric include several key properties:
 
 ### Adding Connections
 ```
-# Add a connection to a dataflow
-> add connection a0b9fa12-60f5-4f95-85ca-565d34abcea1 to dataflow 87654321-4321-4321-4321-210987654321 in workspace 12345678-1234-1234-1234-123456789012
+# Add a single connection to a dataflow
+> add connection a0b9fa12-60f5-4f95-85ca-565d34abcea1 to dataflow 87654321 in workspace 12345678
+
+# Add multiple connections at once
+> add connections ["conn-id-1", "conn-id-2"] to dataflow 87654321 in workspace 12345678
+
+# Replace all connections with a new set
+> replace connections on dataflow 87654321 with ["conn-id-1"] in workspace 12345678
+
+# Clear all connections from a dataflow
+> clear all connections from dataflow 87654321 in workspace 12345678
 ```
 
 ### Background Refresh Operations

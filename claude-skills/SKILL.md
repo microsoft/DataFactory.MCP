@@ -19,7 +19,7 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 - Use a fresh dataflow for multi-source — never transition a published single-source dataflow to multi-source
 - Consolidate all Lakehouse table reads into a single source query (one `Lakehouse.Contents` call) in multi-source dataflows
 - Re-add connections via `add_connection_to_dataflow` after `save_dataflow_definition` (save may wipe them)
-- Add connections one at a time — array format not supported
+- Use `clearExisting: true` to replace all connections atomically instead of manual removal
 - Validate each connection with `execute_query` after adding
 - Use `list_workspaces` and filter by name — there is no `find_workspace` tool
 - Create a new dataflow instead of reverting a multi-source one to single-source — `save_dataflow_definition` does NOT remove stale connections, and there is no `remove_connection` tool

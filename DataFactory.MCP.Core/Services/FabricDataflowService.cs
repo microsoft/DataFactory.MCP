@@ -202,7 +202,8 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
     public async Task<UpdateDataflowDefinitionResponse> AddConnectionsToDataflowAsync(
         string workspaceId,
         string dataflowId,
-        IEnumerable<(string ConnectionId, Connection Connection)> connections)
+        IEnumerable<(string ConnectionId, Connection Connection)> connections,
+        bool clearExisting = false)
     {
         var connectionsList = connections.ToList();
         try
@@ -216,8 +217,8 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
                 ValidateGuids((connectionId, nameof(connectionId)));
             }
 
-            Logger.LogInformation("Adding {Count} connection(s) to dataflow {DataflowId} in workspace {WorkspaceId}",
-                connectionsList.Count, dataflowId, workspaceId);
+            Logger.LogInformation("{Operation} {Count} connection(s) for dataflow {DataflowId} in workspace {WorkspaceId}",
+                clearExisting ? "Replacing with" : "Adding", connectionsList.Count, dataflowId, workspaceId);
 
             // Step 1: Get current dataflow definition via HTTP
             var currentDefinition = await GetDataflowDefinitionAsync(workspaceId, dataflowId);
@@ -244,7 +245,8 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
             // Step 3: Process connection additions via business logic service
             var updatedDefinition = _definitionProcessor.AddConnectionsToDefinition(
                 currentDefinition,
-                connectionsWithClusterIds);
+                connectionsWithClusterIds,
+                clearExisting);
 
             // Step 4: Update via HTTP
             await UpdateDataflowDefinitionAsync(workspaceId, dataflowId, updatedDefinition);

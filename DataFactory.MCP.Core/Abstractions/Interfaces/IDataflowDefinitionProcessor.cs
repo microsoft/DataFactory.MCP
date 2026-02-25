@@ -18,14 +18,17 @@ public interface IDataflowDefinitionProcessor
     DecodedDataflowDefinition DecodeDefinition(DataflowDefinition rawDefinition);
 
     /// <summary>
-    /// Adds one or more connections to an existing dataflow definition
+    /// Adds one or more connections to an existing dataflow definition.
+    /// When clearExisting is true, existing connections are removed before adding new ones.
     /// </summary>
     /// <param name="definition">The dataflow definition to modify</param>
     /// <param name="connections">List of tuples containing (connection, connectionId, clusterId) for each connection to add</param>
+    /// <param name="clearExisting">When true, clears all existing connections before adding new ones</param>
     /// <returns>Updated dataflow definition</returns>
     DataflowDefinition AddConnectionsToDefinition(
         DataflowDefinition definition,
-        IEnumerable<(Connection Connection, string ConnectionId, string? ClusterId)> connections);
+        IEnumerable<(Connection Connection, string ConnectionId, string? ClusterId)> connections,
+        bool clearExisting = false);
 
     /// <summary>
     /// Adds or updates a query in an existing dataflow definition

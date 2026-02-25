@@ -114,6 +114,14 @@ Output Query       → Same as transform, with Data Destination attached
 | `Csv.Document` | CSV files |
 | `Json.Document` | JSON data |
 
+## Connection Management
+
+`add_connection_to_dataflow` supports:
+- **Add**: pass `connectionIds` (string or array) — appends to existing connections
+- **Replace**: pass `connectionIds` + `clearExisting: true` — atomically clears and adds
+- **Clear**: pass `clearExisting: true` with no `connectionIds` — removes all connections
+
+
 ## Error Handling
 
 ```m

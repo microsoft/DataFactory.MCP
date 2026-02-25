@@ -32,6 +32,10 @@ in
 - `refresh_dataflow_status` → poll for completion
 - `list_connections` → find connection GUIDs
 
-## Connection GUIDs
+## Connection Management
 
-`add_connection_to_dataflow` accepts a single GUID string, not arrays or JSON.
+`add_connection_to_dataflow` accepts a single GUID string, an array of GUIDs, or no connections (when clearing).
+
+- **Add**: pass `connectionIds` (string or array) — appends to existing connections
+- **Replace**: pass `connectionIds` + `clearExisting: true` — atomically clears and adds
+- **Clear**: pass `clearExisting: true` with no `connectionIds` — removes all connections
