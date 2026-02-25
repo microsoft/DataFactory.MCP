@@ -276,6 +276,62 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
         }
     }
 
+    public async Task<UpdateDataflowDefinitionResponse> ClearConnectionsFromDataflowAsync(
+        string workspaceId,
+        string dataflowId)
+    {
+        try
+        {
+            ValidateGuids(
+                (workspaceId, nameof(workspaceId)),
+                (dataflowId, nameof(dataflowId)));
+
+            Logger.LogInformation("Clearing all connections from dataflow {DataflowId} in workspace {WorkspaceId}",
+                dataflowId, workspaceId);
+
+            // Step 1: Get current dataflow definition
+            var currentDefinition = await GetDataflowDefinitionAsync(workspaceId, dataflowId);
+            if (currentDefinition?.Parts == null)
+            {
+                return new UpdateDataflowDefinitionResponse
+                {
+                    Success = false,
+                    ErrorMessage = "Failed to retrieve current dataflow definition",
+                    DataflowId = dataflowId,
+                    WorkspaceId = workspaceId
+                };
+            }
+
+            // Step 2: Clear connections via definition processor
+            var updatedDefinition = _definitionProcessor.ClearConnectionsFromDefinition(currentDefinition);
+
+            // Step 3: Update via HTTP
+            await UpdateDataflowDefinitionAsync(workspaceId, dataflowId, updatedDefinition);
+
+            Logger.LogInformation("Successfully cleared all connections from dataflow {DataflowId}", dataflowId);
+
+            return new UpdateDataflowDefinitionResponse
+            {
+                Success = true,
+                DataflowId = dataflowId,
+                WorkspaceId = workspaceId
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error clearing connections from dataflow {DataflowId} in workspace {WorkspaceId}",
+                dataflowId, workspaceId);
+
+            return new UpdateDataflowDefinitionResponse
+            {
+                Success = false,
+                ErrorMessage = ex.Message,
+                DataflowId = dataflowId,
+                WorkspaceId = workspaceId
+            };
+        }
+    }
+
     private async Task<string?> GetClusterId(string connectionId)
     {
         try

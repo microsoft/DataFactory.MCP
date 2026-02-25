@@ -87,6 +87,16 @@ public interface IFabricDataflowService
         IEnumerable<(string ConnectionId, DataFactory.MCP.Models.Connection.Connection Connection)> connections);
 
     /// <summary>
+    /// Clears all connections from an existing dataflow by updating its definition
+    /// </summary>
+    /// <param name="workspaceId">The workspace ID containing the dataflow</param>
+    /// <param name="dataflowId">The dataflow ID to update</param>
+    /// <returns>Update operation result</returns>
+    Task<UpdateDataflowDefinitionResponse> ClearConnectionsFromDataflowAsync(
+        string workspaceId,
+        string dataflowId);
+
+    /// <summary>
     /// Adds or updates a query in an existing dataflow by updating its definition
     /// </summary>
     /// <param name="workspaceId">The workspace ID containing the dataflow</param>

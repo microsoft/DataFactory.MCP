@@ -28,6 +28,13 @@ public interface IDataflowDefinitionProcessor
         IEnumerable<(Connection Connection, string ConnectionId, string? ClusterId)> connections);
 
     /// <summary>
+    /// Clears all connections from an existing dataflow definition
+    /// </summary>
+    /// <param name="definition">The dataflow definition to modify</param>
+    /// <returns>Updated dataflow definition with connections cleared</returns>
+    DataflowDefinition ClearConnectionsFromDefinition(DataflowDefinition definition);
+
+    /// <summary>
     /// Adds or updates a query in an existing dataflow definition
     /// </summary>
     /// <param name="definition">The dataflow definition to modify</param>

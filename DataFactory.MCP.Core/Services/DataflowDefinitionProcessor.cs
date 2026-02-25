@@ -168,6 +168,34 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
         return metadataDict;
     }
 
+    public DataflowDefinition ClearConnectionsFromDefinition(DataflowDefinition definition)
+    {
+        // Find and update the queryMetadata.json part
+        var queryMetadataPart = definition.Parts?.FirstOrDefault(p =>
+            p.Path?.Equals("querymetadata.json", StringComparison.OrdinalIgnoreCase) == true);
+
+        if (queryMetadataPart?.Payload != null)
+        {
+            // Decode current queryMetadata
+            var decodedBytes = Convert.FromBase64String(queryMetadataPart.Payload);
+            var currentMetadataJson = Encoding.UTF8.GetString(decodedBytes);
+
+            using var document = JsonDocument.Parse(currentMetadataJson);
+            var metadata = document.RootElement;
+
+            // Convert to dictionary and clear connections
+            var metadataDict = _dataTransformationService.JsonElementToDictionary(metadata);
+            metadataDict["connections"] = new List<object>();
+
+            // Encode updated metadata back to Base64
+            var updatedMetadataJson = JsonSerializer.Serialize(metadataDict, JsonSerializerOptionsProvider.Indented);
+            var updatedBytes = Encoding.UTF8.GetBytes(updatedMetadataJson);
+            queryMetadataPart.Payload = Convert.ToBase64String(updatedBytes);
+        }
+
+        return definition;
+    }
+
     public DataflowDefinition AddOrUpdateQueryInDefinition(
         DataflowDefinition definition,
         string queryName,
