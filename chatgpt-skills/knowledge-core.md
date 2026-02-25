@@ -121,7 +121,6 @@ Output Query       → Same as transform, with Data Destination attached
 - **Replace**: pass `connectionIds` + `clearExisting: true` — atomically clears and adds
 - **Clear**: pass `clearExisting: true` with no `connectionIds` — removes all connections
 
-Always re-add connections after `save_dataflow_definition` (save may wipe them).
 
 ## Error Handling
 
