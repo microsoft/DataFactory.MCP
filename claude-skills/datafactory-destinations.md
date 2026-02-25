@@ -170,6 +170,30 @@ shared JoinedOutput = let ... in ...;
 
 **Critical:** This is REQUIRED for any dataflow that mixes source types. Single-source dataflows (e.g. Lakehouse-only) do not need it.
 
+### Multi-Source via API: Requirements
+
+Multi-source dataflows (e.g. Lakehouse + SharePoint/Web) **work via API** with `[AllowCombine = true]`, but require specific conditions:
+
+1. **Fresh dataflow** — Always create a new dataflow for multi-source. Never transition a previously-published single-source dataflow to multi-source; stale connection metadata persists and causes instant refresh failure.
+2. **Consolidated Lakehouse reads** — Read all Lakehouse tables in a single source query (one `Lakehouse.Contents` call), not separate queries per table. This reduces the number of distinct data source contexts the privacy firewall must reconcile.
+3. **All connections bound** — Add all connections (Lakehouse, Web/SharePoint) via `add_connection_to_dataflow` before and after `save_dataflow_definition`.
+4. **`ApplyChangesIfNeeded`** — Required on first refresh of any API-created dataflow.
+
+**Pattern that works:**
+```
+StoreActuals     → Single query: Lakehouse.Contents → reads orders, items, stores, products, categories → aggregates
+StoreTargets     → Excel.Workbook(Web.Contents("...sharepoint.com/.../file.xlsx"))
+StoreAnnotations → Excel.Workbook(Web.Contents("...sharepoint.com/.../file.xlsx"))
+OutputQuery      → Joins StoreActuals + StoreTargets + StoreAnnotations, with DataDestination attached
+```
+
+**What causes failure:**
+| Scenario | Result |
+|----------|--------|
+| Fresh dataflow + consolidated reads + AllowCombine | Works |
+| Previously-published single-source dataflow converted to multi-source | Instant failure — stale metadata |
+| Separate `Lakehouse.Contents` calls per source query | May fail — multiple data source contexts |
+
 ### MCP Tool Workflow
 
 ```
@@ -297,6 +321,9 @@ Requires a Web connection to the SharePoint site URL. Find via `list_connections
 | FastCopy fails with transforms | `Table.Group`, `NestedJoin`, etc. | Remove `[StagingDefinition]` |
 | Instant refresh fail (0-3s) | Privacy firewall or unpublished | `[AllowCombine = true]` and/or `ApplyChangesIfNeeded` |
 | `loadEnabled: false` in metadata | Controls data staging during transforms, not destinations | Not a problem with `DataDestinations` + `ApplyChangesIfNeeded` |
+| Multi-source instant fail via API | Dirty dataflow (converted from single-source) or separate Lakehouse.Contents calls | Create fresh dataflow; consolidate Lakehouse reads into single query |
+| Lakehouse-only fails after multi-source revert | `save_dataflow_definition` does NOT remove stale connections from queryMetadata | Create a new dataflow instead of reverting; no `remove_connection` tool exists |
+| `IsNewTarget = false` fails on API-created dataflow | Direct `[Data]` navigation + `IsNewTarget = false` fails on first refresh | Always use `IsNewTarget = true` with `?[Data]?` null-safe operators, even for existing tables |
 
 ---
 
