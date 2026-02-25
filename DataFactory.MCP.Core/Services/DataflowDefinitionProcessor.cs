@@ -66,7 +66,8 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
 
     public DataflowDefinition AddConnectionsToDefinition(
         DataflowDefinition definition,
-        IEnumerable<(Connection Connection, string ConnectionId, string? ClusterId)> connections)
+        IEnumerable<(Connection Connection, string ConnectionId, string? ClusterId)> connections,
+        bool clearExisting = false)
     {
         // Find and update the queryMetadata.json part
         var queryMetadataPart = definition.Parts?.FirstOrDefault(p =>
@@ -82,7 +83,7 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
             var metadata = document.RootElement;
 
             // Create updated metadata with all connections
-            var updatedMetadata = CreateUpdatedQueryMetadataWithConnections(metadata, connections);
+            var updatedMetadata = CreateUpdatedQueryMetadataWithConnections(metadata, connections, clearExisting);
 
             // Encode updated metadata back to Base64
             var updatedMetadataJson = JsonSerializer.Serialize(updatedMetadata, JsonSerializerOptionsProvider.Indented);
@@ -95,7 +96,8 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
 
     private Dictionary<string, object> CreateUpdatedQueryMetadataWithConnections(
         JsonElement currentMetadata,
-        IEnumerable<(Connection Connection, string ConnectionId, string? ClusterId)> connections)
+        IEnumerable<(Connection Connection, string ConnectionId, string? ClusterId)> connections,
+        bool clearExisting = false)
     {
         // Convert the entire JsonElement to a Dictionary for easier manipulation
         var metadataDict = _dataTransformationService.JsonElementToDictionary(currentMetadata);
@@ -106,13 +108,12 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
             metadataDict["documentLocale"] = "en-US";
         }
 
-        // Handle connections array
-        if (!metadataDict.ContainsKey("connections"))
-        {
-            metadataDict["connections"] = new List<object>();
-        }
-
-        var connectionsList = metadataDict["connections"] as List<object> ?? new List<object>();
+        // Handle connections array - start fresh if clearing, otherwise use existing
+        var connectionsList = clearExisting
+            ? new List<object>()
+            : (!metadataDict.ContainsKey("connections")
+                ? new List<object>()
+                : metadataDict["connections"] as List<object> ?? new List<object>());
 
         foreach (var (connection, connectionId, clusterId) in connections)
         {
@@ -166,34 +167,6 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
 
         metadataDict["connections"] = connectionsList;
         return metadataDict;
-    }
-
-    public DataflowDefinition ClearConnectionsFromDefinition(DataflowDefinition definition)
-    {
-        // Find and update the queryMetadata.json part
-        var queryMetadataPart = definition.Parts?.FirstOrDefault(p =>
-            p.Path?.Equals("querymetadata.json", StringComparison.OrdinalIgnoreCase) == true);
-
-        if (queryMetadataPart?.Payload != null)
-        {
-            // Decode current queryMetadata
-            var decodedBytes = Convert.FromBase64String(queryMetadataPart.Payload);
-            var currentMetadataJson = Encoding.UTF8.GetString(decodedBytes);
-
-            using var document = JsonDocument.Parse(currentMetadataJson);
-            var metadata = document.RootElement;
-
-            // Convert to dictionary and clear connections
-            var metadataDict = _dataTransformationService.JsonElementToDictionary(metadata);
-            metadataDict["connections"] = new List<object>();
-
-            // Encode updated metadata back to Base64
-            var updatedMetadataJson = JsonSerializer.Serialize(metadataDict, JsonSerializerOptionsProvider.Indented);
-            var updatedBytes = Encoding.UTF8.GetBytes(updatedMetadataJson);
-            queryMetadataPart.Payload = Convert.ToBase64String(updatedBytes);
-        }
-
-        return definition;
     }
 
     public DataflowDefinition AddOrUpdateQueryInDefinition(

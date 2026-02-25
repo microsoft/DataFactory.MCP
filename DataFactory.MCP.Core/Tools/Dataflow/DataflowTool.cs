@@ -144,27 +144,7 @@ public class DataflowTool
             // Parse connectionIds - can be a single string, an array, or null
             var connectionIdList = connectionIds != null ? ParseConnectionIds(connectionIds) : new List<string>();
 
-            // If clearing with no new connections, just clear all
-            if (clearExisting && connectionIdList.Count == 0)
-            {
-                var clearResult = await _dataflowService.ClearConnectionsFromDataflowAsync(workspaceId, dataflowId);
-
-                var clearResponse = new
-                {
-                    Success = clearResult.Success,
-                    DataflowId = clearResult.DataflowId,
-                    WorkspaceId = clearResult.WorkspaceId,
-                    ConnectionIds = Array.Empty<string>(),
-                    ConnectionCount = 0,
-                    ClearedExisting = true,
-                    Message = clearResult.Success
-                        ? $"Successfully cleared all connections from dataflow {dataflowId}"
-                        : clearResult.ErrorMessage
-                };
-                return clearResponse.ToMcpJson();
-            }
-
-            if (connectionIdList.Count == 0)
+            if (connectionIdList.Count == 0 && !clearExisting)
             {
                 var errorResponse = new
                 {
@@ -174,23 +154,6 @@ public class DataflowTool
                     Message = "At least one connection ID is required when not clearing connections"
                 };
                 return errorResponse.ToMcpJson();
-            }
-
-            // If clearExisting is true and we have new connections, clear first then add
-            if (clearExisting)
-            {
-                var clearResult = await _dataflowService.ClearConnectionsFromDataflowAsync(workspaceId, dataflowId);
-                if (!clearResult.Success)
-                {
-                    var errorResponse = new
-                    {
-                        Success = false,
-                        DataflowId = dataflowId,
-                        WorkspaceId = workspaceId,
-                        Message = $"Failed to clear existing connections: {clearResult.ErrorMessage}"
-                    };
-                    return errorResponse.ToMcpJson();
-                }
             }
 
             // Get connection details for all connection IDs
@@ -223,7 +186,8 @@ public class DataflowTool
                 return errorResponse.ToMcpJson();
             }
 
-            var result = await _dataflowService.AddConnectionsToDataflowAsync(workspaceId, dataflowId, connectionsToAdd);
+            // Single call: clearExisting flag is passed through so clear+add is atomic
+            var result = await _dataflowService.AddConnectionsToDataflowAsync(workspaceId, dataflowId, connectionsToAdd, clearExisting);
 
             var response = new
             {
@@ -234,9 +198,11 @@ public class DataflowTool
                 ConnectionCount = connectionIdList.Count,
                 ClearedExisting = clearExisting,
                 Message = result.Success
-                    ? clearExisting
-                        ? $"Successfully replaced connections with {connectionIdList.Count} new connection(s) in dataflow {dataflowId}"
-                        : $"Successfully added {connectionIdList.Count} connection(s) to dataflow {dataflowId}"
+                    ? clearExisting && connectionIdList.Count == 0
+                        ? $"Successfully cleared all connections from dataflow {dataflowId}"
+                        : clearExisting
+                            ? $"Successfully replaced connections with {connectionIdList.Count} new connection(s) in dataflow {dataflowId}"
+                            : $"Successfully added {connectionIdList.Count} connection(s) to dataflow {dataflowId}"
                     : result.ErrorMessage
             };
 
