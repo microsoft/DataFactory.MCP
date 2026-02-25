@@ -17,7 +17,7 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 - Use `?` null-safe operators in the `_DataDestination` query for new tables (table doesn't exist yet)
 - Add `[AllowCombine = true]` section attribute when combining multiple source types (Lakehouse + SharePoint, etc.)
 - Re-add connections via `add_connection_to_dataflow` after `save_dataflow_definition` (save may wipe them)
-- Add connections one at a time — array format not supported
+- Use `clearExisting: true` to replace all connections atomically instead of manual removal
 - Validate each connection with `execute_query` after adding
 - Use `list_workspaces` and filter by name — there is no `find_workspace` tool
 
