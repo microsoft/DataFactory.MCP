@@ -52,6 +52,8 @@ When a user mentions a data source — by name, type, server, path, or any descr
 
 Users rarely use exact source names. Treat any mention of a data source, database, file location, or storage account as a trigger to call `list_connections` and match.
 
+**Fabric-source connections** (Lakehouse, Warehouse, Eventhouse): All Fabric-native artifact connections require workspace context (workspace ID) to resolve the target. Artifact names are not globally unique — they are scoped to their parent workspace. When listing or creating connections to Fabric sources, always expect/require the workspace ID where the source artifact resides. This applies uniformly across all Fabric item types.
+
 If no matching connection exists, use `create_connection` (or the `create_connection_ui` MCP App) to create one.
 
 ## Connection GUIDs
