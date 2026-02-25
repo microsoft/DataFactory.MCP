@@ -186,7 +186,7 @@ public class DataflowTool
                 return errorResponse.ToMcpJson();
             }
 
-            // Single call: clearExisting flag is passed through so clear+add is atomic
+
             var result = await _dataflowService.AddConnectionsToDataflowAsync(workspaceId, dataflowId, connectionsToAdd, clearExisting);
 
             var response = new
