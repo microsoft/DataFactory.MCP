@@ -50,7 +50,8 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 
 | File | When to Use |
 |------|-------------|
-| `datafactory-core.md` | MCP tools, M basics, first-refresh rule, deprecated tools |
+| `datafactory-core.md` | MCP tools, M basics, connection discovery, rolling dates, what-if queries |
 | `datafactory-destinations.md` | Creating/configuring output destinations, DataDestination patterns, AllowCombine |
 | `datafactory-performance.md` | Query timeouts, chunking, query folding, connector selection |
 | `datafactory-advanced.md` | Fast Copy limits, Action.Sequence, Modern Evaluator |
+| `datafactory-pipelines.md` | Creating pipelines, Dataflow activities, chaining, scheduling |
