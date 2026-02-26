@@ -531,6 +531,9 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
             }
         }
 
+        // set the fastCombine to true
+        metadataDict["fastCombine"] = true;
+
         // Build new queriesMetadata from the parsed queries
         var newQueriesMetadata = new Dictionary<string, object>();
 
