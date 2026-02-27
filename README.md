@@ -14,7 +14,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 - **Connection Management**: List, retrieve, and create Microsoft Fabric connections (cloud, on-premises, and VNet)
 - **Workspace Management**: List and retrieve Microsoft Fabric workspaces
 - **Dataflow Management**: List, create, and retrieve Microsoft Fabric dataflows
-- **Pipeline Management**: List, create, update, and manage Microsoft Fabric pipeline definitions
+- **Pipeline Management**: List, create, update, run, monitor, and schedule Microsoft Fabric pipelines
 - **Capacity Management**: List and retrieve Microsoft Fabric capacities
 - **Microsoft Fabric Integration**: Support for on-premises, personal, and virtual network gateways
 - 📦 **NuGet Distribution**: Available as a NuGet package for easy integration
@@ -30,7 +30,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 - **Dataflow Refresh**: `refresh_dataflow_background`, `refresh_dataflow_status`
 - **Dataflow Query Execution**: `execute_query` *(Preview)*
 - **Capacity Management**: `list_capacities`
-- **Pipeline Management**: `list_pipelines`, `create_pipeline`, `get_pipeline`, `update_pipeline`, `get_pipeline_definition`, `update_pipeline_definition` *(Preview)*
+- **Pipeline Management**: `list_pipelines`, `create_pipeline`, `get_pipeline`, `update_pipeline`, `get_pipeline_definition`, `update_pipeline_definition`, `run_pipeline`, `get_pipeline_run_status`, `create_pipeline_schedule`, `list_pipeline_schedules` *(Preview)*
 
 ## Available Resources
 

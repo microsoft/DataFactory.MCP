@@ -18,6 +18,7 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
     private const string TestWorkspaceId = "349f40ea-ecb0-4fe6-baf4-884b2887b074";
     private const string InvalidWorkspaceId = "invalid-workspace-id";
     private const string InvalidPipelineId = "00000000-0000-0000-0000-000000000001";
+    private const string InvalidJobInstanceId = "00000000-0000-0000-0000-000000000002";
 
     public PipelineToolIntegrationTests(McpTestFixture fixture) : base(fixture)
     {
@@ -259,6 +260,217 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
 
     #endregion
 
+    #region RunPipelineAsync - Unauthenticated
+
+    [Fact]
+    public async Task RunPipelineAsync_WithoutAuthentication_ShouldReturnAuthenticationError()
+    {
+        // Act
+        var result = await _pipelineTool.RunPipelineAsync(TestWorkspaceId, InvalidPipelineId);
+
+        // Assert
+        AssertAuthenticationError(result);
+    }
+
+    [Fact]
+    public async Task RunPipelineAsync_WithEmptyWorkspaceId_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.RunPipelineAsync("", InvalidPipelineId);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("workspaceId"));
+    }
+
+    [Fact]
+    public async Task RunPipelineAsync_WithEmptyPipelineId_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.RunPipelineAsync(TestWorkspaceId, "");
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("pipelineId"));
+    }
+
+    [Fact]
+    public async Task RunPipelineAsync_WithInvalidExecutionDataJson_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.RunPipelineAsync(TestWorkspaceId, InvalidPipelineId, "not-valid-json{");
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, "Invalid executionData JSON format");
+    }
+
+    [Fact]
+    public async Task RunPipelineAsync_WithValidExecutionDataJson_WithoutAuthentication_ShouldReturnAuthenticationError()
+    {
+        // Arrange
+        var executionDataJson = "{\"param1\":\"value1\"}";
+
+        // Act
+        var result = await _pipelineTool.RunPipelineAsync(TestWorkspaceId, InvalidPipelineId, executionDataJson);
+
+        // Assert
+        AssertAuthenticationError(result);
+    }
+
+    #endregion
+
+    #region GetPipelineRunStatusAsync - Unauthenticated
+
+    [Fact]
+    public async Task GetPipelineRunStatusAsync_WithoutAuthentication_ShouldReturnAuthenticationError()
+    {
+        // Act
+        var result = await _pipelineTool.GetPipelineRunStatusAsync(TestWorkspaceId, InvalidPipelineId, InvalidJobInstanceId);
+
+        // Assert
+        AssertAuthenticationError(result);
+    }
+
+    [Fact]
+    public async Task GetPipelineRunStatusAsync_WithEmptyWorkspaceId_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.GetPipelineRunStatusAsync("", InvalidPipelineId, InvalidJobInstanceId);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("workspaceId"));
+    }
+
+    [Fact]
+    public async Task GetPipelineRunStatusAsync_WithEmptyPipelineId_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.GetPipelineRunStatusAsync(TestWorkspaceId, "", InvalidJobInstanceId);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("pipelineId"));
+    }
+
+    [Fact]
+    public async Task GetPipelineRunStatusAsync_WithEmptyJobInstanceId_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.GetPipelineRunStatusAsync(TestWorkspaceId, InvalidPipelineId, "");
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("jobInstanceId"));
+    }
+
+    #endregion
+
+    #region CreatePipelineScheduleAsync - Unauthenticated
+
+    [Fact]
+    public async Task CreatePipelineScheduleAsync_WithoutAuthentication_ShouldReturnAuthenticationError()
+    {
+        // Arrange
+        var configJson = "{\"type\":\"Cron\",\"startDateTime\":\"2024-04-28T00:00:00\",\"endDateTime\":\"2024-04-30T23:59:00\",\"localTimeZoneId\":\"Central Standard Time\",\"interval\":10}";
+
+        // Act
+        var result = await _pipelineTool.CreatePipelineScheduleAsync(TestWorkspaceId, InvalidPipelineId, true, configJson);
+
+        // Assert
+        AssertAuthenticationError(result);
+    }
+
+    [Fact]
+    public async Task CreatePipelineScheduleAsync_WithEmptyWorkspaceId_ShouldReturnValidationError()
+    {
+        // Arrange
+        var configJson = "{\"type\":\"Cron\",\"interval\":10}";
+
+        // Act
+        var result = await _pipelineTool.CreatePipelineScheduleAsync("", InvalidPipelineId, true, configJson);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("workspaceId"));
+    }
+
+    [Fact]
+    public async Task CreatePipelineScheduleAsync_WithEmptyPipelineId_ShouldReturnValidationError()
+    {
+        // Arrange
+        var configJson = "{\"type\":\"Cron\",\"interval\":10}";
+
+        // Act
+        var result = await _pipelineTool.CreatePipelineScheduleAsync(TestWorkspaceId, "", true, configJson);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("pipelineId"));
+    }
+
+    [Fact]
+    public async Task CreatePipelineScheduleAsync_WithEmptyConfigurationJson_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.CreatePipelineScheduleAsync(TestWorkspaceId, InvalidPipelineId, true, "");
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("configurationJson"));
+    }
+
+    [Fact]
+    public async Task CreatePipelineScheduleAsync_WithInvalidConfigurationJson_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.CreatePipelineScheduleAsync(TestWorkspaceId, InvalidPipelineId, true, "not-valid-json{");
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, "Invalid configuration JSON format");
+    }
+
+    #endregion
+
+    #region ListPipelineSchedulesAsync - Unauthenticated
+
+    [Fact]
+    public async Task ListPipelineSchedulesAsync_WithoutAuthentication_ShouldReturnAuthenticationError()
+    {
+        // Act
+        var result = await _pipelineTool.ListPipelineSchedulesAsync(TestWorkspaceId, InvalidPipelineId);
+
+        // Assert
+        AssertAuthenticationError(result);
+    }
+
+    [Fact]
+    public async Task ListPipelineSchedulesAsync_WithContinuationToken_WithoutAuthentication_ShouldReturnAuthenticationError()
+    {
+        // Arrange
+        var testToken = "test-continuation-token";
+
+        // Act
+        var result = await _pipelineTool.ListPipelineSchedulesAsync(TestWorkspaceId, InvalidPipelineId, testToken);
+
+        // Assert
+        AssertAuthenticationError(result);
+    }
+
+    [Fact]
+    public async Task ListPipelineSchedulesAsync_WithEmptyWorkspaceId_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.ListPipelineSchedulesAsync("", InvalidPipelineId);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("workspaceId"));
+    }
+
+    [Fact]
+    public async Task ListPipelineSchedulesAsync_WithEmptyPipelineId_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.ListPipelineSchedulesAsync(TestWorkspaceId, "");
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("pipelineId"));
+    }
+
+    #endregion
+
     #region Authenticated Scenarios
 
     [SkippableFact]
@@ -310,6 +522,73 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
         AssertNoAuthenticationError(result);
     }
 
+    [SkippableFact]
+    public async Task RunPipelineAsync_WithAuthentication_NonExistentPipeline_ShouldReturnError()
+    {
+        // Arrange
+        var isAuthenticated = await TryAuthenticateAsync();
+        Skip.IfNot(isAuthenticated, "Skipping authenticated test - no valid credentials available");
+
+        // Act
+        var result = await _pipelineTool.RunPipelineAsync(TestWorkspaceId, InvalidPipelineId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+
+        SkipIfUpstreamBlocked(result);
+        AssertNoAuthenticationError(result);
+    }
+
+    [SkippableFact]
+    public async Task GetPipelineRunStatusAsync_WithAuthentication_NonExistentJobInstance_ShouldReturnError()
+    {
+        // Arrange
+        var isAuthenticated = await TryAuthenticateAsync();
+        Skip.IfNot(isAuthenticated, "Skipping authenticated test - no valid credentials available");
+
+        // Act
+        var result = await _pipelineTool.GetPipelineRunStatusAsync(TestWorkspaceId, InvalidPipelineId, InvalidJobInstanceId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+
+        SkipIfUpstreamBlocked(result);
+        AssertNoAuthenticationError(result);
+    }
+
+    [SkippableFact]
+    public async Task ListPipelineSchedulesAsync_WithAuthentication_ShouldReturnResultOrApiError()
+    {
+        // Arrange
+        var isAuthenticated = await TryAuthenticateAsync();
+        Skip.IfNot(isAuthenticated, "Skipping authenticated test - no valid credentials available");
+
+        // Act
+        var result = await _pipelineTool.ListPipelineSchedulesAsync(TestWorkspaceId, InvalidPipelineId);
+
+        // Assert
+        AssertScheduleListResult(result);
+    }
+
+    [SkippableFact]
+    public async Task ListPipelineSchedulesAsync_WithInvalidWorkspaceId_ShouldReturnApiError()
+    {
+        // Arrange
+        var isAuthenticated = await TryAuthenticateAsync();
+        Skip.IfNot(isAuthenticated, "Skipping authenticated test - no valid credentials available");
+
+        // Act
+        var result = await _pipelineTool.ListPipelineSchedulesAsync(InvalidWorkspaceId, InvalidPipelineId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+        AssertNoAuthenticationError(result);
+        Assert.Contains("workspaceId must be a valid GUID", result);
+    }
+
     #endregion
 
     #region Helper Methods
@@ -346,6 +625,42 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
             Assert.True(root.TryGetProperty("workspaceId", out _), "JSON response should have workspaceId property");
             Assert.True(root.TryGetProperty("pipelineCount", out _), "JSON response should have pipelineCount property");
             Assert.True(root.TryGetProperty("pipelines", out _), "JSON response should have pipelines property");
+        }
+    }
+
+    private static void AssertScheduleListResult(string result)
+    {
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+
+        // Skip if upstream service is blocking requests
+        SkipIfUpstreamBlocked(result);
+
+        AssertNoAuthenticationError(result);
+
+        // Should either be "No schedules found" or valid JSON
+        if (result.Contains("No schedules found"))
+        {
+            Assert.Contains("No schedules found", result);
+            return;
+        }
+
+        if (result.Contains("HttpRequestError"))
+        {
+            McpResponseAssertHelper.AssertHttpError(result);
+            return;
+        }
+
+        // If it's JSON, verify basic structure
+        if (IsValidJson(result))
+        {
+            var jsonDoc = JsonDocument.Parse(result);
+            var root = jsonDoc.RootElement;
+
+            Assert.True(root.TryGetProperty("pipelineId", out _), "JSON response should have pipelineId property");
+            Assert.True(root.TryGetProperty("workspaceId", out _), "JSON response should have workspaceId property");
+            Assert.True(root.TryGetProperty("scheduleCount", out _), "JSON response should have scheduleCount property");
+            Assert.True(root.TryGetProperty("schedules", out _), "JSON response should have schedules property");
         }
     }
 
