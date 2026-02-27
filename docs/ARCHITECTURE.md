@@ -58,6 +58,10 @@ The Microsoft Data Factory MCP Server is a .NET-based application that implement
 │  │  │  Dataflow    │ │DataflowQuery │ │  Capacity    │ │ AzureRes   │  │   │
 │  │  │    Tool      │ │ Tool (flag)  │ │    Tool      │ │ Discovery  │  │   │
 │  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘  │   │
+│  │  ┌──────────────┐ ┌──────────────┐                                  │   │
+│  │  │  Pipeline    │ │  CopyJob     │                                  │   │
+│  │  │ Tool (flag)  │ │ Tool (flag)  │                                  │   │
+│  │  └──────────────┘ └──────────────┘                                  │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                    │                                        │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
@@ -74,6 +78,10 @@ The Microsoft Data Factory MCP Server is a .NET-based application that implement
 │  │  │ ArrowData    │ │DataTransform │ │DataflowDef   │ │GatewayClus-│  │   │
 │  │  │ReaderService │ │   Service    │ │  Processor   │ │terDatasrc  │  │   │
 │  │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘  │   │
+│  │  ┌──────────────┐ ┌──────────────┐                                  │   │
+│  │  │FabricPipeline│ │FabricCopyJob │                                  │   │
+│  │  │   Service    │ │   Service    │                                  │   │
+│  │  └──────────────┘ └──────────────┘                                  │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                    │                                        │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
@@ -102,7 +110,9 @@ The Microsoft Data Factory MCP Server is a .NET-based application that implement
 │  │  │ IFabricWorkspaceSvc│  │  │  │Response Ext  │ │MQuery Ext    │   │    │
 │  │  │ IFabricDataflowSvc │  │  │  │Json Ext      │ │HttpResponse  │   │    │
 │  │  │ IFabricCapacitySvc │  │  │  └──────────────┘ └──────────────┘   │    │
-│  │  │ IValidationService │  │  └──────────────────────────────────────┘    │                                              │
+│  │  │ IFabricPipelineSvc │  │  └──────────────────────────────────────┘    │                                              │
+│  │  │ IFabricCopyJobSvc  │  │                                              │
+│  │  │ IValidationService │  │                                              │
 │  │  │ IArrowDataReader   │  │                                              │
 │  │  │ IDataTransformSvc  │  │                                              │
 │  │  │ IDataflowDefProc   │  │                                              │
@@ -123,6 +133,8 @@ The Microsoft Data Factory MCP Server is a .NET-based application that implement
 │                       │  • Workspaces         │                              │
 │                       │  • Dataflows          │                              │
 │                       │  • Capacities         │                              │
+│                       │  • Pipelines          │                              │
+│                       │  • Copy Jobs          │                              │
 │                       └─────────────────────┘                               │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │                    Power BI API (v2.0)                               │   │
@@ -247,6 +259,30 @@ MCP Tools are the public interface that AI assistants interact with. Each tool i
 
 #### CapacityTool
 - `ListCapacitiesAsync()`: List Fabric capacities user has access to
+
+#### PipelineTool (Feature Flag: `--pipeline`)
+- `ListPipelinesAsync()`: List pipelines in a workspace with optional pagination
+- `CreatePipelineAsync()`: Create a new pipeline
+- `GetPipelineAsync()`: Get pipeline metadata by ID
+- `UpdatePipelineAsync()`: Update pipeline metadata (displayName, description)
+- `GetPipelineDefinitionAsync()`: Get pipeline definition with decoded base64 content
+- `UpdatePipelineDefinitionAsync()`: Update pipeline definition with JSON content
+- `RunPipelineAsync()`: Run a pipeline on demand
+- `GetPipelineRunStatusAsync()`: Get status of a pipeline run by job instance ID
+- `CreatePipelineScheduleAsync()`: Create a schedule for a pipeline
+- `ListPipelineSchedulesAsync()`: List schedules configured for a pipeline
+
+#### CopyJobTool (Feature Flag: `--copy-job`)
+- `ListCopyJobsAsync()`: List copy jobs in a workspace with optional pagination
+- `CreateCopyJobAsync()`: Create a new copy job
+- `GetCopyJobAsync()`: Get copy job metadata by ID
+- `UpdateCopyJobAsync()`: Update copy job metadata (displayName, description)
+- `GetCopyJobDefinitionAsync()`: Get copy job definition with decoded base64 content
+- `UpdateCopyJobDefinitionAsync()`: Update copy job definition with JSON content
+- `RunCopyJobAsync()`: Run a copy job on demand
+- `GetCopyJobRunStatusAsync()`: Get status of a copy job run by job instance ID
+- `CreateCopyJobScheduleAsync()`: Create a schedule for a copy job
+- `ListCopyJobSchedulesAsync()`: List schedules configured for a copy job
 
 ### 2a. MCP App Resources Layer
 
@@ -673,6 +709,8 @@ Named HTTP client constants:
 #### FeatureFlags
 Feature flag constants for conditional tool registration:
 - `DataflowQuery`: Enable/disable DataflowQueryTool (`--dataflow-query`)
+- `Pipeline`: Enable/disable PipelineTool (`--pipeline`)
+- `CopyJob`: Enable/disable CopyJobTool (`--copy-job`)
 
 #### FeatureFlagRegistration
 Extension methods for registering tools based on feature flags:

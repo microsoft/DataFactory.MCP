@@ -11,6 +11,7 @@ Comprehensive documentation for the Microsoft Data Factory MCP Server.
 - **[Workspace Management Guide](workspace-management.md)** - Managing Microsoft Fabric workspaces
 - **[Dataflow Management Guide](dataflow-management.md)** - Managing Microsoft Fabric dataflows
 - **[Pipeline Management Guide](pipeline-management.md)** - Managing Microsoft Fabric pipelines
+- **[Copy Job Management Guide](copyjob-management.md)** - Managing Microsoft Fabric copy jobs
 
 ## Technical Documentation
 
