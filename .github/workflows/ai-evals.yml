@@ -1,7 +1,7 @@
 # AI Eval Workflow
 # Runs on PRs that touch eval files, skill files, or tool code.
 # - Parse check: always runs (no API key needed)
-# - LLM evals: run when OPENAI_API_KEY secret is available
+# - LLM evals: run when EVAL_AZURE_OPENAI_API_KEY secret is available
 
 name: AI Evals
 permissions:
@@ -23,9 +23,26 @@ concurrency:
 
 env:
   PYTHON_VERSION: '3.12'
-  EVAL_MODEL: 'gpt-4o'
+  EVAL_MODEL: ${{ secrets.EVAL_AZURE_OPENAI_MODEL || 'gpt-4o' }}
 
 jobs:
+  # -------------------------------------------------------------------
+  # Check if API key secret is available (secrets can't be used in if:)
+  # -------------------------------------------------------------------
+  check-secrets:
+    name: 🔑 Check secrets
+    runs-on: ubuntu-latest
+    outputs:
+      has-key: ${{ steps.check.outputs.has-key }}
+    steps:
+      - id: check
+        env:
+          KEY: ${{ secrets.EVAL_AZURE_OPENAI_API_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then
+            echo "has-key=true" >> "$GITHUB_OUTPUT"
+          fi
+
   # -------------------------------------------------------------------
   # Parse check — validates eval files are well-formed (no API key)
   # -------------------------------------------------------------------
@@ -51,10 +68,11 @@ jobs:
   tool-selection-evals:
     name: 🎯 Tool selection evals
     runs-on: ubuntu-latest
-    needs: parse-check
-    if: ${{ secrets.OPENAI_API_KEY != '' }}
+    needs: [parse-check, check-secrets]
+    if: needs.check-secrets.outputs.has-key == 'true'
     env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.EVAL_AZURE_OPENAI_API_KEY }}
+      EVAL_BASE_URL: ${{ secrets.EVAL_AZURE_OPENAI_ENDPOINT }}
 
     steps:
       - uses: actions/checkout@v4
@@ -64,7 +82,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Run tool-selection evals
-        run: python evals/run_evals.py --model ${{ env.EVAL_MODEL }} --output tool_selection_results.json --delay 0.5
+        run: python evals/run_evals.py --model ${{ env.EVAL_MODEL }} --base-url ${{ secrets.EVAL_AZURE_OPENAI_ENDPOINT }} --output tool_selection_results.json --delay 0.5
 
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -79,10 +97,11 @@ jobs:
   integration-evals:
     name: 🔬 Integration evals
     runs-on: ubuntu-latest
-    needs: parse-check
-    if: ${{ secrets.OPENAI_API_KEY != '' }}
+    needs: [parse-check, check-secrets]
+    if: needs.check-secrets.outputs.has-key == 'true'
     env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.EVAL_AZURE_OPENAI_API_KEY }}
+      EVAL_BASE_URL: ${{ secrets.EVAL_AZURE_OPENAI_ENDPOINT }}
 
     steps:
       - uses: actions/checkout@v4
@@ -92,7 +111,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Run integration evals
-        run: python evals/integration/run_integration_evals.py --model ${{ env.EVAL_MODEL }} --output integration_eval_results.json --delay 1.0
+        run: python evals/integration/run_integration_evals.py --model ${{ env.EVAL_MODEL }} --base-url ${{ secrets.EVAL_AZURE_OPENAI_ENDPOINT }} --output integration_eval_results.json --delay 1.0
 
       - name: Upload results
         uses: actions/upload-artifact@v4
