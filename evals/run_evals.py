@@ -161,6 +161,20 @@ def _extract_expected_tools(block: str) -> list[ExpectedToolCall]:
 # LLM caller
 # ---------------------------------------------------------------------------
 
+def _is_azure_openai(base_url: str) -> bool:
+    """Check if the base URL points to an Azure OpenAI endpoint."""
+    return "openai.azure.com" in base_url
+
+
+def _build_azure_url(base_url: str, model: str) -> str:
+    """Build the Azure OpenAI chat completions URL."""
+    base = base_url.rstrip("/")
+    # If the URL already contains /openai/deployments, use it as-is
+    if "/openai/deployments/" in base:
+        return f"{base}/chat/completions?api-version=2024-10-21"
+    return f"{base}/openai/deployments/{model}/chat/completions?api-version=2024-10-21"
+
+
 def call_llm(
     prompt: str,
     tools: list[dict],
@@ -197,13 +211,25 @@ def call_llm(
         "temperature": 0,
     }
 
-    req = urllib.request.Request(
-        f"{base_url}/chat/completions",
-        data=json.dumps(body).encode(),
-        headers={
+    is_azure = _is_azure_openai(base_url)
+
+    if is_azure:
+        url = _build_azure_url(base_url, model)
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": api_key,
+        }
+    else:
+        url = f"{base_url}/chat/completions"
+        headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}",
-        },
+        }
+
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode(),
+        headers=headers,
     )
 
     try:
