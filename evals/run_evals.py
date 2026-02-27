@@ -161,6 +161,20 @@ def _extract_expected_tools(block: str) -> list[ExpectedToolCall]:
 # LLM caller
 # ---------------------------------------------------------------------------
 
+def _is_azure_openai(base_url: str) -> bool:
+    """Check if the base URL points to an Azure OpenAI endpoint."""
+    return "openai.azure.com" in base_url
+
+
+def _build_azure_url(base_url: str, model: str) -> str:
+    """Build the Azure OpenAI chat completions URL."""
+    base = base_url.rstrip("/")
+    # If the URL already contains /openai/deployments, use it as-is
+    if "/openai/deployments/" in base:
+        return f"{base}/chat/completions?api-version=2024-10-21"
+    return f"{base}/openai/deployments/{model}/chat/completions?api-version=2024-10-21"
+
+
 def call_llm(
     prompt: str,
     tools: list[dict],
@@ -197,13 +211,25 @@ def call_llm(
         "temperature": 0,
     }
 
-    req = urllib.request.Request(
-        f"{base_url}/chat/completions",
-        data=json.dumps(body).encode(),
-        headers={
+    is_azure = _is_azure_openai(base_url)
+
+    if is_azure:
+        url = _build_azure_url(base_url, model)
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": api_key,
+        }
+    else:
+        url = f"{base_url}/chat/completions"
+        headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}",
-        },
+        }
+
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode(),
+        headers=headers,
     )
 
     try:
@@ -317,7 +343,8 @@ def print_result(scenario: EvalScenario):
         print(f"         Tools called: {names}")
 
 
-def print_summary(scenarios: list[EvalScenario]):
+def print_summary(scenarios: list[EvalScenario]) -> float:
+    """Print summary and return the score as a percentage (0-100)."""
     total = len(scenarios)
     counts = {"pass": 0, "partial": 0, "fail": 0, "skip": 0, "error": 0}
     for s in scenarios:
@@ -334,9 +361,12 @@ def print_summary(scenarios: list[EvalScenario]):
     print(f"  💥 Error:   {counts['error']}")
 
     scored = counts["pass"] + counts["partial"] + counts["fail"]
+    score = 0.0
     if scored > 0:
         score = (counts["pass"] + 0.5 * counts["partial"]) / scored * 100
         print(f"\n  Score: {score:.1f}% ({scored} scored)")
+    elif counts["error"] > 0:
+        print(f"\n  Score: N/A (all {counts['error']} scenarios errored)")
     print("=" * 60)
 
     # Per-file breakdown
@@ -347,6 +377,8 @@ def print_summary(scenarios: list[EvalScenario]):
         p = sum(1 for s in file_scenarios if s.result == "pass")
         t = len(file_scenarios)
         print(f"  {f}: {p}/{t} pass")
+
+    return score
 
 
 def save_results(scenarios: list[EvalScenario], output_path: Path):
@@ -384,6 +416,8 @@ def main():
     parser.add_argument("--base-url", default=os.environ.get("EVAL_BASE_URL", "https://api.openai.com/v1"))
     parser.add_argument("--output", default="eval_results.json", help="Output file for results")
     parser.add_argument("--delay", type=float, default=1.0, help="Delay between API calls (seconds)")
+    parser.add_argument("--fail-under", type=float, default=0.0,
+                        help="Exit non-zero if score is below this percentage (default: 0 = always pass)")
     args = parser.parse_args()
 
     evals_dir = Path(__file__).parent
@@ -474,8 +508,19 @@ def main():
             time.sleep(args.delay)
 
     # Report
-    print_summary(all_scenarios)
+    score = print_summary(all_scenarios)
     save_results(all_scenarios, Path(args.output))
+
+    # Exit non-zero if all scenarios errored
+    error_count = sum(1 for s in all_scenarios if s.result == "error")
+    if error_count == len(all_scenarios):
+        print(f"\nFAILED: All {error_count} scenarios errored.", file=sys.stderr)
+        sys.exit(1)
+
+    # Exit non-zero if score is below threshold
+    if args.fail_under > 0 and score < args.fail_under:
+        print(f"\nFAILED: Score {score:.1f}% is below --fail-under {args.fail_under}%", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -30,7 +30,7 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.12"
-  EVAL_MODEL: ${{ secrets.EVAL_AZURE_OPENAI_MODEL || 'gpt-4o' }}
+  EVAL_MODEL: ${{ vars.EVAL_AZURE_OPENAI_MODEL || 'gpt-4o' }}
 
 jobs:
   # -------------------------------------------------------------------
@@ -93,7 +93,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Run tool-selection evals
-        run: python evals/run_evals.py --model ${{ env.EVAL_MODEL }} --base-url ${{ secrets.EVAL_AZURE_OPENAI_ENDPOINT }} --output tool_selection_results.json --delay 0.5
+        run: python evals/run_evals.py --model ${{ env.EVAL_MODEL }} --base-url ${{ secrets.EVAL_AZURE_OPENAI_ENDPOINT }} --output tool_selection_results.json --delay 0.5 --fail-under 50
 
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -124,7 +124,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Run integration evals
-        run: python evals/integration/run_integration_evals.py --model ${{ env.EVAL_MODEL }} --base-url ${{ secrets.EVAL_AZURE_OPENAI_ENDPOINT }} --output integration_eval_results.json --delay 1.0
+        run: python evals/integration/run_integration_evals.py --model ${{ env.EVAL_MODEL }} --base-url ${{ secrets.EVAL_AZURE_OPENAI_ENDPOINT }} --output integration_eval_results.json --delay 1.0 --fail-under 50
 
       - name: Upload results
         uses: actions/upload-artifact@v4

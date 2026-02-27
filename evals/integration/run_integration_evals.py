@@ -329,6 +329,19 @@ def _match_rule(description: str) -> Optional[ValidationRule]:
 # LLM caller
 # ---------------------------------------------------------------------------
 
+def _is_azure_openai(base_url: str) -> bool:
+    """Check if the base URL points to an Azure OpenAI endpoint."""
+    return "openai.azure.com" in base_url
+
+
+def _build_azure_url(base_url: str, model: str) -> str:
+    """Build the Azure OpenAI chat completions URL."""
+    base = base_url.rstrip("/")
+    if "/openai/deployments/" in base:
+        return f"{base}/chat/completions?api-version=2024-10-21"
+    return f"{base}/openai/deployments/{model}/chat/completions?api-version=2024-10-21"
+
+
 def call_llm(
     prompt: str,
     system_prompt: str,
@@ -348,13 +361,25 @@ def call_llm(
         "max_tokens": 4096,
     }
 
-    req = urllib.request.Request(
-        f"{base_url}/chat/completions",
-        data=json.dumps(body).encode(),
-        headers={
+    is_azure = _is_azure_openai(base_url)
+
+    if is_azure:
+        url = _build_azure_url(base_url, model)
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": api_key,
+        }
+    else:
+        url = f"{base_url}/chat/completions"
+        headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}",
-        },
+        }
+
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode(),
+        headers=headers,
     )
 
     try:
@@ -437,7 +462,8 @@ def _pct(passed: list, failed: list) -> float:
     return (len(passed) / total * 100) if total > 0 else 0
 
 
-def print_summary(scenarios: list[IntegrationScenario]):
+def print_summary(scenarios: list[IntegrationScenario]) -> float:
+    """Print summary and return the skills score as a percentage (0-100)."""
     print("\n" + "=" * 70)
     print("INTEGRATION EVAL SUMMARY")
     print("=" * 70)
@@ -450,14 +476,15 @@ def print_summary(scenarios: list[IntegrationScenario]):
     b_total = b_total_pass + b_total_fail
     s_total = s_total_pass + s_total_fail
 
+    skills_pct = 0.0
     if b_total > 0:
         print(f"\n  Baseline (no skills):   {b_total_pass}/{b_total} rules passed ({b_total_pass/b_total*100:.1f}%)")
     if s_total > 0:
-        print(f"  With skills:            {s_total_pass}/{s_total} rules passed ({s_total_pass/s_total*100:.1f}%)")
+        skills_pct = s_total_pass / s_total * 100
+        print(f"  With skills:            {s_total_pass}/{s_total} rules passed ({skills_pct:.1f}%)")
     if b_total > 0 and s_total > 0:
         b_pct = b_total_pass / b_total * 100
-        s_pct = s_total_pass / s_total * 100
-        delta = s_pct - b_pct
+        delta = skills_pct - b_pct
         color = "\033[92m" if delta > 0 else "\033[91m" if delta < 0 else "\033[90m"
         print(f"  Skill ROI (delta):      {color}{delta:+.1f}%\033[0m")
 
@@ -475,6 +502,8 @@ def print_summary(scenarios: list[IntegrationScenario]):
         print(f"  {cat:20s}  baseline: {b:8s}  skills: {s}")
 
     print("=" * 70)
+
+    return skills_pct
 
 
 def save_results(scenarios: list[IntegrationScenario], output_path: Path):
@@ -518,6 +547,8 @@ def main():
     parser.add_argument("--base-url", default=os.environ.get("EVAL_BASE_URL", "https://api.openai.com/v1"))
     parser.add_argument("--output", default="integration_eval_results.json")
     parser.add_argument("--delay", type=float, default=1.0)
+    parser.add_argument("--fail-under", type=float, default=0.0,
+                        help="Exit non-zero if skills score is below this percentage (default: 0 = always pass)")
     args = parser.parse_args()
 
     evals_dir = Path(__file__).parent
@@ -598,8 +629,20 @@ def main():
 
         print_scenario_result(scenario)
 
-    print_summary(all_scenarios)
+    score = print_summary(all_scenarios)
     save_results(all_scenarios, Path(args.output))
+
+    # Exit non-zero if all outputs are errors
+    error_count = sum(1 for s in all_scenarios
+                      if s.skills_output.startswith("[ERROR]") or s.baseline_output.startswith("[ERROR]"))
+    if error_count == len(all_scenarios):
+        print(f"\nFAILED: All {error_count} scenarios errored.", file=sys.stderr)
+        sys.exit(1)
+
+    # Exit non-zero if score is below threshold
+    if args.fail_under > 0 and score < args.fail_under:
+        print(f"\nFAILED: Score {score:.1f}% is below --fail-under {args.fail_under}%", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
