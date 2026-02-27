@@ -13,6 +13,7 @@ using DataFactory.MCP.Services.DMTSv2;
 using DataFactory.MCP.Services.Notifications;
 using DataFactory.MCP.Tools;
 using DataFactory.MCP.Tools.Dataflow;
+using DataFactory.MCP.Tools.CopyJob;
 using DataFactory.MCP.Tools.Pipeline;
 
 namespace DataFactory.MCP.Tests.Infrastructure;
@@ -86,6 +87,7 @@ public class McpTestFixture : IDisposable
                 services.AddScoped<IFabricDataflowService, FabricDataflowService>();
                 services.AddScoped<IFabricCapacityService, FabricCapacityService>();
                 services.AddScoped<IFabricPipelineService, FabricPipelineService>();
+                services.AddScoped<IFabricCopyJobService, FabricCopyJobService>();
 
                 // Register background task services
                 services.AddSingleton<IMcpSessionAccessor, McpSessionAccessor>();
@@ -105,6 +107,7 @@ public class McpTestFixture : IDisposable
                 services.AddScoped<DataflowQueryTool>();
                 services.AddScoped<DataflowDefinitionTool>();
                 services.AddScoped<PipelineTool>();
+                services.AddScoped<CopyJobTool>();
             })
             .Build();
 

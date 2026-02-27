@@ -30,4 +30,10 @@ public static class FeatureFlags
     /// Command line: --pipeline
     /// </summary>
     public const string Pipeline = "pipeline";
+
+    /// <summary>
+    /// Feature flag for enabling the CopyJobTool
+    /// Command line: --copy-job
+    /// </summary>
+    public const string CopyJob = "copy-job";
 }
