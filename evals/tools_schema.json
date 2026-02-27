@@ -1,0 +1,464 @@
+{
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "AuthenticateServicePrincipalAsync",
+        "description": "Authenticate with Azure AD using service principal and client secret",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "applicationId": { "type": "string", "description": "The application (client) ID of the service principal" },
+            "clientSecret": { "type": "string", "description": "The client secret for the service principal" },
+            "tenantId": { "type": "string", "description": "The Azure AD tenant ID (optional)", "nullable": true }
+          },
+          "required": ["applicationId", "clientSecret"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "AuthenticateInteractiveAsync",
+        "description": "Authenticate with Azure AD using interactive login",
+        "parameters": { "type": "object", "properties": {}, "required": [] }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "StartDeviceCodeAuthAsync",
+        "description": "Start device code authentication - returns device code and URL immediately for user action",
+        "parameters": { "type": "object", "properties": {}, "required": [] }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "CheckDeviceAuthStatusAsync",
+        "description": "Check the status of pending device code authentication",
+        "parameters": { "type": "object", "properties": {}, "required": [] }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GetAuthenticationStatus",
+        "description": "Get current authentication status and profile information",
+        "parameters": { "type": "object", "properties": {}, "required": [] }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "SignOutAsync",
+        "description": "Clear current authentication and sign out",
+        "parameters": { "type": "object", "properties": {}, "required": [] }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GetAccessTokenAsync",
+        "description": "Get current access token for authenticated user",
+        "parameters": { "type": "object", "properties": {}, "required": [] }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ListWorkspacesAsync",
+        "description": "Lists all workspaces the user has permission for. Returns workspaces filtered by the specified roles if provided.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "roles": { "type": "string", "description": "A list of roles. Separate values using a comma (e.g., 'Admin,Member,Contributor,Viewer'). If not provided, all workspaces are returned.", "nullable": true },
+            "continuationToken": { "type": "string", "description": "A token for retrieving the next page of results (optional)", "nullable": true },
+            "preferWorkspaceSpecificEndpoints": { "type": "boolean", "description": "Include workspace-specific API endpoints in the response (true/false, optional)", "nullable": true }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ListCapacitiesAsync",
+        "description": "Lists all capacities the user has permission for (either administrator or contributor)",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "continuationToken": { "type": "string", "description": "A token for retrieving the next page of results (optional)", "nullable": true }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ListSupportedConnectionTypesAsync",
+        "description": "Lists supported connection types with their creation methods, parameters, and supported credential types. Used to populate the Create Connection form.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "gatewayId": { "type": "string", "description": "Optional gateway ID to filter supported types for a specific gateway", "nullable": true }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ListConnectionsAsync",
+        "description": "Lists all connections the user has permission for, including on-premises, virtual network and cloud connections",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "continuationToken": { "type": "string", "description": "A token for retrieving the next page of results (optional)", "nullable": true }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GetConnectionAsync",
+        "description": "Gets details about a specific connection by its ID",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "connectionId": { "type": "string", "description": "The ID of the connection to retrieve" }
+          },
+          "required": ["connectionId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "CreateConnectionAsync",
+        "description": "Creates a new data source connection. Supports cloud, on-premises (gateway), and virtual network connectivity types.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "connectionName": { "type": "string", "description": "Display name for the connection" },
+            "connectionType": { "type": "string", "description": "Connection type identifier, e.g. 'SQL', 'Web', 'AzureBlobs', etc.", "default": "SQL" },
+            "creationMethod": { "type": "string", "description": "Creation method name from ListSupportedConnectionTypes. Defaults to connectionType if not specified.", "nullable": true },
+            "connectionParameters": { "type": "string", "description": "Connection parameters as JSON string of name:value pairs, e.g. '{\"server\":\"myserver.com\",\"database\":\"mydb\"}'", "nullable": true },
+            "credentialType": { "type": "string", "description": "Credential type: Anonymous, Basic, Windows, OAuth2, Key, SharedAccessSignature, ServicePrincipal, WorkspaceIdentity, KeyPair", "default": "Anonymous" },
+            "credentials": { "type": "string", "description": "Credentials as JSON name-value pairs matching the credentialType", "nullable": true },
+            "privacyLevel": { "type": "string", "description": "Privacy level: None, Organizational, Public, or Private", "default": "None" },
+            "connectionEncryption": { "type": "string", "description": "Connection encryption: NotEncrypted, Encrypted, or Any", "default": "NotEncrypted" },
+            "skipTestConnection": { "type": "boolean", "description": "Whether to skip test connection", "default": false },
+            "connectivityType": { "type": "string", "description": "Connectivity type: ShareableCloud, OnPremisesGateway, or VirtualNetworkGateway", "default": "ShareableCloud" },
+            "gatewayId": { "type": "string", "description": "Gateway ID (required for OnPremisesGateway and VirtualNetworkGateway types)", "nullable": true }
+          },
+          "required": ["connectionName"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "create_connection_ui",
+        "description": "Shows a form for creating a new data source connection. Use this when the user wants to add a new connection to a data source.",
+        "parameters": { "type": "object", "properties": {}, "required": [] }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ListGatewaysAsync",
+        "description": "Lists all gateways the user has permission for, including on-premises, on-premises (personal mode), and virtual network gateways",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "continuationToken": { "type": "string", "description": "A token for retrieving the next page of results (optional)", "nullable": true }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GetGatewayAsync",
+        "description": "Gets details about a specific gateway by its ID",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "gatewayId": { "type": "string", "description": "The ID of the gateway to retrieve" }
+          },
+          "required": ["gatewayId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "create_virtualnetwork_gateway",
+        "description": "Creates a new virtual network gateway in Microsoft Fabric",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "displayName": { "type": "string", "description": "Display name for the gateway" },
+            "capacityId": { "type": "string", "description": "The capacity ID where the gateway will be created" },
+            "subscriptionId": { "type": "string", "description": "Azure subscription ID containing the virtual network" },
+            "resourceGroupName": { "type": "string", "description": "Azure resource group name containing the virtual network" },
+            "virtualNetworkName": { "type": "string", "description": "Name of the virtual network" },
+            "subnetName": { "type": "string", "description": "Name of the subnet within the virtual network" },
+            "inactivityMinutesBeforeSleep": { "type": "integer", "description": "Number of minutes of inactivity before the gateway goes to sleep. Valid values: 30, 60, 90, 120, 150, 240, 360, 480, 720, 1440", "default": 120 },
+            "numberOfMemberGateways": { "type": "integer", "description": "Number of member gateways", "default": 1 }
+          },
+          "required": ["displayName", "capacityId", "subscriptionId", "resourceGroupName", "virtualNetworkName", "subnetName"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ListDataflowsAsync",
+        "description": "Returns a list of Dataflows from the specified workspace. This API supports pagination.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID to list dataflows from (required)" },
+            "continuationToken": { "type": "string", "description": "A token for retrieving the next page of results (optional)", "nullable": true }
+          },
+          "required": ["workspaceId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "CreateDataflowAsync",
+        "description": "Creates a Dataflow in the specified workspace. The workspace must be on a supported Fabric capacity.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID where the dataflow will be created (required)" },
+            "displayName": { "type": "string", "description": "The Dataflow display name (required)" },
+            "description": { "type": "string", "description": "The Dataflow description (optional, max 256 characters)", "nullable": true },
+            "folderId": { "type": "string", "description": "The folder ID where the dataflow will be created (optional, defaults to workspace root)", "nullable": true }
+          },
+          "required": ["workspaceId", "displayName"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "AddConnectionToDataflowAsync",
+        "description": "Adds or replaces connections in an existing dataflow, or clears all connections. When clearExisting is true with no connectionIds, all connections are removed. When clearExisting is true with connectionIds, existing connections are replaced. When clearExisting is false (default), connections are appended.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the dataflow (required)" },
+            "dataflowId": { "type": "string", "description": "The dataflow ID to update (required)" },
+            "connectionIds": { "description": "The connection ID(s) to add. Can be a single string or an array. Optional when clearExisting is true.", "nullable": true },
+            "clearExisting": { "type": "boolean", "description": "When true, clears existing connections before adding new ones. Defaults to false.", "default": false }
+          },
+          "required": ["workspaceId", "dataflowId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "AddOrUpdateQueryInDataflowAsync",
+        "description": "Adds or updates a query in an existing dataflow by updating its definition. The query will be added to the mashup.pq file and registered in queryMetadata.json.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the dataflow (required)" },
+            "dataflowId": { "type": "string", "description": "The dataflow ID to update (required)" },
+            "queryName": { "type": "string", "description": "The name of the query to add or update (required)" },
+            "mCode": { "type": "string", "description": "The M (Power Query) code for the query (required). Can be a full 'let...in' expression or a simple expression." }
+          },
+          "required": ["workspaceId", "dataflowId", "queryName", "mCode"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_dataflow_definition",
+        "description": "Gets the definition of a dataflow with human-readable content (queryMetadata.json, mashup.pq M code, and .platform metadata).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the dataflow (required)" },
+            "dataflowId": { "type": "string", "description": "The dataflow ID to get the definition for (required)" }
+          },
+          "required": ["workspaceId", "dataflowId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "save_dataflow_definition",
+        "description": "Saves a dataflow definition by validating and persisting an M section document. Validates M document syntax, extracts individual queries, and saves each query to the dataflow. The M document should start with 'section Section1;' and contain all shared queries.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the target dataflow (required)" },
+            "dataflowId": { "type": "string", "description": "The dataflow ID to save the document to (required)" },
+            "mDocument": { "type": "string", "description": "The complete M section document to validate and save (required). Should start with 'section Section1;' and contain all shared queries." },
+            "validateOnly": { "type": "boolean", "description": "If true, only validates without saving (optional, defaults to false)", "default": false }
+          },
+          "required": ["workspaceId", "dataflowId", "mDocument"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ExecuteQueryAsync",
+        "description": "Executes a query against a dataflow and returns the complete results in Apache Arrow format. Runs M (Power Query) language queries against data sources connected through the dataflow.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the dataflow (required)" },
+            "dataflowId": { "type": "string", "description": "The dataflow ID to execute the query against (required)" },
+            "queryName": { "type": "string", "description": "The name of the query to execute (required)" },
+            "customMashupDocument": { "type": "string", "description": "The M (Power Query) language query to execute. Can be a raw M expression or a complete section document." }
+          },
+          "required": ["workspaceId", "dataflowId", "queryName", "customMashupDocument"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "RefreshDataflowBackground",
+        "description": "Start a dataflow refresh in the background. Returns immediately with task info. You'll receive a notification when the refresh completes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the dataflow (required)" },
+            "dataflowId": { "type": "string", "description": "The dataflow ID to refresh (required)" },
+            "displayName": { "type": "string", "description": "User-friendly name for notifications (optional, defaults to dataflow ID)", "nullable": true },
+            "executeOption": { "type": "string", "description": "Execute option: 'SkipApplyChanges' (default, faster) or 'ApplyChangesIfNeeded' (applies pending changes first)", "default": "SkipApplyChanges" }
+          },
+          "required": ["workspaceId", "dataflowId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "RefreshDataflowStatus",
+        "description": "Check the status of a dataflow refresh operation. Use this to manually poll for status if you started a refresh with RefreshDataflowBackground.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the dataflow (required)" },
+            "dataflowId": { "type": "string", "description": "The dataflow ID being refreshed (required)" },
+            "jobInstanceId": { "type": "string", "description": "The job instance ID from RefreshDataflowBackground result (required)" }
+          },
+          "required": ["workspaceId", "dataflowId", "jobInstanceId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ListPipelinesAsync",
+        "description": "Returns a list of Pipelines from the specified workspace. This API supports pagination.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID to list pipelines from (required)" },
+            "continuationToken": { "type": "string", "description": "A token for retrieving the next page of results (optional)", "nullable": true }
+          },
+          "required": ["workspaceId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "CreatePipelineAsync",
+        "description": "Creates a Pipeline in the specified workspace.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID where the pipeline will be created (required)" },
+            "displayName": { "type": "string", "description": "The Pipeline display name (required)" },
+            "description": { "type": "string", "description": "The Pipeline description (optional, max 256 characters)", "nullable": true },
+            "folderId": { "type": "string", "description": "The folder ID where the pipeline will be created (optional, defaults to workspace root)", "nullable": true }
+          },
+          "required": ["workspaceId", "displayName"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GetPipelineAsync",
+        "description": "Gets the metadata of a Pipeline by ID.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the pipeline (required)" },
+            "pipelineId": { "type": "string", "description": "The pipeline ID to retrieve (required)" }
+          },
+          "required": ["workspaceId", "pipelineId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GetPipelineDefinitionAsync",
+        "description": "Gets the definition of a Pipeline. The definition contains the pipeline JSON configuration with base64-encoded parts.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the pipeline (required)" },
+            "pipelineId": { "type": "string", "description": "The pipeline ID to get the definition for (required)" }
+          },
+          "required": ["workspaceId", "pipelineId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "UpdatePipelineAsync",
+        "description": "Updates the metadata (displayName and/or description) of a Pipeline.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the pipeline (required)" },
+            "pipelineId": { "type": "string", "description": "The pipeline ID to update (required)" },
+            "displayName": { "type": "string", "description": "The new display name (optional)", "nullable": true },
+            "description": { "type": "string", "description": "The new description (optional)", "nullable": true }
+          },
+          "required": ["workspaceId", "pipelineId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "UpdatePipelineDefinitionAsync",
+        "description": "Updates the definition of a Pipeline with the provided JSON content. The JSON will be base64-encoded and sent to the API.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the pipeline (required)" },
+            "pipelineId": { "type": "string", "description": "The pipeline ID to update (required)" },
+            "definitionJson": { "type": "string", "description": "The pipeline definition JSON content (required)" }
+          },
+          "required": ["workspaceId", "pipelineId", "definitionJson"]
+        }
+      }
+    }
+  ]
+}
