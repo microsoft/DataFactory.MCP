@@ -1,0 +1,203 @@
+# AI Eval Workflow
+# Runs on PRs that touch eval files, skill files, or tool code.
+# - Parse check: always runs (no API key needed)
+# - LLM evals: run when OPENAI_API_KEY secret is available
+
+name: AI Evals
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'evals/**'
+      - 'claude-skills/**'
+      - 'chatgpt-skills/**'
+      - 'DataFactory.MCP.Core/Tools/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.12'
+  EVAL_MODEL: 'gpt-4o'
+
+jobs:
+  # -------------------------------------------------------------------
+  # Parse check — validates eval files are well-formed (no API key)
+  # -------------------------------------------------------------------
+  parse-check:
+    name: 📋 Parse eval files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Parse tool-selection evals
+        run: python evals/run_evals.py --dry-run
+
+      - name: Parse integration evals
+        run: python evals/integration/run_integration_evals.py --dry-run
+
+  # -------------------------------------------------------------------
+  # Tool-selection evals (94 scenarios)
+  # -------------------------------------------------------------------
+  tool-selection-evals:
+    name: 🎯 Tool selection evals
+    runs-on: ubuntu-latest
+    needs: parse-check
+    if: ${{ secrets.OPENAI_API_KEY != '' }}
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run tool-selection evals
+        run: python evals/run_evals.py --model ${{ env.EVAL_MODEL }} --output tool_selection_results.json --delay 0.5
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tool-selection-results
+          path: tool_selection_results.json
+
+  # -------------------------------------------------------------------
+  # Integration evals (M code quality, baseline vs with skills)
+  # -------------------------------------------------------------------
+  integration-evals:
+    name: 🔬 Integration evals
+    runs-on: ubuntu-latest
+    needs: parse-check
+    if: ${{ secrets.OPENAI_API_KEY != '' }}
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run integration evals
+        run: python evals/integration/run_integration_evals.py --model ${{ env.EVAL_MODEL }} --output integration_eval_results.json --delay 1.0
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-eval-results
+          path: integration_eval_results.json
+
+  # -------------------------------------------------------------------
+  # Post results summary
+  # -------------------------------------------------------------------
+  report:
+    name: 📊 Post results
+    runs-on: ubuntu-latest
+    needs: [tool-selection-evals, integration-evals]
+    if: always() && (needs.tool-selection-evals.result == 'success' || needs.integration-evals.result == 'success')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Download tool-selection results
+        uses: actions/download-artifact@v4
+        with:
+          name: tool-selection-results
+          path: results/
+        continue-on-error: true
+
+      - name: Download integration results
+        uses: actions/download-artifact@v4
+        with:
+          name: integration-eval-results
+          path: results/
+        continue-on-error: true
+
+      - name: Generate summary
+        run: |
+          python3 << 'PYEOF'
+          import json, os
+          from pathlib import Path
+
+          lines = ["## AI Eval Results", ""]
+          lines.append(f"**Model:** `{os.environ.get('EVAL_MODEL', 'gpt-4o')}`")
+          lines.append("")
+
+          # Tool-selection results
+          ts_path = Path("results/tool_selection_results.json")
+          if ts_path.exists():
+              data = json.loads(ts_path.read_text())
+              total = len(data)
+              passed = sum(1 for d in data if d["result"] == "pass")
+              partial = sum(1 for d in data if d["result"] == "partial")
+              failed = sum(1 for d in data if d["result"] == "fail")
+              scored = passed + partial + failed
+              score = (passed + 0.5 * partial) / scored * 100 if scored else 0
+
+              lines.append("### Tool Selection")
+              lines.append("| Metric | Count |")
+              lines.append("|---|---|")
+              lines.append(f"| Pass | {passed} |")
+              lines.append(f"| Partial | {partial} |")
+              lines.append(f"| Fail | {failed} |")
+              lines.append(f"| **Score** | **{score:.1f}%** |")
+              lines.append("")
+
+              failures = [d for d in data if d["result"] in ("fail", "partial")]
+              if failures:
+                  lines.append("<details><summary>Issues (" + str(len(failures)) + ")</summary>")
+                  lines.append("")
+                  for f in failures[:20]:
+                      icon = "x" if f["result"] == "fail" else "!"
+                      lines.append(f"- [{icon}] **{f['eval_id']}**: {f['title']} - {f['explanation']}")
+                  lines.append("")
+                  lines.append("</details>")
+                  lines.append("")
+
+          # Integration results
+          int_path = Path("results/integration_eval_results.json")
+          if int_path.exists():
+              data = json.loads(int_path.read_text())
+
+              b_pass = sum(len(d["baseline"]["passed"]) for d in data)
+              b_fail = sum(len(d["baseline"]["failed"]) for d in data)
+              s_pass = sum(len(d["with_skills"]["passed"]) for d in data)
+              s_fail = sum(len(d["with_skills"]["failed"]) for d in data)
+              b_total = b_pass + b_fail
+              s_total = s_pass + s_fail
+
+              lines.append("### Integration (M Code Quality)")
+              lines.append("| Mode | Rules Passed | Score |")
+              lines.append("|---|---|---|")
+              if b_total:
+                  lines.append(f"| Baseline (no skills) | {b_pass}/{b_total} | {b_pass/b_total*100:.1f}% |")
+              if s_total:
+                  lines.append(f"| With skills | {s_pass}/{s_total} | {s_pass/s_total*100:.1f}% |")
+              if b_total and s_total:
+                  delta = (s_pass/s_total - b_pass/b_total) * 100
+                  sign = "+" if delta > 0 else ""
+                  lines.append(f"| **Skill ROI** | - | **{sign}{delta:.1f}%** |")
+              lines.append("")
+
+          summary = "\n".join(lines)
+          with open(os.environ.get("GITHUB_STEP_SUMMARY", "/dev/null"), "a") as f:
+              f.write(summary)
+          print(summary)
+          PYEOF

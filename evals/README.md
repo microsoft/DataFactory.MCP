@@ -64,58 +64,50 @@ Each scenario follows this template:
 
 ## Running Evals
 
-### Prerequisites
+Evals run automatically as a **GitHub Actions workflow** on PRs that touch `evals/`, `claude-skills/`, or `DataFactory.MCP.Core/Tools/`.
 
-- Python 3.11+
-- An OpenAI-compatible API key (set `OPENAI_API_KEY`)
+### What the workflow does
 
-### Commands
+| Job | Runs when | What it does |
+|---|---|---|
+| **Parse check** | Every matching PR | Validates all eval files parse correctly (no API key needed) |
+| **Tool-selection evals** | `OPENAI_API_KEY` secret set | Runs 94 scenarios, scores tool selection + params |
+| **Integration evals** | `OPENAI_API_KEY` secret set | Tests M code quality baseline vs with skills |
+| **Report** | After LLM evals | Posts score summary to GitHub Actions step summary |
+
+Results are uploaded as workflow artifacts (`tool_selection_results.json`, `integration_eval_results.json`).
+
+### Required secret
+
+Add `OPENAI_API_KEY` to the repo secrets to enable LLM evals. Without it, only the parse check runs.
+
+### Running locally (optional)
 
 ```bash
-# Dry run — parse all scenarios, no LLM calls
+# Parse check only (no API key)
 python evals/run_evals.py --dry-run
+python evals/integration/run_integration_evals.py --dry-run
 
-# Run all 94 evals
+# Full run
 OPENAI_API_KEY=sk-... python evals/run_evals.py
-
-# Run a specific file
-python evals/run_evals.py --file authentication
-
-# Run a single scenario
-python evals/run_evals.py --eval EVAL-AUTH-001
-
-# Filter by category or difficulty
-python evals/run_evals.py --category "Tool Selection"
-python evals/run_evals.py --difficulty Hard
-
-# Use a different model or API
-EVAL_MODEL=gpt-4o-mini python evals/run_evals.py
-EVAL_BASE_URL=http://localhost:11434/v1 EVAL_MODEL=llama3 python evals/run_evals.py
-```
-
-### Output
-
-Results are saved to `eval_results.json` with per-scenario details:
-```json
-{
-  "eval_id": "EVAL-AUTH-001",
-  "result": "pass",
-  "expected_tools": [{"name": "AuthenticateInteractiveAsync", "params": {}}],
-  "actual_tools": [{"name": "AuthenticateInteractiveAsync", "arguments": {}}]
-}
+OPENAI_API_KEY=sk-... python evals/integration/run_integration_evals.py
 ```
 
 ### Files
 
 | File | Purpose |
 |---|---|
-| `run_evals.py` | Runner script — parses markdown, calls LLM, scores results |
-| `tools_schema.json` | Tool definitions in OpenAI function-calling format (32 tools) |
-| `eval_results.json` | Generated after a run — detailed per-scenario results |
+| `.github/workflows/ai-evals.yml` | GitHub Actions workflow |
+| `evals/run_evals.py` | Tool-selection runner (parses markdown, calls LLM, scores) |
+| `evals/integration/run_integration_evals.py` | Integration runner (M code quality, baseline vs skills) |
+| `evals/integration/m-code-quality.eval.md` | 20 integration eval scenarios |
+| `evals/tools_schema.json` | 32 tool definitions (OpenAI function-calling format) |
 
 ---
 
 ## Total Eval Count
+
+### Tool Selection Evals
 
 | Area | Tool Selection | Param Extraction | Edge Cases | Total |
 |---|---|---|---|---|
@@ -127,3 +119,18 @@ Results are saved to `eval_results.json` with per-scenario details:
 | Pipelines | 6 | 5 | 4 | 15 |
 | Multi-step | — | — | — | 10 |
 | **Total** | **33** | **26** | **25** | **94** |
+
+### Integration Evals (M Code Quality)
+
+| Category | Count |
+|---|---|
+| M Syntax | 4 |
+| Destinations | 3 |
+| Performance | 3 |
+| Advanced (Fast Copy, Action.Sequence) | 3 |
+| Pipeline JSON | 2 |
+| Workflow | 3 |
+| Lifecycle | 2 |
+| **Total** | **20** |
+
+**Grand total: 114 evals** (94 tool-selection + 20 integration)
