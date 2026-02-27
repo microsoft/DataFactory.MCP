@@ -30,7 +30,7 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.12"
-  EVAL_MODEL: ${{ secrets.EVAL_AZURE_OPENAI_MODEL || 'gpt-4o' }}
+  EVAL_MODEL: ${{ vars.EVAL_AZURE_OPENAI_MODEL || 'gpt-4o' }}
 
 jobs:
   # -------------------------------------------------------------------
