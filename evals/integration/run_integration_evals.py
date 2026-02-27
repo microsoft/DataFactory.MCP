@@ -17,6 +17,7 @@ Environment variables:
     OPENAI_API_KEY     - API key (required unless --dry-run)
     EVAL_MODEL         - Model to test (default: gpt-4o)
     EVAL_BASE_URL      - API base URL (default: https://api.openai.com/v1)
+                         For Azure OpenAI, use the deployment endpoint URL
 """
 
 import argparse
@@ -519,7 +520,7 @@ def main():
     parser.add_argument("--delay", type=float, default=1.0)
     args = parser.parse_args()
 
-    evals_dir = Path(__file__).parent / "integration"
+    evals_dir = Path(__file__).parent
 
     # Parse eval files
     files = sorted(evals_dir.glob("*.eval.md"))
