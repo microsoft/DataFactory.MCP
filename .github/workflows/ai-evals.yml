@@ -9,20 +9,21 @@ permissions:
   pull-requests: write
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [main, develop]
     paths:
-      - 'evals/**'
-      - 'claude-skills/**'
-      - 'chatgpt-skills/**'
-      - 'DataFactory.MCP.Core/Tools/**'
+      - "evals/**"
+      - "claude-skills/**"
+      - "chatgpt-skills/**"
+      - "DataFactory.MCP.Core/Tools/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  PYTHON_VERSION: '3.12'
+  PYTHON_VERSION: "3.12"
   EVAL_MODEL: ${{ secrets.EVAL_AZURE_OPENAI_MODEL || 'gpt-4o' }}
 
 jobs:
