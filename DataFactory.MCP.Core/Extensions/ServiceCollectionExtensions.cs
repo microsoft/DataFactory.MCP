@@ -13,6 +13,7 @@ using DataFactory.MCP.Services.DMTSv2;
 using DataFactory.MCP.Services.Notifications;
 using DataFactory.MCP.Tools;
 using DataFactory.MCP.Tools.Dataflow;
+using DataFactory.MCP.Tools.CopyJob;
 using DataFactory.MCP.Tools.Pipeline;
 
 namespace DataFactory.MCP.Extensions;
@@ -66,6 +67,8 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IFabricCapacityService, FabricCapacityService>()
             // Pipeline service
             .AddSingleton<IFabricPipelineService, FabricPipelineService>()
+            // Copy Job service
+            .AddSingleton<IFabricCopyJobService, FabricCopyJobService>()
             // Session accessor for background notifications
             .AddSingleton<IMcpSessionAccessor, McpSessionAccessor>()
             // Background task system (consolidated: monitor handles start, track, poll, notify)
@@ -144,6 +147,14 @@ public static class ServiceCollectionExtensions
             args,
             FeatureFlags.Pipeline,
             nameof(PipelineTool),
+            logger);
+
+        // Conditionally enable CopyJobTool based on feature flag
+        mcpBuilder.RegisterToolWithFeatureFlag<CopyJobTool>(
+            configuration,
+            args,
+            FeatureFlags.CopyJob,
+            nameof(CopyJobTool),
             logger);
 
         return mcpBuilder;
