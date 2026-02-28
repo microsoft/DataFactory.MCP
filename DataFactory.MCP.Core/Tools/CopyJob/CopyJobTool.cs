@@ -365,7 +365,7 @@ public class CopyJobTool
                 WorkspaceId = workspaceId,
                 JobInstanceId = jobInstanceId,
                 LocationUrl = location,
-                Hint = "Use GetCopyJobRunStatusAsync with the jobInstanceId to check the run status"
+                Hint = "Use the 'get_copy_job_run_status' MCP tool with the jobInstanceId to check the run status"
             };
 
             return result.ToMcpJson();
