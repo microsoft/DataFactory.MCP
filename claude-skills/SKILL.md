@@ -55,4 +55,3 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 | `datafactory-performance.md` | Query timeouts, chunking, query folding, connector selection |
 | `datafactory-advanced.md` | Fast Copy limits, Action.Sequence, Modern Evaluator |
 | `datafactory-pipelines.md` | Creating pipelines, Dataflow activities, chaining, scheduling |
-| `datafactory-copyjobs.md` | Creating copy jobs, running, monitoring, scheduling |
