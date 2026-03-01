@@ -34,11 +34,65 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 
 ## Available Resources
 
-The server also exposes interactive UI forms as MCP App resources (rendered inside VS Code chat):
+The server exposes interactive UI forms as MCP App resources, rendered directly inside VS Code chat:
 
 | Resource URI | Description |
 |---|---|
-| `ui://datafactory/create-connection` | Guided form for creating a new data source connection |
+| `ui://datafactory/create-connection` | Guided wizard for creating a new data source connection |
+
+### Create Connection Wizard
+
+The **Create Connection** form is a 3-step guided wizard that walks you through setting up a new data source connection — no need to remember parameter names or look up credential types.
+
+**Step 1 — Choose connectivity type**
+
+![Choose connectivity type — Cloud, On-Premises, or Virtual Network](assets/New%20Connection%20Type.jpg)
+
+Pick how you want to connect: **Cloud**, **On-Premises** (gateway), or **Virtual Network**. Selecting a mode automatically moves you to the next step.
+
+**Step 2 — Connection details**
+
+![Connection details — choose data source type and fill in parameters](assets/New%20Connection%20Details.jpg)
+
+Fill in your connection info:
+- **Gateway** (shown for on-prem / VNet modes)
+- **Connection name**
+- **Data source type** — searchable dropdown with 45+ supported types, including:
+
+  | Type | Description |
+  |------|-------------|
+  | SQL | SQL Server & Azure SQL Database |
+  | AzureBlobs | Azure Blob Storage |
+  | AzureDataLakeStorage | Azure Data Lake Storage Gen2 |
+  | Lakehouse | Microsoft Fabric Lakehouse |
+  | Warehouse | Microsoft Fabric Warehouse |
+  | Web | REST APIs, SharePoint Online, web endpoints |
+  | AzureTable | Azure Table Storage |
+  | PostgreSql | PostgreSQL databases |
+  | MySql | MySQL databases |
+  | Oracle | Oracle databases |
+  | Snowflake | Snowflake Data Cloud |
+
+  > The full list is loaded dynamically — run `list_supported_connection_types` or open the wizard to see all available types for your environment.
+
+- **Connection parameters** — fields appear dynamically based on the selected type (e.g. server, database for SQL)
+
+**Step 3 — Credentials & settings**
+
+![Credentials — choose auth method and enter credentials](assets/New%20Connection%20Credentials.jpg)
+
+Configure authentication and options:
+- **Credential type** — only valid options for your chosen data source are shown (e.g. Basic, OAuth2, Key, Anonymous)
+- **Credential fields** — adapts to the selected auth method (e.g. username/password for Basic)
+- **Privacy level**, **connection encryption**, and **skip test connection** toggle
+
+On submit the connection is created and you'll see a confirmation with the new connection ID. To open the wizard, ask:
+
+```
+> open the create connection form
+```
+
+Or trigger it from any chat by referencing the resource URI `ui://datafactory/create-connection`.
 
 ## Quick Start
 
