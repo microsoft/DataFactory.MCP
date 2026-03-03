@@ -8,6 +8,7 @@ The connection management tools allow you to:
 - List all accessible connections across different types
 - Retrieve detailed information about specific connections
 - Create new cloud, on-premises (gateway), and virtual network connections
+- Launch an interactive Create Connection form via `create_connection_ui`
 - Discover supported connection types, parameters, and credential kinds
 - Work with on-premises, virtual network, and cloud connections
 
@@ -205,6 +206,19 @@ create_connection(
 }
 ```
 
+### Create Connection UI
+
+Launch the interactive Create Connection form directly from chat. The tool validates authentication before displaying the guided wizard.
+
+#### Usage
+```
+create_connection_ui
+```
+
+No parameters are required — the form handles connection type selection, parameter entry, and credential configuration interactively.
+
+> **Note**: You must be authenticated before calling this tool. If not signed in, the tool returns an error prompting you to authenticate first.
+
 ## UI Resource: Create Connection Form
 
 The server exposes a guided HTML form as an MCP App resource that can be rendered inside VS Code chat.
@@ -216,6 +230,8 @@ The server exposes a guided HTML form as an MCP App resource that can be rendere
 | Description | Interactive form for creating a new data source connection |
 
 The form dynamically loads supported connection types, prompts for parameters and credentials based on the selected type, and calls `create_connection` on submit.
+
+Both the `create_connection_ui` tool and the `ui://datafactory/create-connection` resource open the same wizard — use whichever is more convenient.
 
 ## Usage Examples
 
@@ -247,6 +263,9 @@ The form dynamically loads supported connection types, prompts for parameters an
 
 # Open the interactive Create Connection form
 > open the create connection form
+
+# Launch the create connection UI tool
+> I want to use the create connection UI
 ```
 
 ## Create Connection Wizard
