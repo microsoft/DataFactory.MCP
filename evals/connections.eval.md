@@ -70,7 +70,7 @@ Tools under test:
 **Difficulty:** Medium
 
 **User prompt:**
-> Create a new SQL connection called "Prod SQL" to server `sql.contoso.com` database `SalesDB` using basic auth with username `admin` and password `p@ss`
+> Create a new SQL connection called "Prod SQL" to server `sql.contoso.com` database `SalesDB` using basic auth with username `sqladmin` and password `<PLACEHOLDER>`
 
 **Expected tool call(s):**
 - Tool: `CreateConnectionAsync`
@@ -78,7 +78,7 @@ Tools under test:
   - `connectionType`: `SQL`
   - `connectionParameters`: `{"server":"sql.contoso.com","database":"SalesDB"}`
   - `credentialType`: `Basic`
-  - `credentials`: `{"username":"admin","password":"p@ss"}`
+  - `credentials`: `{"username":"sqladmin","password":"<PLACEHOLDER>"}`
 
 **Assertions:**
 - Must use programmatic create, not UI tool
