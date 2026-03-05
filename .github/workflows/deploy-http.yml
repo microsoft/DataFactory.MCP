@@ -18,11 +18,6 @@ on:
         required: false
         default: ""
         type: string
-      dataflow_query:
-        description: "Enable the dataflow-query feature flag"
-        required: false
-        default: true
-        type: boolean
       device_code_auth:
         description: "Enable the device-code-auth feature flag"
         required: false
@@ -116,7 +111,7 @@ jobs:
         uses: azure/appservice-settings@v1
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          app-settings-json: '[{"name": "dataflow-query", "value": "${{ github.event.inputs.dataflow_query || true }}"}, {"name": "device-code-auth", "value": "${{ github.event.inputs.device_code_auth || true }}"}, {"name": "interactive-auth", "value": "${{ github.event.inputs.interactive_auth || false }}"}]'
+          app-settings-json: '[{"name": "device-code-auth", "value": "${{ github.event.inputs.device_code_auth || true }}"}, {"name": "interactive-auth", "value": "${{ github.event.inputs.interactive_auth || false }}"}]'
 
       - name: "Deploy to Azure Web App"
         id: deploy

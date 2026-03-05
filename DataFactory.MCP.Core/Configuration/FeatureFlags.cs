@@ -6,12 +6,6 @@ namespace DataFactory.MCP.Configuration;
 public static class FeatureFlags
 {
     /// <summary>
-    /// Feature flag for enabling the DataflowQueryTool
-    /// Command line: --dataflow-query
-    /// </summary>
-    public const string DataflowQuery = "dataflow-query";
-
-    /// <summary>
     /// Feature flag for enabling the DeviceCodeAuthenticationTool
     /// Command line: --device-code-auth
     /// Only enabled for HTTP version

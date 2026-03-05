@@ -104,7 +104,6 @@ public class McpTestFixture : IDisposable
                 services.AddScoped<DataflowTool>();
                 services.AddScoped<DataflowRefreshTool>();
                 services.AddScoped<CapacityTool>();
-                services.AddScoped<DataflowQueryTool>();
                 services.AddScoped<DataflowDefinitionTool>();
                 services.AddScoped<PipelineTool>();
                 services.AddScoped<CopyJobTool>();

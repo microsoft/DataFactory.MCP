@@ -96,6 +96,7 @@ public static class ServiceCollectionExtensions
             .WithTools<DataflowTool>()
             .WithTools<DataflowRefreshTool>()
             .WithTools<CapacityTool>()
+            .WithTools<DataflowQueryTool>()
             .WithTools<DataflowDefinitionTool>()
             .WithTools<CreateConnectionUITool>()                // MCP Apps: Create Connection UI
             .WithResources<CreateConnectionResourceHandler>();  // MCP Apps: Create Connection Resource
@@ -115,14 +116,6 @@ public static class ServiceCollectionExtensions
         string[] args,
         ILogger logger)
     {
-        // Conditionally enable DataflowQueryTool based on feature flag
-        mcpBuilder.RegisterToolWithFeatureFlag<DataflowQueryTool>(
-            configuration,
-            args,
-            FeatureFlags.DataflowQuery,
-            nameof(DataflowQueryTool),
-            logger);
-
         // Conditionally enable DeviceCodeAuthenticationTool based on feature flag
         // This is only enabled for HTTP version
         mcpBuilder.RegisterToolWithFeatureFlag<DeviceCodeAuthenticationTool>(

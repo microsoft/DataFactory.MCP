@@ -11,8 +11,6 @@
 				"--pipeline",
 				"true",
 				"--copy-job",
-				"true",
-				"--dataflow-query",
 				"true"
 			]
 		}

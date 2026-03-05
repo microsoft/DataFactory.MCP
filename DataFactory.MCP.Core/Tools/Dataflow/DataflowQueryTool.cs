@@ -8,7 +8,6 @@ namespace DataFactory.MCP.Tools.Dataflow;
 
 /// <summary>
 /// MCP Tool for executing queries against Microsoft Fabric Dataflows.
-/// Feature-flagged: enabled with --dataflow-query.
 /// </summary>
 [McpServerToolType]
 public class DataflowQueryTool
