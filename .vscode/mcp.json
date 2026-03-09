@@ -6,12 +6,7 @@
 			"args": [
 				"run",
 				"--project",
-				"./DataFactory.MCP/DataFactory.MCP.csproj",
-				"--",
-				"--pipeline",
-				"true",
-				"--copy-job",
-				"true"
+				"./DataFactory.MCP/DataFactory.MCP.csproj"
 			]
 		}
 		// "DataFactory.MCP.Http": {
