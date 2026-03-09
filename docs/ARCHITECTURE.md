@@ -708,8 +708,7 @@ Named HTTP client constants:
 
 #### FeatureFlags
 Feature flag constants for conditional tool registration:
-- `DeviceCodeAuth`: Enable/disable DeviceCodeAuthenticationTool (`--device-code-auth`)
-- `InteractiveAuth`: Enable/disable InteractiveAuthenticationTool (`--interactive-auth`)
+- `DataflowQuery`: Enable/disable DataflowQueryTool (`--dataflow-query`)
 
 #### FeatureFlagRegistration
 Extension methods for registering tools based on feature flags:
