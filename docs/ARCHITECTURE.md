@@ -260,7 +260,7 @@ MCP Tools are the public interface that AI assistants interact with. Each tool i
 #### CapacityTool
 - `ListCapacitiesAsync()`: List Fabric capacities user has access to
 
-#### PipelineTool (Feature Flag: `--pipeline`)
+#### PipelineTool
 - `ListPipelinesAsync()`: List pipelines in a workspace with optional pagination
 - `CreatePipelineAsync()`: Create a new pipeline
 - `GetPipelineAsync()`: Get pipeline metadata by ID
@@ -272,7 +272,7 @@ MCP Tools are the public interface that AI assistants interact with. Each tool i
 - `CreatePipelineScheduleAsync()`: Create a schedule for a pipeline
 - `ListPipelineSchedulesAsync()`: List schedules configured for a pipeline
 
-#### CopyJobTool (Feature Flag: `--copy-job`)
+#### CopyJobTool
 - `ListCopyJobsAsync()`: List copy jobs in a workspace with optional pagination
 - `CreateCopyJobAsync()`: Create a new copy job
 - `GetCopyJobAsync()`: Get copy job metadata by ID
@@ -708,9 +708,8 @@ Named HTTP client constants:
 
 #### FeatureFlags
 Feature flag constants for conditional tool registration:
-- `DataflowQuery`: Enable/disable DataflowQueryTool (`--dataflow-query`)
-- `Pipeline`: Enable/disable PipelineTool (`--pipeline`)
-- `CopyJob`: Enable/disable CopyJobTool (`--copy-job`)
+- `DeviceCodeAuth`: Enable/disable DeviceCodeAuthenticationTool (`--device-code-auth`)
+- `InteractiveAuth`: Enable/disable InteractiveAuthenticationTool (`--interactive-auth`)
 
 #### FeatureFlagRegistration
 Extension methods for registering tools based on feature flags:

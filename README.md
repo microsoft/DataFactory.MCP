@@ -31,8 +31,8 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 - **Dataflow Refresh**: `refresh_dataflow_background`, `refresh_dataflow_status`
 - **Dataflow Query Execution**: `execute_query` *(Preview)*
 - **Capacity Management**: `list_capacities`
-- **Pipeline Management**: `list_pipelines`, `create_pipeline`, `get_pipeline`, `update_pipeline`, `get_pipeline_definition`, `update_pipeline_definition`, `run_pipeline`, `get_pipeline_run_status`, `create_pipeline_schedule`, `list_pipeline_schedules` *(Preview)*
-- **Copy Job Management**: `list_copy_jobs`, `create_copy_job`, `get_copy_job`, `update_copy_job`, `get_copy_job_definition`, `update_copy_job_definition`, `run_copy_job`, `get_copy_job_run_status`, `create_copy_job_schedule`, `list_copy_job_schedules` *(Preview)*
+- **Pipeline Management**: `list_pipelines`, `create_pipeline`, `get_pipeline`, `update_pipeline`, `get_pipeline_definition`, `update_pipeline_definition`, `run_pipeline`, `get_pipeline_run_status`, `create_pipeline_schedule`, `list_pipeline_schedules`
+- **Copy Job Management**: `list_copy_jobs`, `create_copy_job`, `get_copy_job`, `update_copy_job`, `get_copy_job_definition`, `update_copy_job_definition`, `run_copy_job`, `get_copy_job_run_status`, `create_copy_job_schedule`, `list_copy_job_schedules`
 
 ## Available Resources
 

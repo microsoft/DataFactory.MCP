@@ -19,15 +19,4 @@ public static class FeatureFlags
     /// </summary>
     public const string InteractiveAuth = "interactive-auth";
 
-    /// <summary>
-    /// Feature flag for enabling the PipelineTool
-    /// Command line: --pipeline
-    /// </summary>
-    public const string Pipeline = "pipeline";
-
-    /// <summary>
-    /// Feature flag for enabling the CopyJobTool
-    /// Command line: --copy-job
-    /// </summary>
-    public const string CopyJob = "copy-job";
 }

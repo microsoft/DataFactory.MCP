@@ -98,6 +98,8 @@ public static class ServiceCollectionExtensions
             .WithTools<CapacityTool>()
             .WithTools<DataflowQueryTool>()
             .WithTools<DataflowDefinitionTool>()
+            .WithTools<PipelineTool>()
+            .WithTools<CopyJobTool>()
             .WithTools<CreateConnectionUITool>()                // MCP Apps: Create Connection UI
             .WithResources<CreateConnectionResourceHandler>();  // MCP Apps: Create Connection Resource
     }
@@ -132,22 +134,6 @@ public static class ServiceCollectionExtensions
             args,
             FeatureFlags.InteractiveAuth,
             nameof(InteractiveAuthenticationTool),
-            logger);
-
-        // Conditionally enable PipelineTool based on feature flag
-        mcpBuilder.RegisterToolWithFeatureFlag<PipelineTool>(
-            configuration,
-            args,
-            FeatureFlags.Pipeline,
-            nameof(PipelineTool),
-            logger);
-
-        // Conditionally enable CopyJobTool based on feature flag
-        mcpBuilder.RegisterToolWithFeatureFlag<CopyJobTool>(
-            configuration,
-            args,
-            FeatureFlags.CopyJob,
-            nameof(CopyJobTool),
             logger);
 
         return mcpBuilder;
