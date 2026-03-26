@@ -10,48 +10,68 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 ## Must / Prefer / Avoid
 
 ### MUST DO
-- Use `executeOption = "ApplyChangesIfNeeded"` on first refresh of API-created dataflows (default causes `DataflowNeverPublishedError`)
-- Include both a `DataDestinations` annotation AND a companion `_DataDestination` query for Lakehouse output
-- Name destination queries `[QueryName]_DataDestination` — e.g., query `Results` gets companion `Results_DataDestination`
-- Use `Kind = "Automatic"` (not Manual) when creating new destination tables — Manual causes `DestinationColumnNotFound`
-- Always use `IsNewTarget = true` with `?` null-safe operators in API-created dataflows — even when the table exists; `IsNewTarget = false` with direct `[Data]` fails on first refresh
-- Add `[AllowCombine = true]` section attribute when combining multiple source types (Lakehouse + SharePoint, etc.)
-- Use a fresh dataflow for multi-source — never transition a published single-source dataflow to multi-source
-- Consolidate all Lakehouse table reads into a single source query (one `Lakehouse.Contents` call) in multi-source dataflows
+- Use `executeOption = "ApplyChangesIfNeeded"` on first refresh of API-created dataflows
 - Re-add connections via `add_connection_to_dataflow` after `save_dataflow_definition` (save may wipe them)
-- Use `clearExisting: true` to replace all connections atomically instead of manual removal
-- Validate each connection with `execute_query` after adding
 - Use `list_workspaces` and filter by name — there is no `find_workspace` tool
-- Create a new dataflow instead of reverting a multi-source one to single-source — `save_dataflow_definition` does NOT remove stale connections, and there is no `remove_connection` tool
+- Validate each connection with `execute_query` after adding
+- Create a new dataflow instead of reverting a multi-source one to single-source — there is no `remove_connection` tool
 
 ### PREFER
 - Filter early in M queries to enable query folding (push filters to source)
 - Expensive operations (sorting, aggregation) last — streaming operations (filter, select) first
-- Native connectors (SQL Server, Lakehouse) over generic ones (ODBC/OLEDB) for better query folding
-- Explicit data types on all columns, especially for unstructured sources (CSV, TXT)
-- Modular queries — split large queries via "Extract Previous" for readability and reuse
-- Standard engine for complex transforms; Fast Copy only for simple ingestion (select/rename/type change)
-- Automatic schema settings for new tables; Manual for stable existing tables with downstream dependencies
-- Validate both source and destination lakehouse access before configuring DataDestination
 - `execute_query` with `customMashupDocument` to iterate on M code before saving
+- Standard engine for complex transforms; Fast Copy only for simple ingestion
 
 ### AVOID
 - `get_authoring_guidance` — deprecated, author M directly
-- Fast Copy with `Table.Group`, `Table.NestedJoin`, or any schema-changing transform
-- Manual column mappings (`ColumnSettings`) for new tables
-- Default `SkipApplyChanges` on first refresh of API-created dataflows
-- `Action.Sequence` for normal query transformations — only use for side-effecting writes
 - Sorting early in query chains (requires reading all data before returning results)
 - `SELECT *` equivalent without row limits during development — use "Keep First Rows" then remove
-- Reusing a previously-published single-source dataflow for multi-source — stale connections persist and cause instant refresh failure; always create a fresh dataflow for multi-source
-- Separate `Lakehouse.Contents` calls per query in multi-source dataflows — consolidate all Lakehouse table reads into a single query for reliable multi-source refresh
+
+## Symptom Triage
+
+| Symptom | Likely Cause | Read |
+|---------|-------------|------|
+| `DataflowNeverPublishedError` | Default SkipApplyChanges on first run | `destinations/dest-new-table.md` |
+| `DestinationColumnNotFound` | Manual mappings for new table | `destinations/dest-new-table.md` |
+| Credentials error on Lakehouse | Connection not bound | `datafactory-connections.md` (Binding) |
+| FastCopy fails with transforms | Unsupported transform in fast copy | `datafactory-advanced.md` (Fast Copy) |
+| Instant refresh fail (0-3s) | Privacy firewall or unpublished draft | `sources/multi-source.md` |
+| Multi-source instant fail via API | Dirty dataflow or separate Lakehouse.Contents calls | `sources/multi-source.md` |
+| `IsNewTarget = false` fails | Direct navigation on API-created dataflow | `destinations/dest-new-table.md` |
+| Stale connections after revert | save_dataflow_definition doesn't remove connections | `datafactory-connections.md` (Troubleshooting) |
 
 ## Knowledge Files
 
-| File | When to Use |
-|------|-------------|
-| `datafactory-core.md` | MCP tools, M basics, connection discovery, rolling dates, what-if queries |
-| `datafactory-destinations.md` | Creating/configuring output destinations, DataDestination patterns, AllowCombine |
+| File | When to Read |
+|------|--------------|
+| `datafactory-core.md` | MCP tools, M basics, rolling dates, what-if queries |
+| `datafactory-connections.md` | Connection discovery, creation, binding, gateways, troubleshooting connection errors |
 | `datafactory-performance.md` | Query timeouts, chunking, query folding, connector selection |
 | `datafactory-advanced.md` | Fast Copy limits, Action.Sequence, Modern Evaluator |
-| `datafactory-pipelines.md` | Creating pipelines, Dataflow activities, chaining, scheduling |
+| `datafactory-pipelines.md` | Pipeline creation, Dataflow activities, chaining, scheduling |
+
+### Destination Files (read only the one you need)
+
+| File | When to Read |
+|------|--------------|
+| `destinations/dest-new-table.md` | Creating a new output table via MCP (most common path) |
+| `destinations/dest-existing-table.md` | Writing to a table that already exists |
+| `destinations/dest-troubleshooting.md` | Diagnosing refresh failures, connection issues, silent errors |
+
+### Source Files
+
+| File | When to Read |
+|------|--------------|
+| `sources/multi-source.md` | Combining Lakehouse + SharePoint/Web sources, AllowCombine |
+| `sources/sharepoint-excel.md` | Reading Excel files from SharePoint via Web.Contents |
+
+### M Templates (copy-paste-ready, no prose)
+
+| File | When to Read |
+|------|--------------|
+| `templates/m-new-table-destination.m` | Need the complete M section document for a new table |
+| `templates/m-existing-table-destination.m` | Need the M section document for an existing table |
+| `templates/m-multi-source-section.m` | Need the M section document for multi-source with AllowCombine |
+| `templates/m-sharepoint-excel-source.m` | Need the M snippet for SharePoint Excel via Web.Contents |
+| `templates/pipeline-single-dataflow.json` | Need pipeline JSON for a single Dataflow activity |
+| `templates/pipeline-chained-dataflows.json` | Need pipeline JSON for chained Dataflow activities |
