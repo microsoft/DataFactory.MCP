@@ -1,0 +1,63 @@
+// Replace: ACTIVITY_*_NAME, DATAFLOW_*_ID (from list_dataflows → objectId), WORKSPACE_ID
+// lastModifiedByObjectId and lastPublishTime: set to any value, platform overwrites on save
+{
+  "properties": {
+    "activities": [
+      {
+        "name": "ACTIVITY_1_NAME",
+        "type": "DataflowActivity",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 60
+        },
+        "typeProperties": {
+          "dataflowId": "DATAFLOW_1_ID",
+          "workspaceId": "WORKSPACE_ID"
+        }
+      },
+      {
+        "name": "ACTIVITY_2_NAME",
+        "type": "DataflowActivity",
+        "dependsOn": [
+          {
+            "activity": "ACTIVITY_1_NAME",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 60
+        },
+        "typeProperties": {
+          "dataflowId": "DATAFLOW_2_ID",
+          "workspaceId": "WORKSPACE_ID"
+        }
+      },
+      {
+        "name": "ACTIVITY_3_NAME",
+        "type": "DataflowActivity",
+        "dependsOn": [
+          {
+            "activity": "ACTIVITY_2_NAME",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 60
+        },
+        "typeProperties": {
+          "dataflowId": "DATAFLOW_3_ID",
+          "workspaceId": "WORKSPACE_ID"
+        }
+      }
+    ],
+    "annotations": [],
+    "lastModifiedByObjectId": "00000000-0000-0000-0000-000000000000",
+    "lastPublishTime": "2026-01-01T00:00:00.000Z"
+  }
+}

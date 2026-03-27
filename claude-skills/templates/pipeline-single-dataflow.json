@@ -1,0 +1,25 @@
+// Replace: ACTIVITY_NAME, DATAFLOW_ID (from list_dataflows → objectId), WORKSPACE_ID
+// lastModifiedByObjectId and lastPublishTime: set to any value, platform overwrites on save
+{
+  "properties": {
+    "activities": [
+      {
+        "name": "ACTIVITY_NAME",
+        "type": "DataflowActivity",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 60
+        },
+        "typeProperties": {
+          "dataflowId": "DATAFLOW_ID",
+          "workspaceId": "WORKSPACE_ID"
+        }
+      }
+    ],
+    "annotations": [],
+    "lastModifiedByObjectId": "00000000-0000-0000-0000-000000000000",
+    "lastPublishTime": "2026-01-01T00:00:00.000Z"
+  }
+}
