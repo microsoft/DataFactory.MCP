@@ -12,7 +12,7 @@ description: "Building, testing, and running the DataFactory.MCP project. Use wh
 
 ## Commands
 
-All commands run from repo root: `Q:\Repos\DataFactory.MCP`
+All commands run from the repo root.
 
 | Task | Command |
 |------|---------|

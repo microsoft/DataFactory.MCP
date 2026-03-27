@@ -11,4 +11,4 @@ You run builds and report results. You do NOT modify source code.
 
 Load the `builder.datafactory` skill for build commands and troubleshooting.
 
-Always run from repo root: `Q:\Repos\DataFactory.MCP`
+Always run from the repo root.
