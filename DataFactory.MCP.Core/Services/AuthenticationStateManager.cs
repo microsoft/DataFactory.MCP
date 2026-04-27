@@ -9,6 +9,10 @@ namespace DataFactory.MCP.Services;
 /// <summary>
 /// Manages authentication state, tokens, and provides access token operations
 /// </summary>
+/// <remarks>
+/// This service is registered as singleton and shares authentication state across all requests.
+/// For HTTP deployments, ensure the endpoint is protected by external authentication.
+/// </remarks>
 public class AuthenticationStateManager : IAuthenticationStateManager
 {
     private readonly ILogger<AuthenticationStateManager> _logger;

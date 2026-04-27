@@ -42,6 +42,8 @@ mcpBuilder.AddDataFactoryMcpOptionalTools(
 var app = builder.Build();
 
 // Map MCP endpoints
+// SECURITY: This endpoint requires external authentication (e.g., Azure Easy Auth, API Management).
+// Do not expose this endpoint to untrusted networks without authentication.
 app.MapMcp();
 
 // Add a simple health check endpoint

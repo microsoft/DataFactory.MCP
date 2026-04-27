@@ -111,7 +111,7 @@ jobs:
         uses: azure/appservice-settings@v1
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          app-settings-json: '[{"name": "device-code-auth", "value": "${{ github.event.inputs.device_code_auth || true }}"}, {"name": "interactive-auth", "value": "${{ github.event.inputs.interactive_auth || false }}"}]'
+          app-settings-json: '[{"name": "device-code-auth", "value": "${{ github.event.inputs.device_code_auth || true }}"}, {"name": "interactive-auth", "value": "${{ github.event.inputs.interactive_auth || false }}"}, {"name": "Logging__LogLevel__Default", "value": "Warning"}]'
 
       - name: "Deploy to Azure Web App"
         id: deploy

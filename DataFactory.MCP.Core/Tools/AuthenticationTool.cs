@@ -74,6 +74,10 @@ public class AuthenticationTool
         }
     }
 
+    /// <remarks>
+    /// SECURITY: This tool returns the raw access token. In HTTP deployments, ensure the endpoint
+    /// is protected by authentication to prevent unauthorized token access.
+    /// </remarks>
     [McpServerTool, Description(@"Get current access token for authenticated user")]
     public async Task<string> GetAccessTokenAsync()
     {
