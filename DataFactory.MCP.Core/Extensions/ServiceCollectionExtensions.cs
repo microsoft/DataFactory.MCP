@@ -6,6 +6,7 @@ using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Configuration;
 using DataFactory.MCP.Infrastructure.Http;
 using DataFactory.MCP.Resources.McpApps;
+using DataFactory.MCP.Resources.Skills;
 using DataFactory.MCP.Services;
 using DataFactory.MCP.Services.Authentication;
 using DataFactory.MCP.Services.BackgroundTasks;
@@ -101,7 +102,8 @@ public static class ServiceCollectionExtensions
             .WithTools<PipelineTool>()
             .WithTools<CopyJobTool>()
             .WithTools<CreateConnectionUITool>()                // MCP Apps: Create Connection UI
-            .WithResources<CreateConnectionResourceHandler>();  // MCP Apps: Create Connection Resource
+            .WithResources<CreateConnectionResourceHandler>()  // MCP Apps: Create Connection Resource
+            .WithResources<SkillResourceHandler>();             // SEP-2640: Skill Resources
     }
 
     /// <summary>
