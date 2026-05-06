@@ -10,8 +10,13 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataFactory.MCP.Core\DataFactory.MCP.Core.csproj" />
-    <!-- TODO: Replace with NuGet package reference when Microsoft.Mcp.Core is published to NuGet.
-         For now, requires the mcp repo cloned as a sibling at Q:\Repos\mcp -->
+  </ItemGroup>
+  <!-- Microsoft.Mcp.Core: use sibling repo path when standalone, or mcp repo path when used as submodule -->
+  <ItemGroup Condition="Exists('..\..\..\core\Microsoft.Mcp.Core\src\Microsoft.Mcp.Core.csproj')">
+    <ProjectReference Include="..\..\..\core\Microsoft.Mcp.Core\src\Microsoft.Mcp.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="!Exists('..\..\..\core\Microsoft.Mcp.Core\src\Microsoft.Mcp.Core.csproj')">
+    <!-- Standalone build: mcp repo as sibling at same level as DataFactory.MCP -->
     <ProjectReference Include="..\..\mcp\core\Microsoft.Mcp.Core\src\Microsoft.Mcp.Core.csproj" />
   </ItemGroup>
 </Project>
