@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 using DataFactory.MCP.Extensions;
-using DataFactory.MCP.Fabric.Commands;
+using DataFactory.MCP.Fabric.Commands.Pipeline;
+using DataFactory.MCP.Fabric.Commands.Workspace;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;

@@ -3,7 +3,7 @@
 
 using Microsoft.Mcp.Core.Options;
 
-namespace DataFactory.MCP.Fabric.Options;
+namespace DataFactory.MCP.Fabric.Options.Pipeline;
 
 public sealed class GetPipelineOptions : GlobalOptions
 {

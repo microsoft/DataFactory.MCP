@@ -4,6 +4,7 @@
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Fabric.Models;
 using DataFactory.MCP.Fabric.Options;
+using DataFactory.MCP.Fabric.Options.Workspace;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -11,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
 
-namespace DataFactory.MCP.Fabric.Commands;
+namespace DataFactory.MCP.Fabric.Commands.Workspace;
 
 [CommandMetadata(
     Id = "a1b2c3d4-1001-4000-8000-000000000001",

@@ -4,6 +4,7 @@
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Fabric.Models;
 using DataFactory.MCP.Fabric.Options;
+using DataFactory.MCP.Fabric.Options.Pipeline;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -11,22 +12,22 @@ using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
 
-namespace DataFactory.MCP.Fabric.Commands;
+namespace DataFactory.MCP.Fabric.Commands.Pipeline;
 
 [CommandMetadata(
-    Id = "a1b2c3d4-1001-4000-8000-000000000004",
-    Name = "get-pipeline",
-    Title = "Get Pipeline",
-    Description = "Gets details of a specific pipeline in a Microsoft Fabric workspace. Requires workspace ID and pipeline ID.",
+    Id = "a1b2c3d4-1001-4000-8000-000000000005",
+    Name = "run-pipeline",
+    Title = "Run Pipeline",
+    Description = "Triggers a run of a specified pipeline in a Microsoft Fabric workspace. Requires workspace ID and pipeline ID. Returns the run instance ID.",
     Destructive = false,
-    Idempotent = true,
-    ReadOnly = true,
+    Idempotent = false,
+    ReadOnly = false,
     OpenWorld = false)]
-public sealed class GetPipelineCommand(
-    ILogger<GetPipelineCommand> logger,
-    IFabricPipelineService pipelineService) : GlobalCommand<GetPipelineOptions>()
+public sealed class RunPipelineCommand(
+    ILogger<RunPipelineCommand> logger,
+    IFabricPipelineService pipelineService) : GlobalCommand<RunPipelineOptions>()
 {
-    private readonly ILogger<GetPipelineCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<RunPipelineCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPipelineService _pipelineService = pipelineService ?? throw new ArgumentNullException(nameof(pipelineService));
 
     protected override void RegisterOptions(Command command)
@@ -36,7 +37,7 @@ public sealed class GetPipelineCommand(
         command.Options.Add(DataFactoryOptionDefinitions.PipelineId.AsRequired());
     }
 
-    protected override GetPipelineOptions BindOptions(ParseResult parseResult)
+    protected override RunPipelineOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.WorkspaceId = parseResult.GetValueOrDefault<string>(DataFactoryOptionDefinitions.WorkspaceIdName) ?? string.Empty;
@@ -54,17 +55,17 @@ public sealed class GetPipelineCommand(
         var options = BindOptions(parseResult);
         try
         {
-            var pipeline = await _pipelineService.GetPipelineAsync(options.WorkspaceId, options.PipelineId);
+            var runId = await _pipelineService.RunPipelineAsync(options.WorkspaceId, options.PipelineId);
 
-            _logger.LogInformation("Successfully retrieved pipeline {PipelineId} from workspace {WorkspaceId}",
-                options.PipelineId, options.WorkspaceId);
+            _logger.LogInformation("Successfully triggered pipeline {PipelineId} in workspace {WorkspaceId}, RunId: {RunId}",
+                options.PipelineId, options.WorkspaceId, runId);
 
-            var result = new GetPipelineCommandResult(pipeline);
-            context.Response.Results = ResponseResult.Create(result, DataFactoryJsonContext.Default.GetPipelineCommandResult);
+            var result = new RunPipelineCommandResult(runId);
+            context.Response.Results = ResponseResult.Create(result, DataFactoryJsonContext.Default.RunPipelineCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting pipeline {PipelineId} from workspace {WorkspaceId}",
+            _logger.LogError(ex, "Error running pipeline {PipelineId} in workspace {WorkspaceId}",
                 options.PipelineId, options.WorkspaceId);
             HandleException(context, ex);
         }

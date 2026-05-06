@@ -4,6 +4,7 @@
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Fabric.Models;
 using DataFactory.MCP.Fabric.Options;
+using DataFactory.MCP.Fabric.Options.Pipeline;
 using DataFactory.MCP.Models.Pipeline;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -12,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Options;
 
-namespace DataFactory.MCP.Fabric.Commands;
+namespace DataFactory.MCP.Fabric.Commands.Pipeline;
 
 [CommandMetadata(
     Id = "a1b2c3d4-1001-4000-8000-000000000003",
@@ -69,7 +70,7 @@ public sealed class CreatePipelineCommand(
                 options.DisplayName, options.WorkspaceId);
 
             // Map CreatePipelineResponse to Pipeline for the result
-            var pipeline = new Pipeline
+            var pipeline = new DataFactory.MCP.Models.Pipeline.Pipeline
             {
                 Id = response.Id,
                 DisplayName = response.DisplayName,
