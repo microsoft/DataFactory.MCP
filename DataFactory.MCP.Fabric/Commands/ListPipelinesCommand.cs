@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Fabric.Models;
 using DataFactory.MCP.Fabric.Options;
+using DataFactory.MCP.Handlers.Pipeline;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -24,10 +24,10 @@ namespace DataFactory.MCP.Fabric.Commands;
     OpenWorld = false)]
 public sealed class ListPipelinesCommand(
     ILogger<ListPipelinesCommand> logger,
-    IFabricPipelineService pipelineService) : GlobalCommand<ListPipelinesOptions>()
+    ListPipelinesHandler handler) : GlobalCommand<ListPipelinesOptions>()
 {
     private readonly ILogger<ListPipelinesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IFabricPipelineService _pipelineService = pipelineService ?? throw new ArgumentNullException(nameof(pipelineService));
+    private readonly ListPipelinesHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));
 
     protected override void RegisterOptions(Command command)
     {
@@ -50,20 +50,20 @@ public sealed class ListPipelinesCommand(
         }
 
         var options = BindOptions(parseResult);
-        try
-        {
-            var response = await _pipelineService.ListPipelinesAsync(options.WorkspaceId);
 
+        var result = await _handler.ExecuteAsync(options.WorkspaceId);
+        if (result.IsSuccess)
+        {
             _logger.LogInformation("Successfully listed {Count} pipelines in workspace {WorkspaceId}",
-                response.Value.Count, options.WorkspaceId);
+                result.Value!.PipelineCount, options.WorkspaceId);
 
-            var result = new ListPipelinesCommandResult(response.Value, response.Value.Count);
-            context.Response.Results = ResponseResult.Create(result, DataFactoryJsonContext.Default.ListPipelinesCommandResult);
+            var commandResult = new ListPipelinesCommandResult(result.Value.RawPipelines, result.Value.PipelineCount);
+            context.Response.Results = ResponseResult.Create(commandResult, DataFactoryJsonContext.Default.ListPipelinesCommandResult);
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Error listing pipelines in workspace {WorkspaceId}", options.WorkspaceId);
-            HandleException(context, ex);
+            _logger.LogError("Error listing pipelines in workspace {WorkspaceId}: {Error}", options.WorkspaceId, result.Error);
+            HandleException(context, new Exception(result.Error));
         }
 
         return context.Response;

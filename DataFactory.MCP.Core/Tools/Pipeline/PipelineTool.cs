@@ -4,6 +4,8 @@ using System.Text;
 using System.Text.Json;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
+using DataFactory.MCP.Handlers;
+using DataFactory.MCP.Handlers.Pipeline;
 using DataFactory.MCP.Models.Pipeline;
 using DataFactory.MCP.Models.Pipeline.Definition;
 using DataFactory.MCP.Models.Pipeline.Schedule;
@@ -19,13 +21,16 @@ public class PipelineTool
 {
     private readonly IFabricPipelineService _pipelineService;
     private readonly IValidationService _validationService;
+    private readonly ListPipelinesHandler _listPipelinesHandler;
 
     public PipelineTool(
         IFabricPipelineService pipelineService,
-        IValidationService validationService)
+        IValidationService validationService,
+        ListPipelinesHandler listPipelinesHandler)
     {
         _pipelineService = pipelineService;
         _validationService = validationService;
+        _listPipelinesHandler = listPipelinesHandler;
     }
 
     [McpServerTool, Description(@"Returns a list of Pipelines from the specified workspace. This API supports pagination.")]
@@ -33,45 +38,21 @@ public class PipelineTool
         [Description("The workspace ID to list pipelines from (required)")] string workspaceId,
         [Description("A token for retrieving the next page of results (optional)")] string? continuationToken = null)
     {
-        try
+        var result = await _listPipelinesHandler.ExecuteAsync(workspaceId, continuationToken);
+        if (result.IsSuccess)
         {
-            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
-
-            var response = await _pipelineService.ListPipelinesAsync(workspaceId, continuationToken);
-
-            if (!response.Value.Any())
+            var value = result.Value!;
+            return new
             {
-                return $"No pipelines found in workspace '{workspaceId}'.";
-            }
-
-            var result = new
-            {
-                WorkspaceId = workspaceId,
-                PipelineCount = response.Value.Count,
-                ContinuationToken = response.ContinuationToken,
-                ContinuationUri = response.ContinuationUri,
-                HasMoreResults = !string.IsNullOrEmpty(response.ContinuationToken),
-                Pipelines = response.Value.Select(p => p.ToFormattedInfo())
-            };
-
-            return result.ToMcpJson();
+                value.WorkspaceId,
+                value.PipelineCount,
+                value.ContinuationToken,
+                value.ContinuationUri,
+                value.HasMoreResults,
+                value.Pipelines
+            }.ToMcpJson();
         }
-        catch (ArgumentException ex)
-        {
-            return ex.ToValidationError().ToMcpJson();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return ex.ToAuthenticationError().ToMcpJson();
-        }
-        catch (HttpRequestException ex)
-        {
-            return ex.ToHttpError().ToMcpJson();
-        }
-        catch (Exception ex)
-        {
-            return ex.ToOperationError("listing pipelines").ToMcpJson();
-        }
+        return result.ToErrorResponse("listing pipelines").ToMcpJson();
     }
 
     [McpServerTool, Description(@"Creates a Pipeline in the specified workspace.")]

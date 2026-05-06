@@ -15,6 +15,7 @@ using DataFactory.MCP.Tools;
 using DataFactory.MCP.Tools.Dataflow;
 using DataFactory.MCP.Tools.CopyJob;
 using DataFactory.MCP.Tools.Pipeline;
+using DataFactory.MCP.Handlers.Pipeline;
 
 namespace DataFactory.MCP.Extensions;
 
@@ -67,6 +68,8 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IFabricCapacityService, FabricCapacityService>()
             // Pipeline service
             .AddSingleton<IFabricPipelineService, FabricPipelineService>()
+            // Pipeline handlers (shared handler pattern)
+            .AddSingleton<ListPipelinesHandler>()
             // Copy Job service
             .AddSingleton<IFabricCopyJobService, FabricCopyJobService>()
             // Session accessor for background notifications
