@@ -3,7 +3,6 @@
 
 using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Fabric.Commands.Pipeline;
-using DataFactory.MCP.Fabric.Commands.Workspace;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
@@ -21,7 +20,6 @@ public class DataFactoryAreaSetup : IAreaSetup
         services.AddDataFactoryMcpServices();
 
         // Register command instances
-        services.AddSingleton<ListWorkspacesCommand>();
         services.AddSingleton<ListPipelinesCommand>();
         services.AddSingleton<CreatePipelineCommand>();
         services.AddSingleton<GetPipelineCommand>();
@@ -39,7 +37,6 @@ public class DataFactoryAreaSetup : IAreaSetup
             - Work with dataflows and data transformations
             """);
 
-        group.AddCommand<ListWorkspacesCommand>(serviceProvider);
         group.AddCommand<ListPipelinesCommand>(serviceProvider);
         group.AddCommand<CreatePipelineCommand>(serviceProvider);
         group.AddCommand<GetPipelineCommand>(serviceProvider);
