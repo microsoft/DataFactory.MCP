@@ -6,6 +6,7 @@ namespace DataFactory.MCP.Models.Gateway;
 /// <summary>
 /// Custom JSON converter for Gateway polymorphic deserialization
 /// </summary>
+#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
 public class GatewayJsonConverter : JsonConverter<Gateway>
 {
     public override Gateway Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -36,3 +37,4 @@ public class GatewayJsonConverter : JsonConverter<Gateway>
         JsonSerializer.Serialize(writer, value, value.GetType(), options);
     }
 }
+#pragma warning restore IL2026, IL3050
