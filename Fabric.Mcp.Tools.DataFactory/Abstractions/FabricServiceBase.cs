@@ -61,7 +61,9 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
+#pragma warning disable IL2026, IL3050
         var jsonContent = JsonSerializer.Serialize(request, JsonOptions);
+#pragma warning restore IL2026, IL3050
         Logger.LogDebug("Request body: {Body}", jsonContent);
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
@@ -79,7 +81,9 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Patching: {Url}", url);
 
+#pragma warning disable IL2026, IL3050
         var jsonContent = JsonSerializer.Serialize(request, JsonOptions);
+#pragma warning restore IL2026, IL3050
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         var httpRequest = new HttpRequestMessage(HttpMethod.Patch, url) { Content = content };
@@ -97,7 +101,9 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
+#pragma warning disable IL2026, IL3050
         var jsonContent = JsonSerializer.Serialize(request, JsonOptions);
+#pragma warning restore IL2026, IL3050
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         var response = await HttpClient.PostAsync(url, content);
@@ -115,7 +121,9 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
+#pragma warning disable IL2026, IL3050
         var jsonContent = request != null ? JsonSerializer.Serialize(request, JsonOptions) : null;
+#pragma warning restore IL2026, IL3050
         var content = jsonContent != null ? new StringContent(jsonContent, Encoding.UTF8, "application/json") : null;
 
         var response = await HttpClient.PostAsync(url, content);
@@ -135,7 +143,9 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
+#pragma warning disable IL2026, IL3050
         var jsonContent = JsonSerializer.Serialize(request, JsonOptions);
+#pragma warning restore IL2026, IL3050
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         var response = await HttpClient.PostAsync(url, content);
@@ -145,7 +155,9 @@ public abstract class FabricServiceBase
             return true;
         }
 
+#pragma warning disable IL2026, IL3050
         var (_, _, error) = await response.TryReadAsJsonAsync<object>(JsonOptions);
+#pragma warning restore IL2026, IL3050
         Logger.LogError("API POST request failed. Status: {StatusCode}, Content: {Content}",
             error?.StatusCode, error?.ResponseContent);
         return false;

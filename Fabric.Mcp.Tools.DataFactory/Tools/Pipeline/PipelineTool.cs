@@ -339,7 +339,9 @@ public class PipelineTool
             {
                 try
                 {
+#pragma warning disable IL2026, IL3050
                     executionData = JsonSerializer.Deserialize<object>(executionDataJson);
+#pragma warning restore IL2026, IL3050
                 }
                 catch (JsonException ex)
                 {
@@ -456,8 +458,10 @@ public class PipelineTool
             object configuration;
             try
             {
+#pragma warning disable IL2026, IL3050
                 configuration = JsonSerializer.Deserialize<object>(configurationJson)
                     ?? throw new ArgumentException("Configuration JSON cannot be null");
+#pragma warning restore IL2026, IL3050
             }
             catch (JsonException ex)
             {

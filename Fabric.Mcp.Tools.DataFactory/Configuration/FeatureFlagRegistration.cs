@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -20,7 +21,7 @@ public static class FeatureFlagRegistration
     /// <param name="toolName">The name of the tool for logging purposes</param>
     /// <param name="logger">Logger for outputting registration status</param>
     /// <returns>The MCP server builder for fluent chaining</returns>
-    public static IMcpServerBuilder RegisterToolWithFeatureFlag<T>(
+    public static IMcpServerBuilder RegisterToolWithFeatureFlag<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] T>(
         this IMcpServerBuilder mcpBuilder,
         IConfiguration configuration,
         string[] args,
@@ -29,7 +30,7 @@ public static class FeatureFlagRegistration
         ILogger logger) where T : class
     {
         // Check both configuration parsing and direct args for flexibility
-        var isEnabled = configuration.GetValue<bool>(featureFlag) ||
+        var isEnabled = (bool.TryParse(configuration[featureFlag], out var flagValue) && flagValue) ||
                         args.Contains($"--{featureFlag}");
 
         logger.LogInformation("Feature flag '{FeatureFlag}' is {Status}", featureFlag, isEnabled ? "ENABLED" : "DISABLED");

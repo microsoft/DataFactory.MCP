@@ -5,7 +5,7 @@ namespace Fabric.Mcp.Tools.DataFactory.Models.Workspace;
 /// <summary>
 /// A workspace type. Additional workspace types may be added over time.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<WorkspaceType>))]
 public enum WorkspaceType
 {
     /// <summary>

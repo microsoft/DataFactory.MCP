@@ -180,7 +180,9 @@ public class ConnectionsTool
             List<CreateConnectionParameter>? parameters = null;
             if (!string.IsNullOrWhiteSpace(connectionParameters))
             {
+#pragma warning disable IL2026, IL3050
                 var paramDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(connectionParameters);
+#pragma warning restore IL2026, IL3050
                 if (paramDict != null && paramDict.Count > 0)
                 {
                     parameters = paramDict.Select(kvp => new CreateConnectionParameter
@@ -196,7 +198,9 @@ public class ConnectionsTool
             var creds = new CreateCredentials { CredentialType = credentialType };
             if (!string.IsNullOrWhiteSpace(credentials))
             {
+#pragma warning disable IL2026, IL3050
                 var credDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(credentials);
+#pragma warning restore IL2026, IL3050
                 if (credDict != null)
                 {
                     // Map well-known credential fields

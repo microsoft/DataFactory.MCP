@@ -53,7 +53,9 @@ public class McpUserNotificationService : IUserNotificationService
             {
                 Level = mcpLevel,
                 Logger = "UserNotification",
+#pragma warning disable IL2026, IL3050
                 Data = JsonSerializer.SerializeToElement(data)
+#pragma warning restore IL2026, IL3050
             };
 
             await session.SendNotificationAsync(

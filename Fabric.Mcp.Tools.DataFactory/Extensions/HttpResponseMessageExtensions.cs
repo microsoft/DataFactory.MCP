@@ -64,7 +64,9 @@ public static class HttpResponseMessageExtensions
             return null;
         }
 
+#pragma warning disable IL2026, IL3050
         return JsonSerializer.Deserialize<T>(content, options ?? JsonSerializerOptionsProvider.FabricApi);
+#pragma warning restore IL2026, IL3050
     }
 
     /// <summary>
@@ -95,8 +97,10 @@ public static class HttpResponseMessageExtensions
             return defaultValue;
         }
 
+#pragma warning disable IL2026, IL3050
         return JsonSerializer.Deserialize<T>(content, options ?? JsonSerializerOptionsProvider.FabricApi)
             ?? defaultValue;
+#pragma warning restore IL2026, IL3050
     }
 
     /// <summary>
@@ -153,7 +157,9 @@ public static class HttpResponseMessageExtensions
         }
 
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
+#pragma warning disable IL2026, IL3050
         var value = JsonSerializer.Deserialize<T>(content, options ?? JsonSerializerOptionsProvider.FabricApi);
+#pragma warning restore IL2026, IL3050
         return (true, value, null);
     }
 

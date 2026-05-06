@@ -5,7 +5,7 @@ namespace Fabric.Mcp.Tools.DataFactory.Models.Connection;
 /// <summary>
 /// The connectivity type of the connection
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<ConnectivityType>))]
 public enum ConnectivityType
 {
     ShareableCloud,
@@ -20,7 +20,7 @@ public enum ConnectivityType
 /// <summary>
 /// The credential type of the connection
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<CredentialType>))]
 public enum CredentialType
 {
     Windows,
@@ -37,7 +37,7 @@ public enum CredentialType
 /// <summary>
 /// The connection encryption type of the connection
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<ConnectionEncryption>))]
 public enum ConnectionEncryption
 {
     Encrypted,
@@ -48,7 +48,7 @@ public enum ConnectionEncryption
 /// <summary>
 /// The privacy level setting of the connection
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<PrivacyLevel>))]
 public enum PrivacyLevel
 {
     None,
@@ -60,7 +60,7 @@ public enum PrivacyLevel
 /// <summary>
 /// The single sign-on type of the connection
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<SingleSignOnType>))]
 public enum SingleSignOnType
 {
     None,

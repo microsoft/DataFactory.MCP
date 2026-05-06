@@ -23,7 +23,6 @@ public static class JsonSerializerOptionsProvider
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         Converters =
         {
-            new JsonStringEnumConverter(),
             new ConnectionJsonConverter(),
             new GatewayJsonConverter()
         }

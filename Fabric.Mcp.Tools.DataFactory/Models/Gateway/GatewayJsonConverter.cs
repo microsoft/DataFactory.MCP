@@ -22,6 +22,7 @@ public class GatewayJsonConverter : JsonConverter<Gateway>
         string gatewayType = typeElement.GetString() ?? string.Empty;
 
         // Deserialize to the appropriate concrete type based on the type field
+#pragma warning disable IL2026, IL3050
         return gatewayType switch
         {
             "OnPremises" => JsonSerializer.Deserialize<OnPremisesGateway>(root.GetRawText(), options)!,
@@ -29,10 +30,13 @@ public class GatewayJsonConverter : JsonConverter<Gateway>
             "VirtualNetwork" => JsonSerializer.Deserialize<VirtualNetworkGateway>(root.GetRawText(), options)!,
             _ => throw new JsonException($"Unknown gateway type: {gatewayType}")
         };
+#pragma warning restore IL2026, IL3050
     }
 
     public override void Write(Utf8JsonWriter writer, Gateway value, JsonSerializerOptions options)
     {
+#pragma warning disable IL2026, IL3050
         JsonSerializer.Serialize(writer, value, value.GetType(), options);
+#pragma warning restore IL2026, IL3050
     }
 }

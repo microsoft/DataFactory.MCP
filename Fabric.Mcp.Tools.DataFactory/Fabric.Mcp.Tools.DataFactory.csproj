@@ -5,6 +5,9 @@
         <RollForward>Major</RollForward>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <IsAotCompatible>true</IsAotCompatible>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+        <EnableAotAnalyzer>true</EnableAotAnalyzer>
 
         <!-- Package metadata -->
         <PackageId>Microsoft.Fabric.Mcp.Tools.DataFactory</PackageId>

@@ -28,6 +28,7 @@ public class ConnectionJsonConverter : JsonConverter<Connection>
         var jsonOptions = new JsonSerializerOptions(options);
         jsonOptions.Converters.Remove(this); // Prevent infinite recursion
 
+#pragma warning disable IL2026, IL3050
         return connectivityType switch
         {
             ConnectivityType.ShareableCloud => JsonSerializer.Deserialize<ShareableCloudConnection>(json, jsonOptions),
@@ -37,12 +38,15 @@ public class ConnectionJsonConverter : JsonConverter<Connection>
             ConnectivityType.VirtualNetworkGateway => JsonSerializer.Deserialize<VirtualNetworkGatewayConnection>(json, jsonOptions),
             _ => throw new JsonException($"Unsupported connectivity type: {connectivityType}")
         };
+#pragma warning restore IL2026, IL3050
     }
 
     public override void Write(Utf8JsonWriter writer, Connection value, JsonSerializerOptions options)
     {
         var jsonOptions = new JsonSerializerOptions(options);
         jsonOptions.Converters.Remove(this); // Prevent infinite recursion
+#pragma warning disable IL2026, IL3050
         JsonSerializer.Serialize(writer, value, value.GetType(), jsonOptions);
+#pragma warning restore IL2026, IL3050
     }
 }

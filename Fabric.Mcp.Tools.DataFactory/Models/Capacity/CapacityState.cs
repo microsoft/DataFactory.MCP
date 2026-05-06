@@ -5,7 +5,7 @@ namespace Fabric.Mcp.Tools.DataFactory.Models.Capacity;
 /// <summary>
 /// A capacity state. Additional capacity states may be added over time.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<CapacityState>))]
 public enum CapacityState
 {
     /// <summary>

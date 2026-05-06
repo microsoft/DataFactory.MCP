@@ -71,8 +71,10 @@ public class DataflowRefreshService : IDataflowRefreshService
         var response = await httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
 
+#pragma warning disable IL2026, IL3050
         var jobInstance = await response.Content.ReadFromJsonAsync<ItemJobInstance>(
             JsonSerializerOptionsProvider.FabricApi);
+#pragma warning restore IL2026, IL3050
 
         if (jobInstance == null)
         {

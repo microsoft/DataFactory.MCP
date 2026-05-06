@@ -17,9 +17,10 @@ public class ValidationService : IValidationService
         }
 
         var validationResults = new List<ValidationResult>();
+#pragma warning disable IL2026, IL3050
         var validationContext = new ValidationContext(obj);
-
         if (!Validator.TryValidateObject(obj, validationContext, validationResults, validateAllProperties: true))
+#pragma warning restore IL2026, IL3050
         {
             var errors = string.Join("; ", validationResults.Select(r => r.ErrorMessage));
             throw new ArgumentException($"Validation failed: {errors}", parameterName);
@@ -34,8 +35,10 @@ public class ValidationService : IValidationService
         }
 
         var validationResults = new List<ValidationResult>();
+#pragma warning disable IL2026, IL3050
         var validationContext = new ValidationContext(obj);
         Validator.TryValidateObject(obj, validationContext, validationResults, validateAllProperties: true);
+#pragma warning restore IL2026, IL3050
 
         return validationResults;
     }

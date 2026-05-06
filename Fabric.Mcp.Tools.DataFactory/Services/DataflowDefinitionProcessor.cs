@@ -86,7 +86,9 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
             var updatedMetadata = CreateUpdatedQueryMetadataWithConnections(metadata, connections, clearExisting);
 
             // Encode updated metadata back to Base64
+#pragma warning disable IL2026, IL3050
             var updatedMetadataJson = JsonSerializer.Serialize(updatedMetadata, JsonSerializerOptionsProvider.Indented);
+#pragma warning restore IL2026, IL3050
             var updatedBytes = Encoding.UTF8.GetBytes(updatedMetadataJson);
             queryMetadataPart.Payload = Convert.ToBase64String(updatedBytes);
         }
@@ -130,7 +132,9 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
                     ["ClusterId"] = clusterId,
                     ["DatasourceId"] = connectionId
                 };
+#pragma warning disable IL2026, IL3050
                 connectionIdValue = JsonSerializer.Serialize(connectionIdObj);
+#pragma warning restore IL2026, IL3050
             }
             else
             {
@@ -208,7 +212,9 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
 
             var updatedMetadata = CreateUpdatedQueryMetadataWithQuery(metadata, queryName, referencedDestinationQuery);
 
+#pragma warning disable IL2026, IL3050
             var updatedMetadataJson = JsonSerializer.Serialize(updatedMetadata, JsonSerializerOptionsProvider.Indented);
+#pragma warning restore IL2026, IL3050
             var updatedBytes = Encoding.UTF8.GetBytes(updatedMetadataJson);
             queryMetadataPart.Payload = Convert.ToBase64String(updatedBytes);
         }
@@ -494,7 +500,9 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
 
             var updatedMetadata = SyncQueryMetadata(currentMetadata, parsedQueries);
 
+#pragma warning disable IL2026, IL3050
             var updatedMetadataJson = JsonSerializer.Serialize(updatedMetadata, JsonSerializerOptionsProvider.Indented);
+#pragma warning restore IL2026, IL3050
             var updatedMetadataBytes = Encoding.UTF8.GetBytes(updatedMetadataJson);
             queryMetadataPart.Payload = Convert.ToBase64String(updatedMetadataBytes);
 

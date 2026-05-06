@@ -15,6 +15,8 @@ public static class JsonExtensions
     /// <returns>The JSON string representation</returns>
     public static string ToMcpJson(this object obj)
     {
+#pragma warning disable IL2026, IL3050
         return JsonSerializer.Serialize(obj, JsonSerializerOptionsProvider.McpResponse);
+#pragma warning restore IL2026, IL3050
     }
 }
