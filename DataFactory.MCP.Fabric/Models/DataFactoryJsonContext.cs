@@ -13,6 +13,8 @@ namespace DataFactory.MCP.Fabric.Models;
 [JsonSerializable(typeof(CreatePipelineCommandResult))]
 [JsonSerializable(typeof(GetPipelineCommandResult))]
 [JsonSerializable(typeof(RunPipelineCommandResult))]
+[JsonSerializable(typeof(ListDataflowsCommandResult))]
+[JsonSerializable(typeof(CreateDataflowCommandResult))]
 public partial class DataFactoryJsonContext : JsonSerializerContext
 {
 }
@@ -21,3 +23,5 @@ public sealed record ListPipelinesCommandResult(List<Pipeline> Pipelines, int To
 public sealed record CreatePipelineCommandResult(Pipeline Pipeline);
 public sealed record GetPipelineCommandResult(Pipeline Pipeline);
 public sealed record RunPipelineCommandResult(string? RunId);
+public sealed record ListDataflowsCommandResult(List<DataFactory.MCP.Models.Dataflow.Dataflow> Dataflows, int TotalCount);
+public sealed record CreateDataflowCommandResult(DataFactory.MCP.Models.Dataflow.Dataflow Dataflow);

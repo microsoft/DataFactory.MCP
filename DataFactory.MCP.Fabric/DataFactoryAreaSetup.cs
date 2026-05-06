@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using DataFactory.MCP.Extensions;
+using DataFactory.MCP.Fabric.Commands.Dataflow;
 using DataFactory.MCP.Fabric.Commands.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -24,6 +25,8 @@ public class DataFactoryAreaSetup : IAreaSetup
         services.AddSingleton<CreatePipelineCommand>();
         services.AddSingleton<GetPipelineCommand>();
         services.AddSingleton<RunPipelineCommand>();
+        services.AddSingleton<ListDataflowsCommand>();
+        services.AddSingleton<CreateDataflowCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -41,6 +44,8 @@ public class DataFactoryAreaSetup : IAreaSetup
         group.AddCommand<CreatePipelineCommand>(serviceProvider);
         group.AddCommand<GetPipelineCommand>(serviceProvider);
         group.AddCommand<RunPipelineCommand>(serviceProvider);
+        group.AddCommand<ListDataflowsCommand>(serviceProvider);
+        group.AddCommand<CreateDataflowCommand>(serviceProvider);
 
         return group;
     }
