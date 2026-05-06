@@ -69,8 +69,3 @@ public sealed class ListPipelinesCommand(
         return context.Response;
     }
 }
-
-public sealed class ListPipelinesOptions : GlobalOptions
-{
-    public string WorkspaceId { get; set; } = string.Empty;
-}

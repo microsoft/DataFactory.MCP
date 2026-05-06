@@ -68,8 +68,3 @@ public sealed class ListWorkspacesCommand(
         return context.Response;
     }
 }
-
-public sealed class ListWorkspacesOptions : GlobalOptions
-{
-    public string? Roles { get; set; }
-}

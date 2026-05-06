@@ -72,9 +72,3 @@ public sealed class RunPipelineCommand(
         return context.Response;
     }
 }
-
-public sealed class RunPipelineOptions : GlobalOptions
-{
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string PipelineId { get; set; } = string.Empty;
-}

@@ -92,10 +92,3 @@ public sealed class CreatePipelineCommand(
         return context.Response;
     }
 }
-
-public sealed class CreatePipelineOptions : GlobalOptions
-{
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
-    public string? Description { get; set; }
-}
