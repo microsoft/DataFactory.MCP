@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsAotCompatible>true</IsAotCompatible>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>DataFactory.MCP.Fabric</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DataFactory.MCP.Core\DataFactory.MCP.Core.csproj" />
+    <!-- TODO: Replace with NuGet package reference when Microsoft.Mcp.Core is published to NuGet.
+         For now, requires the mcp repo cloned as a sibling at Q:\Repos\mcp -->
+    <ProjectReference Include="..\..\mcp\core\Microsoft.Mcp.Core\src\Microsoft.Mcp.Core.csproj" />
+  </ItemGroup>
+</Project>
