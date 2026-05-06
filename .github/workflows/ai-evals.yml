@@ -22,7 +22,7 @@ on:
       - "evals/**"
       - "claude-skills/**"
       - "chatgpt-skills/**"
-      - "DataFactory.MCP.Core/Tools/**"
+      - "Fabric.Mcp.Tools.DataFactory/Tools/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

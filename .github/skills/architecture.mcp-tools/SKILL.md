@@ -12,11 +12,11 @@ For the full architecture, see [`docs/ARCHITECTURE.md`](../../../docs/ARCHITECTU
 Every new MCP capability follows the **Tool → Service → Model** pattern:
 
 ```
-1. Define Models       (DataFactory.MCP.Core/Models/)
-2. Define Interface    (DataFactory.MCP.Core/Abstractions/)
-3. Implement Service   (DataFactory.MCP.Core/Services/)
-4. Implement Tool      (DataFactory.MCP.Core/Tools/)
-5. Register in DI      (DataFactory.MCP.Core/Extensions/)
+1. Define Models       (Fabric.Mcp.Tools.DataFactory/Models/)
+2. Define Interface    (Fabric.Mcp.Tools.DataFactory/Abstractions/)
+3. Implement Service   (Fabric.Mcp.Tools.DataFactory/Services/)
+4. Implement Tool      (Fabric.Mcp.Tools.DataFactory/Tools/)
+5. Register in DI      (Fabric.Mcp.Tools.DataFactory/Extensions/)
 6. Add Tests           (DataFactory.MCP.Tests/)
 ```
 

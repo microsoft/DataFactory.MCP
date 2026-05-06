@@ -298,8 +298,8 @@ MCP App Resources expose interactive HTML UIs that render inside the VS Code cha
 - **URI**: `ui://datafactory/create-connection`
 - **MIME type**: `text/html;profile=mcp-app`
 - **Description**: Interactive form for creating a new data source connection
-- **Source**: `DataFactory.MCP.Core/Resources/McpApps/`
-- **UI project**: `DataFactory.MCP.Core/Resources/McpApps/src/create-connection/` (Vite + React build)
+- **Source**: `Fabric.Mcp.Tools.DataFactory/Resources/McpApps/`
+- **UI project**: `Fabric.Mcp.Tools.DataFactory/Resources/McpApps/src/create-connection/` (Vite + React build)
 
 The form:
 1. Calls `list_supported_connection_types` to populate the connection type dropdown

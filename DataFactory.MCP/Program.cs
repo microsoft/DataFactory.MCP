@@ -1,10 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using DataFactory.MCP.Abstractions.Interfaces;
-using DataFactory.MCP.Extensions;
+using Fabric.Mcp.Tools.DataFactory.Abstractions.Interfaces;
+using Fabric.Mcp.Tools.DataFactory.Extensions;
 using DataFactory.MCP.Notifications;
-using DataFactory.MCP.Services;
+using Fabric.Mcp.Tools.DataFactory.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
 

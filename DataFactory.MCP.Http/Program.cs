@@ -1,6 +1,6 @@
-using DataFactory.MCP.Abstractions.Interfaces;
-using DataFactory.MCP.Extensions;
-using DataFactory.MCP.Services;
+using Fabric.Mcp.Tools.DataFactory.Abstractions.Interfaces;
+using Fabric.Mcp.Tools.DataFactory.Extensions;
+using Fabric.Mcp.Tools.DataFactory.Services;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 

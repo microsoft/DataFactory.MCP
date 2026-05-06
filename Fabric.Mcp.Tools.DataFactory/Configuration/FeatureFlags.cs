@@ -1,0 +1,22 @@
+namespace Fabric.Mcp.Tools.DataFactory.Configuration;
+
+/// <summary>
+/// Constants for feature flag names used throughout the application
+/// </summary>
+public static class FeatureFlags
+{
+    /// <summary>
+    /// Feature flag for enabling the DeviceCodeAuthenticationTool
+    /// Command line: --device-code-auth
+    /// Only enabled for HTTP version
+    /// </summary>
+    public const string DeviceCodeAuth = "device-code-auth";
+
+    /// <summary>
+    /// Feature flag for enabling the InteractiveAuthenticationTool
+    /// Command line: --interactive-auth
+    /// Enabled by default for stdio, disabled by default for HTTP
+    /// </summary>
+    public const string InteractiveAuth = "interactive-auth";
+
+}

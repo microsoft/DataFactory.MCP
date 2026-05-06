@@ -1,5 +1,5 @@
-using DataFactory.MCP.Abstractions;
-using DataFactory.MCP.Abstractions.Interfaces;
+using Fabric.Mcp.Tools.DataFactory.Abstractions;
+using Fabric.Mcp.Tools.DataFactory.Abstractions.Interfaces;
 using DataFactory.WindowsMCP.Abstractions.Interfaces;
 using DataFactory.WindowsMCP.Models.Dataflow.Excel;
 using Microsoft.Extensions.Logging;

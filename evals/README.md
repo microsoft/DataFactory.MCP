@@ -64,7 +64,7 @@ Each scenario follows this template:
 
 ## Running Evals
 
-Evals run automatically as a **GitHub Actions workflow** on PRs that touch `evals/`, `claude-skills/`, or `DataFactory.MCP.Core/Tools/`.
+Evals run automatically as a **GitHub Actions workflow** on PRs that touch `evals/`, `claude-skills/`, or `Fabric.Mcp.Tools.DataFactory/Tools/`.
 
 ### What the workflow does
 

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using DataFactory.MCP.Abstractions.Interfaces;
+using Fabric.Mcp.Tools.DataFactory.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace DataFactory.MCP.Notifications;

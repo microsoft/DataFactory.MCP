@@ -1,8 +1,8 @@
 using Xunit;
-using DataFactory.MCP.Tools.CopyJob;
+using Fabric.Mcp.Tools.DataFactory.Tools.CopyJob;
 using DataFactory.MCP.Tests.Infrastructure;
 using System.Text.Json;
-using DataFactory.MCP.Models;
+using Fabric.Mcp.Tools.DataFactory.Models;
 
 namespace DataFactory.MCP.Tests.Integration;
 

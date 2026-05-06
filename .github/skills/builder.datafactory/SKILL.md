@@ -18,7 +18,7 @@ All commands run from the repo root.
 |------|---------|
 | Build all | `dotnet build` |
 | Build release | `dotnet build -c Release` |
-| Build specific project | `dotnet build DataFactory.MCP.Core/` |
+| Build specific project | `dotnet build Fabric.Mcp.Tools.DataFactory/` |
 | Run all tests | `dotnet test` |
 | Run tests verbose | `dotnet test -v normal` |
 | Run specific test | `dotnet test --filter "FullyQualifiedName~TestName"` |
@@ -42,7 +42,7 @@ To bump version, use `Update-ServerVersion.ps1` or edit `Directory.Build.props` 
 ## NuGet Packages Produced
 
 - `Microsoft.DataFactory.MCP` — Main server package
-- `Microsoft.DataFactory.MCP.Core` — Core library
+- `Microsoft.Fabric.Mcp.Tools.DataFactory` — Core library
 - `Microsoft.DataFactory.MCP.Http` — HTTP transport
 
 ## Troubleshooting

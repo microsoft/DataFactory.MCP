@@ -1,9 +1,9 @@
 using Xunit;
-using DataFactory.MCP.Tools;
-using DataFactory.MCP.Tools.Dataflow;
+using Fabric.Mcp.Tools.DataFactory.Tools;
+using Fabric.Mcp.Tools.DataFactory.Tools.Dataflow;
 using DataFactory.MCP.Tests.Infrastructure;
 using System.Text.Json;
-using DataFactory.MCP.Models;
+using Fabric.Mcp.Tools.DataFactory.Models;
 
 namespace DataFactory.MCP.Tests.Integration;
 

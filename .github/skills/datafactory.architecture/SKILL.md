@@ -11,7 +11,7 @@ For the full architecture reference, see [`docs/ARCHITECTURE.md`](../../../docs/
 
 ```
 DataFactory.MCP/             — Main MCP server (stdio transport, entry point)
-DataFactory.MCP.Core/        — Core library (all business logic)
+Fabric.Mcp.Tools.DataFactory/        — Core library (all business logic)
   ├── Abstractions/          — Interfaces and contracts
   ├── Configuration/         — App configuration classes
   ├── Extensions/            — Extension methods and DI registration

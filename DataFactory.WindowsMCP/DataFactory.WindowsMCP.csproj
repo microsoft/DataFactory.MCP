@@ -27,7 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DataFactory.MCP.Core\DataFactory.MCP.Core.csproj" />
+        <ProjectReference Include="..\Fabric.Mcp.Tools.DataFactory\Fabric.Mcp.Tools.DataFactory.csproj" />
     </ItemGroup>
 
     <ItemGroup>

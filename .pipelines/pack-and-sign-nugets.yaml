@@ -111,7 +111,7 @@ extends:
               - task: npmAuthenticate@0
                 displayName: "NPM Authenticate"
                 inputs:
-                  workingFile: "$(Build.SourcesDirectory)/DataFactory.MCP.Core/Resources/McpApps/.npmrc"
+                  workingFile: "$(Build.SourcesDirectory)/Fabric.Mcp.Tools.DataFactory/Resources/McpApps/.npmrc"
 
               - task: PowerShell@2
                 displayName: "Build MCP Apps UI (npm ci + vite build)"
@@ -119,7 +119,7 @@ extends:
                   targetType: inline
                   script: |
                     $ErrorActionPreference = 'Stop'
-                    $mcpAppsDir = "$(Build.SourcesDirectory)/DataFactory.MCP.Core/Resources/McpApps"
+                    $mcpAppsDir = "$(Build.SourcesDirectory)/Fabric.Mcp.Tools.DataFactory/Resources/McpApps"
                     Write-Host "Building MCP Apps in: $mcpAppsDir"
                     Push-Location $mcpAppsDir
 

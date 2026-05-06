@@ -1,6 +1,6 @@
 using System.Text.Json;
-using DataFactory.MCP.Models.Common.Responses;
-using DataFactory.MCP.Models.Common.Responses.Errors;
+using Fabric.Mcp.Tools.DataFactory.Models.Common.Responses;
+using Fabric.Mcp.Tools.DataFactory.Models.Common.Responses.Errors;
 using Xunit;
 
 namespace DataFactory.MCP.Tests.Infrastructure;

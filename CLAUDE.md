@@ -4,7 +4,7 @@
 
 ## Project Structure
 - `DataFactory.MCP/` — Main MCP server
-- `DataFactory.MCP.Core/` — Core library
+- `Fabric.Mcp.Tools.DataFactory/` — Core library
 - `DataFactory.MCP.Http/` — HTTP transport
 - `DataFactory.MCP.Tests/` — Test suite
 - `claude-skills/` — Skill definitions for Claude

@@ -1,5 +1,5 @@
 using Xunit;
-using DataFactory.MCP.Tools;
+using Fabric.Mcp.Tools.DataFactory.Tools;
 using DataFactory.MCP.Tests.Infrastructure;
 using System.Text.Json;
 
