@@ -68,7 +68,6 @@ public class DataflowRefreshJob : IBackgroundJob
                 };
             }
 
-            // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
             var jsonContent = System.Text.Json.JsonSerializer.Serialize(request,
                 JsonSerializerOptionsProvider.FabricApi);
             var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
@@ -154,7 +153,6 @@ public class DataflowRefreshJob : IBackgroundJob
         var response = await httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
 
-        // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
         var jobInstance = await response.Content.ReadFromJsonAsync<ItemJobInstance>(
             JsonSerializerOptionsProvider.FabricApi);
 
