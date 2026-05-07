@@ -15,6 +15,7 @@ trigger:
   paths:
     include:
       - DataFactory.MCP/*
+      - DataFactory.MCP.Core/*
 
 pr:
   branches:
@@ -24,6 +25,7 @@ pr:
   paths:
     include:
       - DataFactory.MCP/*
+      - DataFactory.MCP.Core/*
 
 parameters:
   - name: "debug"
@@ -155,6 +157,45 @@ extends:
                     Get-ChildItem "$mcpAppsDir/dist" -Recurse | Select-Object FullName | Format-Table -AutoSize | Out-String | Write-Host
                   pwsh: true
 
+              # --- DataFactory.MCP.Core (library package) ---
+              - task: DotNetCoreCLI@2
+                displayName: "Restore Core packages"
+                inputs:
+                  command: "restore"
+                  projects: "$(Build.SourcesDirectory)/DataFactory.MCP.Core/DataFactory.MCP.Core.csproj"
+                  feedsToUse: "config"
+                  nugetConfigPath: "$(Build.SourcesDirectory)/nuget.private.config"
+                  verbosityRestore: "Normal"
+                  noCache: true
+                retryCountOnTaskFailure: 3
+
+              - task: DotNetCoreCLI@2
+                displayName: "Build Core project"
+                inputs:
+                  command: "build"
+                  projects: "$(Build.SourcesDirectory)/DataFactory.MCP.Core/DataFactory.MCP.Core.csproj"
+                  arguments: "--configuration $(BuildConfiguration) --no-restore"
+
+              - task: onebranch.pipeline.signing@1
+                displayName: "Sign Core binary files"
+                inputs:
+                  command: "sign"
+                  signing_profile: "external_distribution"
+                  files_to_sign: |
+                    **/DataFactory.MCP.Core.dll;
+                  search_root: "$(Build.SourcesDirectory)\\DataFactory.MCP.Core\\bin\\$(BuildConfiguration)\\net10.0"
+
+              - task: DotNetCoreCLI@2
+                displayName: "Pack Core NuGet package"
+                inputs:
+                  command: "pack"
+                  packagesToPack: "$(Build.SourcesDirectory)/DataFactory.MCP.Core/DataFactory.MCP.Core.csproj"
+                  configuration: "$(BuildConfiguration)"
+                  outputDir: "$(OUTPUTROOT)"
+                  nobuild: true
+                  includeSymbols: true
+
+              # --- DataFactory.MCP (tool package) ---
               - task: DotNetCoreCLI@2
                 displayName: "Restore packages"
                 inputs:
