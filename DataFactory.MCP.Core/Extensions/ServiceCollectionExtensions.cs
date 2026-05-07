@@ -73,6 +73,7 @@ public static class ServiceCollectionExtensions
             .AddSingleton<PipelineHandler>()
             // Dataflow handlers
             .AddSingleton<DataflowHandler>()
+            .AddSingleton<DataflowQueryHandler>()
             // Copy Job service
             .AddSingleton<IFabricCopyJobService, FabricCopyJobService>()
             // Session accessor for background notifications
