@@ -37,9 +37,7 @@ public static class FeatureFlagRegistration
         if (isEnabled)
         {
             logger.LogInformation("Registering {ToolName}...", toolName);
-#pragma warning disable IL2091 // Generic type argument does not satisfy 'DynamicallyAccessedMemberTypes' constraint
             mcpBuilder.WithTools<T>();
-#pragma warning restore IL2091
             logger.LogInformation("{ToolName} registered successfully", toolName);
         }
         else
