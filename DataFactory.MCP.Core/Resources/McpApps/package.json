@@ -8,7 +8,7 @@
         "dev": "vite build --watch"
     },
     "dependencies": {
-        "@modelcontextprotocol/ext-apps": "^1.0.1",
+        "@modelcontextprotocol/ext-apps": "^1.7.1",
         "@modelcontextprotocol/sdk": "^1.26.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0"
