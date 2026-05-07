@@ -61,6 +61,7 @@ public class DataflowRefreshService : IDataflowRefreshService
         };
     }
 
+#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public async Task<DataflowRefreshResult> GetStatusAsync(DataflowRefreshContext context)
     {
         var httpClient = _httpClientFactory.CreateClient(HttpClientNames.FabricApi);
@@ -90,4 +91,5 @@ public class DataflowRefreshService : IDataflowRefreshService
             FailureReason = jobInstance.FailureReason?.Message
         };
     }
+#pragma warning restore IL2026, IL3050
 }

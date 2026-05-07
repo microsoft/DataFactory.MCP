@@ -68,8 +68,11 @@ public class DataflowRefreshJob : IBackgroundJob
                 };
             }
 
+            // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
+#pragma warning disable IL2026, IL3050
             var jsonContent = System.Text.Json.JsonSerializer.Serialize(request,
                 JsonSerializerOptionsProvider.FabricApi);
+#pragma warning restore IL2026, IL3050
             var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
 
             _logger.LogInformation("Starting dataflow refresh: POST {Url}", url);
@@ -153,8 +156,11 @@ public class DataflowRefreshJob : IBackgroundJob
         var response = await httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
 
+        // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
+#pragma warning disable IL2026, IL3050
         var jobInstance = await response.Content.ReadFromJsonAsync<ItemJobInstance>(
             JsonSerializerOptionsProvider.FabricApi);
+#pragma warning restore IL2026, IL3050
 
         if (jobInstance == null)
         {

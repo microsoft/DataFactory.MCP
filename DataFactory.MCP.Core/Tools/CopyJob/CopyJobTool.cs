@@ -324,6 +324,7 @@ public class CopyJobTool
     }
 
     [McpServerTool, Description(@"Runs a Copy Job on demand. Returns a job instance ID that can be used to track the run status with GetCopyJobRunStatusAsync.")]
+#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public async Task<string> RunCopyJobAsync(
         [Description("The workspace ID containing the copy job (required)")] string workspaceId,
         [Description("The copy job ID to run (required)")] string copyJobId,
@@ -387,6 +388,7 @@ public class CopyJobTool
             return ex.ToOperationError("running copy job").ToMcpJson();
         }
     }
+#pragma warning restore IL2026, IL3050
 
     [McpServerTool, Description(@"Gets the status of a Copy Job run (job instance). Use the jobInstanceId returned from RunCopyJobAsync to check the run status. Possible statuses: NotStarted, InProgress, Completed, Failed, Cancelled, Deduped.")]
     public async Task<string> GetCopyJobRunStatusAsync(
@@ -437,6 +439,7 @@ public class CopyJobTool
     }
 
     [McpServerTool, Description(@"Creates a schedule for a Copy Job. Supports Cron (interval-based), Daily, Weekly, and Monthly schedule types. An item can have up to 20 schedules.")]
+#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public async Task<string> CreateCopyJobScheduleAsync(
         [Description("The workspace ID containing the copy job (required)")] string workspaceId,
         [Description("The copy job ID to schedule (required)")] string copyJobId,
@@ -504,6 +507,7 @@ public class CopyJobTool
             return ex.ToOperationError("creating copy job schedule").ToMcpJson();
         }
     }
+#pragma warning restore IL2026, IL3050
 
     [McpServerTool, Description(@"Lists all schedules for a Copy Job. Returns the schedule configurations, status, and owner information.")]
     public async Task<string> ListCopyJobSchedulesAsync(

@@ -64,6 +64,7 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
         return decoded;
     }
 
+#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public DataflowDefinition AddConnectionsToDefinition(
         DataflowDefinition definition,
         IEnumerable<(Connection Connection, string ConnectionId, string? ClusterId)> connections,
@@ -168,7 +169,9 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
         metadataDict["connections"] = connectionsList;
         return metadataDict;
     }
+#pragma warning restore IL2026, IL3050
 
+#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public DataflowDefinition AddOrUpdateQueryInDefinition(
         DataflowDefinition definition,
         string queryName,
@@ -215,6 +218,7 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
 
         return definition;
     }
+#pragma warning restore IL2026, IL3050
 
     /// <summary>
     /// Extracts the destination query name from a [DataDestinations] attribute.
@@ -464,6 +468,7 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
         return metadataDict;
     }
 
+#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public DataflowDefinition SyncMashupInDefinition(
         DataflowDefinition definition,
         string newMashupDocument,
@@ -503,6 +508,7 @@ public class DataflowDefinitionProcessor : IDataflowDefinitionProcessor
 
         return definition;
     }
+#pragma warning restore IL2026, IL3050
 
     private Dictionary<string, object> SyncQueryMetadata(
         JsonElement currentMetadata,

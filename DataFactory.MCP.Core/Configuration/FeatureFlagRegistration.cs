@@ -29,15 +29,19 @@ public static class FeatureFlagRegistration
         ILogger logger) where T : class
     {
         // Check both configuration parsing and direct args for flexibility
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
         var isEnabled = configuration.GetValue<bool>(featureFlag) ||
                         args.Contains($"--{featureFlag}");
+#pragma warning restore IL2026
 
         logger.LogInformation("Feature flag '{FeatureFlag}' is {Status}", featureFlag, isEnabled ? "ENABLED" : "DISABLED");
 
         if (isEnabled)
         {
             logger.LogInformation("Registering {ToolName}...", toolName);
+#pragma warning disable IL2091 // Generic type argument does not satisfy 'DynamicallyAccessedMemberTypes' constraint
             mcpBuilder.WithTools<T>();
+#pragma warning restore IL2091
             logger.LogInformation("{ToolName} registered successfully", toolName);
         }
         else

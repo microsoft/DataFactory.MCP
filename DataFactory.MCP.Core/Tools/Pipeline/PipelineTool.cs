@@ -262,6 +262,7 @@ public class PipelineTool
     }
 
     [McpServerTool, Description(@"Runs a Pipeline on demand. Returns a job instance ID that can be used to track the run status with GetPipelineRunStatusAsync.")]
+#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public async Task<string> RunPipelineAsync(
         [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
         [Description("The pipeline ID to run (required)")] string pipelineId,
@@ -298,6 +299,7 @@ public class PipelineTool
         }
         return result.ToErrorResponse("running pipeline").ToMcpJson();
     }
+#pragma warning restore IL2026, IL3050
 
     [McpServerTool, Description(@"Gets the status of a Pipeline run (job instance). Use the jobInstanceId returned from RunPipelineAsync to check the run status. Possible statuses: NotStarted, InProgress, Completed, Failed, Cancelled, Deduped.")]
     public async Task<string> GetPipelineRunStatusAsync(
@@ -348,6 +350,7 @@ public class PipelineTool
     }
 
     [McpServerTool, Description(@"Creates a schedule for a Pipeline. Supports Cron (interval-based), Daily, Weekly, and Monthly schedule types. An item can have up to 20 schedules.")]
+#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public async Task<string> CreatePipelineScheduleAsync(
         [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
         [Description("The pipeline ID to schedule (required)")] string pipelineId,
@@ -415,6 +418,7 @@ public class PipelineTool
             return ex.ToOperationError("creating pipeline schedule").ToMcpJson();
         }
     }
+#pragma warning restore IL2026, IL3050
 
     [McpServerTool, Description(@"Lists all schedules for a Pipeline. Returns the schedule configurations, status, and owner information.")]
     public async Task<string> ListPipelineSchedulesAsync(
