@@ -49,14 +49,12 @@ public class McpUserNotificationService : IUserNotificationService
                 timestamp = DateTime.UtcNow.ToString("o")
             };
 
-#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
             var notificationParams = new LoggingMessageNotificationParams
             {
                 Level = mcpLevel,
                 Logger = "UserNotification",
                 Data = JsonSerializer.SerializeToElement(data)
             };
-#pragma warning restore IL2026, IL3050
 
             await session.SendNotificationAsync(
                 NotificationMethods.LoggingMessageNotification,

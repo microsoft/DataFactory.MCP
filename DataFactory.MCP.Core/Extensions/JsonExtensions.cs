@@ -13,10 +13,8 @@ public static class JsonExtensions
     /// </summary>
     /// <param name="obj">The object to serialize</param>
     /// <returns>The JSON string representation</returns>
-#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public static string ToMcpJson(this object obj)
     {
         return JsonSerializer.Serialize(obj, JsonSerializerOptionsProvider.McpResponse);
     }
-#pragma warning restore IL2026, IL3050
 }

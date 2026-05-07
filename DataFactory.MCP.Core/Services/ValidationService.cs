@@ -9,7 +9,6 @@ namespace DataFactory.MCP.Services;
 /// </summary>
 public class ValidationService : IValidationService
 {
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public void ValidateAndThrow<T>(T obj, string parameterName) where T : class
     {
         if (obj == null)
@@ -40,7 +39,6 @@ public class ValidationService : IValidationService
 
         return validationResults;
     }
-#pragma warning restore IL2026
 
     public void ValidateRequiredString(string value, string parameterName, int? maxLength = null)
     {

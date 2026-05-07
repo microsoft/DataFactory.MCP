@@ -13,6 +13,7 @@
         <IsAotCompatible>true</IsAotCompatible>
         <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
         <EnableAotAnalyzer>true</EnableAotAnalyzer>
+        <NoWarn>$(NoWarn);IL2026;IL3050</NoWarn>
         <PackageIcon>Microsoft-Fabric.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>

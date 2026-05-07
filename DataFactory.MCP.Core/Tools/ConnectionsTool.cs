@@ -151,7 +151,6 @@ public class ConnectionsTool
     }
 
     [McpServerTool, Description(@"Creates a new data source connection. Supports cloud, on-premises (gateway), and virtual network connectivity types.")]
-#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public async Task<string> CreateConnectionAsync(
         [Description("Display name for the connection")] string connectionName,
         [Description("Connection type identifier, e.g. 'SQL', 'Web', 'AzureBlobs', etc.")] string connectionType = "SQL",
@@ -264,5 +263,4 @@ public class ConnectionsTool
             return ex.ToOperationError("creating connection").ToMcpJson();
         }
     }
-#pragma warning restore IL2026, IL3050
 }

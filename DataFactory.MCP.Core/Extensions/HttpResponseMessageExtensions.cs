@@ -50,7 +50,6 @@ public static class HttpResponseMessageExtensions
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The deserialized object</returns>
     /// <exception cref="FabricApiException">Thrown when the response indicates failure</exception>
-#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public static async Task<T?> ReadAsJsonAsync<T>(
         this HttpResponseMessage response,
         JsonSerializerOptions? options = null,
@@ -67,7 +66,6 @@ public static class HttpResponseMessageExtensions
 
         return JsonSerializer.Deserialize<T>(content, options ?? JsonSerializerOptionsProvider.FabricApi);
     }
-#pragma warning restore IL2026, IL3050
 
     /// <summary>
     /// Reads and deserializes the response content as JSON, returning a default value on failure.
@@ -79,7 +77,6 @@ public static class HttpResponseMessageExtensions
     /// <param name="options">JSON serializer options (uses FabricApi options if null)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The deserialized object or default value on failure</returns>
-#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public static async Task<T> ReadAsJsonOrDefaultAsync<T>(
         this HttpResponseMessage response,
         T defaultValue,
@@ -101,7 +98,6 @@ public static class HttpResponseMessageExtensions
         return JsonSerializer.Deserialize<T>(content, options ?? JsonSerializerOptionsProvider.FabricApi)
             ?? defaultValue;
     }
-#pragma warning restore IL2026, IL3050
 
     /// <summary>
     /// Ensures the response is successful, throwing a detailed FabricApiException on failure.
@@ -139,7 +135,6 @@ public static class HttpResponseMessageExtensions
     /// <summary>
     /// Tries to read the response as JSON, returning success/failure result.
     /// </summary>
-#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     public static async Task<(bool Success, T? Value, FabricApiException? Error)> TryReadAsJsonAsync<T>(
         this HttpResponseMessage response,
         JsonSerializerOptions? options = null,
@@ -161,7 +156,6 @@ public static class HttpResponseMessageExtensions
         var value = JsonSerializer.Deserialize<T>(content, options ?? JsonSerializerOptionsProvider.FabricApi);
         return (true, value, null);
     }
-#pragma warning restore IL2026, IL3050
 
     /// <summary>
     /// Checks if the response indicates a transient failure that could be retried.

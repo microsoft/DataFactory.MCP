@@ -6,7 +6,6 @@ namespace DataFactory.MCP.Models.Connection;
 /// <summary>
 /// JSON converter for handling polymorphic Connection types based on ConnectivityType
 /// </summary>
-#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
 public class ConnectionJsonConverter : JsonConverter<Connection>
 {
     public override Connection? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -47,4 +46,3 @@ public class ConnectionJsonConverter : JsonConverter<Connection>
         JsonSerializer.Serialize(writer, value, value.GetType(), jsonOptions);
     }
 }
-#pragma warning restore IL2026, IL3050

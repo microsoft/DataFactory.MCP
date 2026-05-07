@@ -54,7 +54,6 @@ public abstract class FabricServiceBase
         return await response.ReadAsJsonAsync<T>(JsonOptions);
     }
 
-#pragma warning disable IL2026, IL3050 // Members annotated with 'RequiresUnreferencedCodeAttribute'/'RequiresDynamicCodeAttribute' require dynamic access
     protected async Task<T?> PostAsync<T>(string endpoint, object request) where T : class
     {
         var url = FabricUrlBuilder.ForFabricApi()
@@ -151,5 +150,4 @@ public abstract class FabricServiceBase
             error?.StatusCode, error?.ResponseContent);
         return false;
     }
-#pragma warning restore IL2026, IL3050
 }
