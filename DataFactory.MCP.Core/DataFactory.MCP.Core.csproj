@@ -10,9 +10,7 @@
         <PackageId>Microsoft.DataFactory.MCP.Core</PackageId>
         <PackageTags>AI; MCP; server; library</PackageTags>
         <Description>Core library for DataFactory MCP server - contains services, tools, and models.</Description>
-        <IsAotCompatible>true</IsAotCompatible>
-        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-        <EnableAotAnalyzer>true</EnableAotAnalyzer>
+        <IsAotCompatible>false</IsAotCompatible>
         <PackageIcon>Microsoft-Fabric.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
