@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+using System.Text.Json;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Configuration;
 using DataFactory.MCP.Infrastructure.Http;
@@ -68,8 +68,8 @@ public class DataflowRefreshJob : IBackgroundJob
                 };
             }
 
-            var jsonContent = System.Text.Json.JsonSerializer.Serialize(request,
-                JsonSerializerOptionsProvider.FabricApi);
+            var jsonContent = JsonSerializer.Serialize(request,
+                typeof(RunOnDemandExecuteRequest), DataFactoryJsonContext.Default);
             var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
 
             _logger.LogInformation("Starting dataflow refresh: POST {Url}", url);
@@ -153,8 +153,9 @@ public class DataflowRefreshJob : IBackgroundJob
         var response = await httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
 
-        var jobInstance = await response.Content.ReadFromJsonAsync<ItemJobInstance>(
-            JsonSerializerOptionsProvider.FabricApi);
+        var content = await response.Content.ReadAsStringAsync();
+        var jobInstance = (ItemJobInstance?)JsonSerializer.Deserialize(
+            content, typeof(ItemJobInstance), DataFactoryJsonContext.Default);
 
         if (jobInstance == null)
         {

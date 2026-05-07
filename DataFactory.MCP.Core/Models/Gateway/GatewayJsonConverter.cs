@@ -1,10 +1,12 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using DataFactory.MCP.Configuration;
 
 namespace DataFactory.MCP.Models.Gateway;
 
 /// <summary>
-/// Custom JSON converter for Gateway polymorphic deserialization
+/// Custom JSON converter for Gateway polymorphic deserialization.
+/// Uses source-generated JsonTypeInfo for trim-safe serialization.
 /// </summary>
 public class GatewayJsonConverter : JsonConverter<Gateway>
 {
@@ -13,7 +15,6 @@ public class GatewayJsonConverter : JsonConverter<Gateway>
         using JsonDocument doc = JsonDocument.ParseValue(ref reader);
         JsonElement root = doc.RootElement;
 
-        // Get the type property to determine which concrete type to deserialize to
         if (!root.TryGetProperty("type", out JsonElement typeElement))
         {
             throw new JsonException("Gateway object must have a 'type' property");
@@ -21,18 +22,30 @@ public class GatewayJsonConverter : JsonConverter<Gateway>
 
         string gatewayType = typeElement.GetString() ?? string.Empty;
 
-        // Deserialize to the appropriate concrete type based on the type field
         return gatewayType switch
         {
-            "OnPremises" => JsonSerializer.Deserialize<OnPremisesGateway>(root.GetRawText(), options)!,
-            "OnPremisesPersonal" => JsonSerializer.Deserialize<OnPremisesGatewayPersonal>(root.GetRawText(), options)!,
-            "VirtualNetwork" => JsonSerializer.Deserialize<VirtualNetworkGateway>(root.GetRawText(), options)!,
+            "OnPremises" => JsonSerializer.Deserialize(root.GetRawText(), DataFactoryJsonContext.Default.OnPremisesGateway)!,
+            "OnPremisesPersonal" => JsonSerializer.Deserialize(root.GetRawText(), DataFactoryJsonContext.Default.OnPremisesGatewayPersonal)!,
+            "VirtualNetwork" => JsonSerializer.Deserialize(root.GetRawText(), DataFactoryJsonContext.Default.VirtualNetworkGateway)!,
             _ => throw new JsonException($"Unknown gateway type: {gatewayType}")
         };
     }
 
     public override void Write(Utf8JsonWriter writer, Gateway value, JsonSerializerOptions options)
     {
-        JsonSerializer.Serialize(writer, value, value.GetType(), options);
+        switch (value)
+        {
+            case OnPremisesGateway g:
+                JsonSerializer.Serialize(writer, g, DataFactoryJsonContext.Default.OnPremisesGateway);
+                break;
+            case OnPremisesGatewayPersonal g:
+                JsonSerializer.Serialize(writer, g, DataFactoryJsonContext.Default.OnPremisesGatewayPersonal);
+                break;
+            case VirtualNetworkGateway g:
+                JsonSerializer.Serialize(writer, g, DataFactoryJsonContext.Default.VirtualNetworkGateway);
+                break;
+            default:
+                throw new JsonException($"Unsupported gateway type: {value.GetType()}");
+        }
     }
 }

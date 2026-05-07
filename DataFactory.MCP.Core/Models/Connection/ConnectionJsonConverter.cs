@@ -1,10 +1,12 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using DataFactory.MCP.Configuration;
 
 namespace DataFactory.MCP.Models.Connection;
 
 /// <summary>
-/// JSON converter for handling polymorphic Connection types based on ConnectivityType
+/// JSON converter for handling polymorphic Connection types based on ConnectivityType.
+/// Uses source-generated JsonTypeInfo for trim-safe serialization.
 /// </summary>
 public class ConnectionJsonConverter : JsonConverter<Connection>
 {
@@ -25,24 +27,39 @@ public class ConnectionJsonConverter : JsonConverter<Connection>
         }
 
         var json = root.GetRawText();
-        var jsonOptions = new JsonSerializerOptions(options);
-        jsonOptions.Converters.Remove(this); // Prevent infinite recursion
 
         return connectivityType switch
         {
-            ConnectivityType.ShareableCloud => JsonSerializer.Deserialize<ShareableCloudConnection>(json, jsonOptions),
-            ConnectivityType.PersonalCloud => JsonSerializer.Deserialize<PersonalCloudConnection>(json, jsonOptions),
-            ConnectivityType.OnPremisesGateway => JsonSerializer.Deserialize<OnPremisesGatewayConnection>(json, jsonOptions),
-            ConnectivityType.OnPremisesGatewayPersonal => JsonSerializer.Deserialize<OnPremisesGatewayPersonalConnection>(json, jsonOptions),
-            ConnectivityType.VirtualNetworkGateway => JsonSerializer.Deserialize<VirtualNetworkGatewayConnection>(json, jsonOptions),
+            ConnectivityType.ShareableCloud => JsonSerializer.Deserialize(json, DataFactoryJsonContext.Default.ShareableCloudConnection),
+            ConnectivityType.PersonalCloud => JsonSerializer.Deserialize(json, DataFactoryJsonContext.Default.PersonalCloudConnection),
+            ConnectivityType.OnPremisesGateway => JsonSerializer.Deserialize(json, DataFactoryJsonContext.Default.OnPremisesGatewayConnection),
+            ConnectivityType.OnPremisesGatewayPersonal => JsonSerializer.Deserialize(json, DataFactoryJsonContext.Default.OnPremisesGatewayPersonalConnection),
+            ConnectivityType.VirtualNetworkGateway => JsonSerializer.Deserialize(json, DataFactoryJsonContext.Default.VirtualNetworkGatewayConnection),
             _ => throw new JsonException($"Unsupported connectivity type: {connectivityType}")
         };
     }
 
     public override void Write(Utf8JsonWriter writer, Connection value, JsonSerializerOptions options)
     {
-        var jsonOptions = new JsonSerializerOptions(options);
-        jsonOptions.Converters.Remove(this); // Prevent infinite recursion
-        JsonSerializer.Serialize(writer, value, value.GetType(), jsonOptions);
+        switch (value)
+        {
+            case ShareableCloudConnection c:
+                JsonSerializer.Serialize(writer, c, DataFactoryJsonContext.Default.ShareableCloudConnection);
+                break;
+            case PersonalCloudConnection c:
+                JsonSerializer.Serialize(writer, c, DataFactoryJsonContext.Default.PersonalCloudConnection);
+                break;
+            case OnPremisesGatewayConnection c:
+                JsonSerializer.Serialize(writer, c, DataFactoryJsonContext.Default.OnPremisesGatewayConnection);
+                break;
+            case OnPremisesGatewayPersonalConnection c:
+                JsonSerializer.Serialize(writer, c, DataFactoryJsonContext.Default.OnPremisesGatewayPersonalConnection);
+                break;
+            case VirtualNetworkGatewayConnection c:
+                JsonSerializer.Serialize(writer, c, DataFactoryJsonContext.Default.VirtualNetworkGatewayConnection);
+                break;
+            default:
+                throw new JsonException($"Unsupported connection type: {value.GetType()}");
+        }
     }
 }
