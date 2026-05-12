@@ -33,8 +33,6 @@ public class ExcelTool
             // Validate required parameters using validation service
             _validationService.ValidateRequiredString(mashupQuery, nameof(mashupQuery));
 
-            // TODO: Verify the M query is valid
-
             // Add the query table to the workbook
             var request = new AddQueryTableRequest
             {
