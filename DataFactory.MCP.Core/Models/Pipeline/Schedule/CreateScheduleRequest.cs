@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace DataFactory.MCP.Models.Pipeline.Schedule;
@@ -17,5 +18,5 @@ public class CreateScheduleRequest
     /// The schedule configuration (Cron, Daily, Weekly, or Monthly)
     /// </summary>
     [JsonPropertyName("configuration")]
-    public object Configuration { get; set; } = null!;
+    public JsonElement Configuration { get; set; }
 }

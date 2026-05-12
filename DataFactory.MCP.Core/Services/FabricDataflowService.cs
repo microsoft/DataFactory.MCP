@@ -2,6 +2,7 @@ using DataFactory.MCP.Abstractions;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Infrastructure.Http;
+using DataFactory.MCP.Models.Common;
 using DataFactory.MCP.Models.Dataflow;
 using DataFactory.MCP.Models.Dataflow.Definition;
 using DataFactory.MCP.Models.Dataflow.Query;
@@ -194,7 +195,7 @@ public class FabricDataflowService : FabricServiceBase, IFabricDataflowService
             dataflowId, workspaceId);
 
         // Use empty object as required by API
-        var emptyRequest = new { };
+        var emptyRequest = new EmptyRequest();
         return await PostAsync<GetDataflowDefinitionHttpResponse>(endpoint, emptyRequest)
                ?? throw new InvalidOperationException("Failed to get dataflow definition response");
     }

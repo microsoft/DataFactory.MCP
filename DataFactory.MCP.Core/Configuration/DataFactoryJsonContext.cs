@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using DataFactory.MCP.Models.Capacity;
+using DataFactory.MCP.Models.Common;
 using DataFactory.MCP.Models.Connection;
 using DataFactory.MCP.Models.CopyJob;
 using DataFactory.MCP.Models.CopyJob.Definition;
@@ -91,6 +93,10 @@ namespace DataFactory.MCP.Configuration;
 // Gateway Cluster Datasource types (DMTSv2)
 [JsonSerializable(typeof(GatewayClusterDatasourceService.GatewayClusterDatasourcesResponse))]
 [JsonSerializable(typeof(GatewayClusterDatasourceService.CloudDatasourceInfo))]
+// Common types
+[JsonSerializable(typeof(JsonElement))]
+[JsonSerializable(typeof(EmptyRequest))]
+[JsonSerializable(typeof(RunOnDemandRequest))]
 internal sealed partial class DataFactoryJsonContext : JsonSerializerContext
 {
 }

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models;
 using DataFactory.MCP.Models.Pipeline;
@@ -121,7 +122,7 @@ public class PipelineHandler(IFabricPipelineService pipelineService)
         }
     }
 
-    public async Task<ToolResult<RunPipelineResult>> RunAsync(string workspaceId, string pipelineId, object? executionData = null)
+    public async Task<ToolResult<RunPipelineResult>> RunAsync(string workspaceId, string pipelineId, JsonElement? executionData = null)
     {
         if (string.IsNullOrWhiteSpace(workspaceId))
             return ToolResult<RunPipelineResult>.Failure(Messages.InvalidParameterEmpty("workspaceId"), "validation");

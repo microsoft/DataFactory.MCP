@@ -21,24 +21,12 @@ public abstract class FabricServiceBase
     protected static JsonSerializerOptions JsonOptions => JsonSerializerOptionsProvider.FabricApi;
 
     /// <summary>
-    /// Serializes a request object using source-generated context when available,
-    /// falling back to reflection-based serialization for types not registered
-    /// in DataFactoryJsonContext (e.g., anonymous types, JsonElement properties).
+    /// Serializes a request object using source-generated JSON context for AOT compatibility.
+    /// All request types must be registered in DataFactoryJsonContext.
     /// </summary>
     private static string SerializeRequest(object request)
     {
-        try
-        {
-            return JsonSerializer.Serialize(request, request.GetType(), DataFactoryJsonContext.Default);
-        }
-        catch (InvalidOperationException)
-        {
-            return JsonSerializer.Serialize(request, JsonOptions);
-        }
-        catch (NotSupportedException)
-        {
-            return JsonSerializer.Serialize(request, JsonOptions);
-        }
+        return JsonSerializer.Serialize(request, request.GetType(), DataFactoryJsonContext.Default);
     }
 
     protected FabricServiceBase(

@@ -267,12 +267,12 @@ public class PipelineTool
         [Description("The pipeline ID to run (required)")] string pipelineId,
         [Description("Optional execution data as JSON string for parameterized pipeline runs (optional)")] string? executionDataJson = null)
     {
-        object? executionData = null;
+        JsonElement? executionData = null;
         if (!string.IsNullOrEmpty(executionDataJson))
         {
             try
             {
-                executionData = JsonSerializer.Deserialize<object>(executionDataJson);
+                executionData = JsonSerializer.Deserialize<JsonElement>(executionDataJson);
             }
             catch (JsonException ex)
             {
@@ -364,11 +364,10 @@ public class PipelineTool
             _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
             _validationService.ValidateRequiredString(configurationJson, nameof(configurationJson));
 
-            object configuration;
+            JsonElement configuration;
             try
             {
-                configuration = JsonSerializer.Deserialize<object>(configurationJson)
-                    ?? throw new ArgumentException("Configuration JSON cannot be null");
+                configuration = JsonSerializer.Deserialize<JsonElement>(configurationJson);
             }
             catch (JsonException ex)
             {
