@@ -20,6 +20,27 @@ public abstract class FabricServiceBase
     protected readonly IValidationService ValidationService;
     protected static JsonSerializerOptions JsonOptions => JsonSerializerOptionsProvider.FabricApi;
 
+    /// <summary>
+    /// Serializes a request object using source-generated context when available,
+    /// falling back to reflection-based serialization for types not registered
+    /// in DataFactoryJsonContext (e.g., anonymous types, JsonElement properties).
+    /// </summary>
+    private static string SerializeRequest(object request)
+    {
+        try
+        {
+            return JsonSerializer.Serialize(request, request.GetType(), DataFactoryJsonContext.Default);
+        }
+        catch (InvalidOperationException)
+        {
+            return JsonSerializer.Serialize(request, JsonOptions);
+        }
+        catch (NotSupportedException)
+        {
+            return JsonSerializer.Serialize(request, JsonOptions);
+        }
+    }
+
     protected FabricServiceBase(
         IHttpClientFactory httpClientFactory,
         ILogger logger,
@@ -61,7 +82,7 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
-        var jsonContent = JsonSerializer.Serialize(request, request.GetType(), DataFactoryJsonContext.Default);
+        var jsonContent = SerializeRequest(request);
         Logger.LogDebug("Request body: {Body}", jsonContent);
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
@@ -79,7 +100,7 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Patching: {Url}", url);
 
-        var jsonContent = JsonSerializer.Serialize(request, request.GetType(), DataFactoryJsonContext.Default);
+        var jsonContent = SerializeRequest(request);
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         var httpRequest = new HttpRequestMessage(HttpMethod.Patch, url) { Content = content };
@@ -97,7 +118,7 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
-        var jsonContent = JsonSerializer.Serialize(request, request.GetType(), DataFactoryJsonContext.Default);
+        var jsonContent = SerializeRequest(request);
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         var response = await HttpClient.PostAsync(url, content);
@@ -115,7 +136,7 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
-        var jsonContent = request != null ? JsonSerializer.Serialize(request, request.GetType(), DataFactoryJsonContext.Default) : null;
+        var jsonContent = request != null ? SerializeRequest(request) : null;
         var content = jsonContent != null ? new StringContent(jsonContent, Encoding.UTF8, "application/json") : null;
 
         var response = await HttpClient.PostAsync(url, content);
@@ -135,7 +156,7 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
-        var jsonContent = JsonSerializer.Serialize(request, request.GetType(), DataFactoryJsonContext.Default);
+        var jsonContent = SerializeRequest(request);
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         var response = await HttpClient.PostAsync(url, content);
