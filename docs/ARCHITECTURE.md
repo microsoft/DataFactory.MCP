@@ -10,6 +10,7 @@ This document provides a comprehensive overview of the Microsoft Data Factory MC
   - [Application Entry Point](#1-application-entry-point)
   - [MCP Tools Layer](#2-mcp-tools-layer)
   - [MCP App Resources Layer](#2a-mcp-app-resources-layer)
+  - [Handlers Layer](#2b-handlers-layer)
   - [Core Services Layer](#3-core-services-layer)
   - [Abstractions Layer](#4-abstractions-layer)
   - [Models Layer](#5-models-layer)
@@ -62,6 +63,14 @@ The Microsoft Data Factory MCP Server is a .NET-based application that implement
 │  │  │  Pipeline    │ │  CopyJob     │                                  │   │
 │  │  │ Tool (flag)  │ │ Tool (flag)  │                                  │   │
 │  │  └──────────────┘ └──────────────┘                                  │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                       Handlers Layer (new)                           │   │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐                 │   │
+│  │  │  Pipeline    │ │  Dataflow    │ │DataflowQuery │                 │   │
+│  │  │  Handler     │ │  Handler     │ │  Handler     │                 │   │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘                 │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                    │                                        │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
@@ -320,6 +329,88 @@ public class CreateConnectionResourceHandler
     [McpMeta("ui", JsonValue = """{"csp": {}, "prefersBorder": false}""")]
     [Description("Form to create a new data source connection")]
     public static ReadResourceResult GetCreateConnection() => _resource.ToReadResourceResult();
+}
+```
+
+### 2b. Handlers Layer
+
+The Handlers layer sits between Tools and Services, owning all business logic for domains that need to be shared across multiple MCP framework implementations.
+
+#### Why Handlers Exist
+
+The DataFactory.MCP.Core NuGet package is consumed by two different MCP server implementations:
+
+1. **Standalone DataFactory MCP Server** — uses `[McpServerTool]` SDK attributes
+2. **Microsoft Fabric MCP Server** ([microsoft/mcp](https://github.com/microsoft/mcp)) — uses a custom `GlobalCommand<T>` dispatch framework
+
+Without handlers, every tool's business logic (validation, service calls, error handling, result formatting) would need to be duplicated in both wrappers. Handlers extract this shared logic into a single, testable location.
+
+#### Architecture Pattern
+
+```
+Tool (SDK or Fabric Command)
+  └── Handler (business logic)
+        └── Service (HTTP API calls)
+              └── Model (DTOs)
+```
+
+- **Tools** become thin delegators (~3-8 lines per method)
+- **Handlers** own validation, service orchestration, result shaping, and error handling
+- **Services** remain unchanged (HTTP calls, auth, response parsing)
+
+#### ToolResult\<T\>
+
+Handlers return `ToolResult<T>`, a framework-agnostic result type:
+
+```csharp
+public class ToolResult<T>
+{
+    public bool IsSuccess { get; }
+    public T? Data { get; }
+    public string? Error { get; }
+    public string? ErrorMessage { get; }
+}
+```
+
+Each framework wrapper maps `ToolResult<T>` to its own error format:
+- SDK tools use `ToolResultExtensions` to convert errors to MCP JSON responses
+- Fabric commands map `IsSuccess`/`Error` to their `CommandResult` type
+
+#### Current Handlers
+
+| Handler | Service Dependency | Operations |
+|---------|-------------------|------------|
+| `PipelineHandler` | `IFabricPipelineService` | List, Create, Get, Run |
+| `DataflowHandler` | `IFabricDataflowService` | List, Create |
+| `DataflowQueryHandler` | `IFabricDataflowService`, `IArrowDataReaderService` | Execute M Query |
+
+#### Example: Before and After
+
+**Before (tool owns business logic):**
+```csharp
+[McpServerTool, Description("List all pipelines")]
+public async Task<string> ListPipelinesAsync(string workspaceId)
+{
+    try
+    {
+        _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+        var pipelines = await _pipelineService.ListPipelinesAsync(workspaceId);
+        return new { pipelines, count = pipelines.Count }.ToMcpJson();
+    }
+    catch (ArgumentException ex) { return ex.ToValidationError().ToMcpJson(); }
+    catch (UnauthorizedAccessException ex) { return ex.ToAuthenticationError().ToMcpJson(); }
+    catch (HttpRequestException ex) { return ex.ToHttpError().ToMcpJson(); }
+    catch (Exception ex) { return ex.ToOperationError("list pipelines").ToMcpJson(); }
+}
+```
+
+**After (tool delegates to handler):**
+```csharp
+[McpServerTool, Description("List all pipelines")]
+public async Task<string> ListPipelinesAsync(string workspaceId)
+{
+    var result = await _handler.ListPipelinesAsync(workspaceId);
+    return result.ToMcpToolResponse();
 }
 ```
 
@@ -755,6 +846,10 @@ Centralized JSON serialization options:
 10. Tool → AI Assistant (JSON via ToMcpJson())
 ```
 
+> **Note:** For Pipeline and Dataflow tools, the flow includes a Handler layer:
+> `Tool → Handler → Service → HttpClient → API`. The handler owns all business
+> logic and returns `ToolResult<T>`, which the tool maps to an MCP response.
+
 ### Dataflow Query Execution Flow
 
 ```
@@ -934,6 +1029,40 @@ mcpBuilder.WithTools<NewTool>();
 // Or conditionally with feature flag
 mcpBuilder.RegisterToolWithFeatureFlag<NewTool>(
     configuration, args, "new-feature-flag", nameof(NewTool), logger);
+```
+
+#### Alternative: Handler-Based Tools (Recommended for shared logic)
+
+For tools whose logic needs to be shared across multiple MCP frameworks, use the handler pattern:
+
+1. Create a handler in `Core/Handlers/`:
+```csharp
+public class NewHandler(INewService service)
+{
+    public async Task<ToolResult<NewResult>> DoOperationAsync(string parameter)
+    {
+        try
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(parameter);
+            var result = await service.DoOperationAsync(parameter);
+            return ToolResult<NewResult>.Success(new NewResult(result));
+        }
+        catch (Exception ex)
+        {
+            return ToolResult<NewResult>.Failure(ex.Message);
+        }
+    }
+}
+```
+
+2. Create a thin tool wrapper:
+```csharp
+[McpServerTool, Description("Description of the tool")]
+public async Task<string> NewOperationAsync(string parameter)
+{
+    var result = await _handler.DoOperationAsync(parameter);
+    return result.ToMcpToolResponse();
+}
 ```
 
 ### Adding New Services
