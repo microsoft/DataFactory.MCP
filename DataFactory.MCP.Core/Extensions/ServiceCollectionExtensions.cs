@@ -1,4 +1,6 @@
+using Azure.Core;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using DataFactory.MCP.Abstractions.Interfaces;
@@ -49,15 +51,29 @@ public static class ServiceCollectionExtensions
         }).AddHttpMessageHandler<FabricAuthenticationHandler>();
 
         // Register core services
+        services.AddSingleton<IValidationService, ValidationService>();
+
+        // Authentication system with providers (needed for standalone mode)
+        services.AddSingleton<IAuthenticationStateManager, AuthenticationStateManager>();
+        services.AddSingleton<IAuthenticationProvider, InteractiveAuthenticationProvider>();
+        services.AddSingleton<IAuthenticationProvider, DeviceCodeAuthenticationProvider>();
+        services.AddSingleton<IAuthenticationProvider, ServicePrincipalAuthenticationProvider>();
+
+        // If host already provides TokenCredential (e.g., Fabric MCP Server),
+        // use TokenCredentialAuthenticationService; otherwise use standalone AuthenticationService
+        services.TryAddSingleton<IAuthenticationService>(sp =>
+        {
+            var credential = sp.GetService<TokenCredential>();
+            if (credential != null)
+            {
+                var logger = sp.GetRequiredService<ILogger<TokenCredentialAuthenticationService>>();
+                return new TokenCredentialAuthenticationService(credential, logger);
+            }
+            return ActivatorUtilities.CreateInstance<AuthenticationService>(sp);
+        });
+
+        // Other services
         services
-            .AddSingleton<IValidationService, ValidationService>()
-            // Authentication system with providers
-            .AddSingleton<IAuthenticationStateManager, AuthenticationStateManager>()
-            .AddSingleton<IAuthenticationProvider, InteractiveAuthenticationProvider>()
-            .AddSingleton<IAuthenticationProvider, DeviceCodeAuthenticationProvider>()
-            .AddSingleton<IAuthenticationProvider, ServicePrincipalAuthenticationProvider>()
-            .AddSingleton<IAuthenticationService, AuthenticationService>()
-            // Other services
             .AddSingleton<IArrowDataReaderService, ArrowDataReaderService>()
             .AddSingleton<IGatewayClusterDatasourceService, GatewayClusterDatasourceService>()
             .AddSingleton<IDataTransformationService, DataTransformationService>()
