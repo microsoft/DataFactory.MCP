@@ -13,6 +13,7 @@ using DataFactory.MCP.Services.DMTSv2;
 using DataFactory.MCP.Services.Notifications;
 using DataFactory.MCP.Tools;
 using DataFactory.MCP.Tools.Dataflow;
+using DataFactory.MCP.Tools.AirflowJob;
 using DataFactory.MCP.Tools.CopyJob;
 using DataFactory.MCP.Tools.Pipeline;
 
@@ -69,6 +70,8 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IFabricPipelineService, FabricPipelineService>()
             // Copy Job service
             .AddSingleton<IFabricCopyJobService, FabricCopyJobService>()
+            // Apache Airflow Job service
+            .AddSingleton<IFabricAirflowJobService, FabricAirflowJobService>()
             // Session accessor for background notifications
             .AddSingleton<IMcpSessionAccessor, McpSessionAccessor>()
             // Background task system (consolidated: monitor handles start, track, poll, notify)
@@ -100,6 +103,7 @@ public static class ServiceCollectionExtensions
             .WithTools<DataflowDefinitionTool>()
             .WithTools<PipelineTool>()
             .WithTools<CopyJobTool>()
+            .WithTools<AirflowJobTool>()
             .WithTools<CreateConnectionUITool>()                // MCP Apps: Create Connection UI
             .WithResources<CreateConnectionResourceHandler>();  // MCP Apps: Create Connection Resource
     }

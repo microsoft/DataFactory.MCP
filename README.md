@@ -16,6 +16,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 - **Dataflow Management**: List, create, and retrieve Microsoft Fabric dataflows
 - **Pipeline Management**: List, create, update, run, monitor, and schedule Microsoft Fabric pipelines
 - **Copy Job Management**: List, create, update, run, monitor, and schedule Microsoft Fabric copy jobs
+- **Apache Airflow Job Management**: List, create, update, delete, and manage definitions for Microsoft Fabric Apache Airflow Jobs
 - **Capacity Management**: List and retrieve Microsoft Fabric capacities
 - **Microsoft Fabric Integration**: Support for on-premises, personal, and virtual network gateways
 - 📦 **NuGet Distribution**: Available as a NuGet package for easy integration
@@ -33,6 +34,7 @@ A Model Context Protocol (MCP) server for Microsoft Fabric resource discovery an
 - **Capacity Management**: `list_capacities`
 - **Pipeline Management**: `list_pipelines`, `create_pipeline`, `get_pipeline`, `update_pipeline`, `get_pipeline_definition`, `update_pipeline_definition`, `run_pipeline`, `get_pipeline_run_status`, `create_pipeline_schedule`, `list_pipeline_schedules` *(Preview)*
 - **Copy Job Management**: `list_copy_jobs`, `create_copy_job`, `get_copy_job`, `update_copy_job`, `get_copy_job_definition`, `update_copy_job_definition`, `run_copy_job`, `get_copy_job_run_status`, `create_copy_job_schedule`, `list_copy_job_schedules` *(Preview)*
+- **Apache Airflow Job Management**: `list_airflow_jobs`, `create_airflow_job`, `get_airflow_job`, `update_airflow_job`, `delete_airflow_job`, `get_airflow_job_definition`, `update_airflow_job_definition` *(Preview)*
 
 ## Available Resources
 
@@ -110,6 +112,7 @@ See the detailed guides for comprehensive usage instructions:
 - **Capacity Management**: See [Capacity Management Guide](https://github.com/microsoft/DataFactory.MCP/blob/main/docs/capacity-management.md)
 - **Pipeline Management**: See [Pipeline Management Guide](https://github.com/microsoft/DataFactory.MCP/blob/main/docs/pipeline-management.md)
 - **Copy Job Management**: See [Copy Job Management Guide](https://github.com/microsoft/DataFactory.MCP/blob/main/docs/copyjob-management.md)
+- **Apache Airflow Job Management**: See [Apache Airflow Job Management Guide](https://github.com/microsoft/DataFactory.MCP/blob/main/docs/airflow-job-feature.md)
 
 ## Development
 
@@ -193,6 +196,7 @@ For complete documentation, see our **[Documentation Index](https://github.com/m
 - **[Capacity Management Guide](https://github.com/microsoft/DataFactory.MCP/blob/main/docs/capacity-management.md)** - Capacity operations and examples
 - **[Pipeline Management Guide](https://github.com/microsoft/DataFactory.MCP/blob/main/docs/pipeline-management.md)** - Pipeline operations and examples
 - **[Copy Job Management Guide](https://github.com/microsoft/DataFactory.MCP/blob/main/docs/copyjob-management.md)** - Copy job operations and examples
+- **[Apache Airflow Job Management Guide](https://github.com/microsoft/DataFactory.MCP/blob/main/docs/airflow-job-feature.md)** - Airflow job operations, definition management, and testing guide
 - **[Architecture Guide](https://github.com/microsoft/DataFactory.MCP/blob/main/docs/ARCHITECTURE.md)** - Technical architecture and design details
 
 ## Contributing
