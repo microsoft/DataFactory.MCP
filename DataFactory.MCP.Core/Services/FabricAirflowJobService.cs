@@ -4,6 +4,7 @@ using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Infrastructure.Http;
 using DataFactory.MCP.Models.AirflowJob;
 using DataFactory.MCP.Models.AirflowJob.Definition;
+using DataFactory.MCP.Models.Common;
 using Microsoft.Extensions.Logging;
 
 namespace DataFactory.MCP.Services;
@@ -185,7 +186,7 @@ public class FabricAirflowJobService : FabricServiceBase, IFabricAirflowJobServi
             Logger.LogInformation("Getting definition for Apache Airflow Job {AirflowJobId} in workspace {WorkspaceId}",
                 airflowJobId, workspaceId);
 
-            var emptyRequest = new { };
+            var emptyRequest = new EmptyRequest();
             var response = await PostAsync<GetAirflowJobDefinitionResponse>(endpoint, emptyRequest)
                            ?? throw new InvalidOperationException("Failed to get Apache Airflow Job definition response");
 
