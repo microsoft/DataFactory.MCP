@@ -79,7 +79,7 @@ public class GatewayClusterDatasourceService : IGatewayClusterDatasourceService
         _logger.LogDebug("Fetching cloud datasources from Power BI v2.0 API");
 
         var response = await _httpClient.GetAsync(GatewayClusterDatasourcesUrl);
-        var result = await response.ReadAsJsonAsync<GatewayClusterDatasourcesResponse>(JsonSerializerOptionsProvider.FabricApi);
+        var result = await response.ReadAsJsonAsync<GatewayClusterDatasourcesResponse>();
 
         var datasources = result?.Value ?? new List<CloudDatasourceInfo>();
 
@@ -97,7 +97,7 @@ public class GatewayClusterDatasourceService : IGatewayClusterDatasourceService
     /// <summary>
     /// Minimal model for cloud datasource info from the v2 API
     /// </summary>
-    private sealed class CloudDatasourceInfo
+    internal sealed class CloudDatasourceInfo
     {
         [JsonPropertyName("id")]
         public string Id { get; set; } = string.Empty;
@@ -109,7 +109,7 @@ public class GatewayClusterDatasourceService : IGatewayClusterDatasourceService
     /// <summary>
     /// Response wrapper for the gatewayClusterDatasources API
     /// </summary>
-    private sealed class GatewayClusterDatasourcesResponse
+    internal sealed class GatewayClusterDatasourcesResponse
     {
         [JsonPropertyName("value")]
         public List<CloudDatasourceInfo> Value { get; set; } = new();

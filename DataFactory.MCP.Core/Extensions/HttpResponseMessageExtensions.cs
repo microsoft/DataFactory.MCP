@@ -64,7 +64,7 @@ public static class HttpResponseMessageExtensions
             return null;
         }
 
-        return JsonSerializer.Deserialize<T>(content, options ?? JsonSerializerOptionsProvider.FabricApi);
+        return (T?)JsonSerializer.Deserialize(content, typeof(T), DataFactoryJsonContext.Default);
     }
 
     /// <summary>
@@ -95,7 +95,7 @@ public static class HttpResponseMessageExtensions
             return defaultValue;
         }
 
-        return JsonSerializer.Deserialize<T>(content, options ?? JsonSerializerOptionsProvider.FabricApi)
+        return (T?)JsonSerializer.Deserialize(content, typeof(T), DataFactoryJsonContext.Default)
             ?? defaultValue;
     }
 
@@ -153,7 +153,7 @@ public static class HttpResponseMessageExtensions
         }
 
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        var value = JsonSerializer.Deserialize<T>(content, options ?? JsonSerializerOptionsProvider.FabricApi);
+        var value = (T?)JsonSerializer.Deserialize(content, typeof(T), DataFactoryJsonContext.Default);
         return (true, value, null);
     }
 

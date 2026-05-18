@@ -334,12 +334,12 @@ public class CopyJobTool
             _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
             _validationService.ValidateRequiredString(copyJobId, nameof(copyJobId));
 
-            object? executionData = null;
+            JsonElement? executionData = null;
             if (!string.IsNullOrEmpty(executionDataJson))
             {
                 try
                 {
-                    executionData = JsonSerializer.Deserialize<object>(executionDataJson);
+                    executionData = JsonSerializer.Deserialize<JsonElement>(executionDataJson);
                 }
                 catch (JsonException ex)
                 {
@@ -453,11 +453,10 @@ public class CopyJobTool
             _validationService.ValidateRequiredString(copyJobId, nameof(copyJobId));
             _validationService.ValidateRequiredString(configurationJson, nameof(configurationJson));
 
-            object configuration;
+            JsonElement configuration;
             try
             {
-                configuration = JsonSerializer.Deserialize<object>(configurationJson)
-                    ?? throw new ArgumentException("Configuration JSON cannot be null");
+                configuration = JsonSerializer.Deserialize<JsonElement>(configurationJson);
             }
             catch (JsonException ex)
             {

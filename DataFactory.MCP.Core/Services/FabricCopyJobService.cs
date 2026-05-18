@@ -1,6 +1,8 @@
+using System.Text.Json;
 using DataFactory.MCP.Abstractions;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Infrastructure.Http;
+using DataFactory.MCP.Models.Common;
 using DataFactory.MCP.Models.CopyJob;
 using DataFactory.MCP.Models.CopyJob.Definition;
 using DataFactory.MCP.Models.Pipeline;
@@ -123,7 +125,7 @@ public class FabricCopyJobService : FabricServiceBase, IFabricCopyJobService
             Logger.LogInformation("Getting definition for copy job {CopyJobId} in workspace {WorkspaceId}",
                 copyJobId, workspaceId);
 
-            var emptyRequest = new { };
+            var emptyRequest = new EmptyRequest();
             var response = await PostAsync<GetCopyJobDefinitionResponse>(endpoint, emptyRequest)
                            ?? throw new InvalidOperationException("Failed to get copy job definition response");
 
@@ -199,7 +201,7 @@ public class FabricCopyJobService : FabricServiceBase, IFabricCopyJobService
     public async Task<string?> RunCopyJobAsync(
         string workspaceId,
         string copyJobId,
-        object? executionData = null)
+        JsonElement? executionData = null)
     {
         try
         {
@@ -213,7 +215,9 @@ public class FabricCopyJobService : FabricServiceBase, IFabricCopyJobService
             Logger.LogInformation("Running copy job {CopyJobId} on demand in workspace {WorkspaceId}",
                 copyJobId, workspaceId);
 
-            var request = executionData != null ? new { executionData } : null;
+            var request = executionData != null 
+                ? new RunOnDemandRequest { ExecutionData = executionData } 
+                : null;
             var location = await PostAndGetLocationAsync(endpoint, request);
 
             Logger.LogInformation("Copy job {CopyJobId} run triggered successfully. Location: {Location}",

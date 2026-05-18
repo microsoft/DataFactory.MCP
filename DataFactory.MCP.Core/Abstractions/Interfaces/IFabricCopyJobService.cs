@@ -1,3 +1,4 @@
+using System.Text.Json;
 using DataFactory.MCP.Models.CopyJob;
 using DataFactory.MCP.Models.CopyJob.Definition;
 using DataFactory.MCP.Models.Pipeline;
@@ -60,7 +61,7 @@ public interface IFabricCopyJobService
     Task<string?> RunCopyJobAsync(
         string workspaceId,
         string copyJobId,
-        object? executionData = null);
+        JsonElement? executionData = null);
 
     /// <summary>
     /// Gets the status of a copy job instance

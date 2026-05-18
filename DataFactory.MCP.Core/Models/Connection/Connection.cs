@@ -5,6 +5,7 @@ namespace DataFactory.MCP.Models.Connection;
 /// <summary>
 /// Base connection class
 /// </summary>
+[JsonConverter(typeof(ConnectionJsonConverter))]
 public abstract class Connection
 {
     [JsonPropertyName("id")]

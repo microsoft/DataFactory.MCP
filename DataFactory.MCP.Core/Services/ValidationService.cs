@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Models;
 
@@ -9,6 +10,7 @@ namespace DataFactory.MCP.Services;
 /// </summary>
 public class ValidationService : IValidationService
 {
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Validation types are preserved by the application")]
     public void ValidateAndThrow<T>(T obj, string parameterName) where T : class
     {
         if (obj == null)
@@ -26,6 +28,7 @@ public class ValidationService : IValidationService
         }
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Validation types are preserved by the application")]
     public IList<ValidationResult> Validate<T>(T obj) where T : class
     {
         if (obj == null)

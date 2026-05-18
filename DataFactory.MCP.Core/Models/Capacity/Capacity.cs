@@ -35,6 +35,6 @@ public class Capacity
     /// The capacity state
     /// </summary>
     [JsonPropertyName("state")]
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter<CapacityState>))]
     public CapacityState State { get; set; }
 }

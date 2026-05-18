@@ -30,3 +30,5 @@ When these topics come up, reference the corresponding file in `docs/datafactory
 | Fast Copy, Action.Sequence, Modern Evaluator | `advanced.md` |
 
 For connection management (creating/listing connections, supported types, UI form), reference `docs/connection-management.md`.
+
+For DevOps/CI integration with Fabric.Mcp.Server (feed caching, publishing, trim safety), reference the `devops.fabric-mcp-integration` skill.

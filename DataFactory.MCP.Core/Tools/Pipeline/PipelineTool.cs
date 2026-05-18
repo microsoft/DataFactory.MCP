@@ -4,6 +4,8 @@ using System.Text;
 using System.Text.Json;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
+using DataFactory.MCP.Handlers;
+using DataFactory.MCP.Handlers.Pipeline;
 using DataFactory.MCP.Models.Pipeline;
 using DataFactory.MCP.Models.Pipeline.Definition;
 using DataFactory.MCP.Models.Pipeline.Schedule;
@@ -19,13 +21,16 @@ public class PipelineTool
 {
     private readonly IFabricPipelineService _pipelineService;
     private readonly IValidationService _validationService;
+    private readonly PipelineHandler _pipelineHandler;
 
     public PipelineTool(
         IFabricPipelineService pipelineService,
-        IValidationService validationService)
+        IValidationService validationService,
+        PipelineHandler pipelineHandler)
     {
         _pipelineService = pipelineService;
         _validationService = validationService;
+        _pipelineHandler = pipelineHandler;
     }
 
     [McpServerTool, Description(@"Returns a list of Pipelines from the specified workspace. This API supports pagination.")]
@@ -33,45 +38,21 @@ public class PipelineTool
         [Description("The workspace ID to list pipelines from (required)")] string workspaceId,
         [Description("A token for retrieving the next page of results (optional)")] string? continuationToken = null)
     {
-        try
+        var result = await _pipelineHandler.ListAsync(workspaceId, continuationToken);
+        if (result.IsSuccess)
         {
-            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
-
-            var response = await _pipelineService.ListPipelinesAsync(workspaceId, continuationToken);
-
-            if (!response.Value.Any())
+            var value = result.Value!;
+            return new
             {
-                return $"No pipelines found in workspace '{workspaceId}'.";
-            }
-
-            var result = new
-            {
-                WorkspaceId = workspaceId,
-                PipelineCount = response.Value.Count,
-                ContinuationToken = response.ContinuationToken,
-                ContinuationUri = response.ContinuationUri,
-                HasMoreResults = !string.IsNullOrEmpty(response.ContinuationToken),
-                Pipelines = response.Value.Select(p => p.ToFormattedInfo())
-            };
-
-            return result.ToMcpJson();
+                value.WorkspaceId,
+                value.PipelineCount,
+                value.ContinuationToken,
+                value.ContinuationUri,
+                value.HasMoreResults,
+                Pipelines = value.Pipelines.Select(p => p.ToFormattedInfo())
+            }.ToMcpJson();
         }
-        catch (ArgumentException ex)
-        {
-            return ex.ToValidationError().ToMcpJson();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return ex.ToAuthenticationError().ToMcpJson();
-        }
-        catch (HttpRequestException ex)
-        {
-            return ex.ToHttpError().ToMcpJson();
-        }
-        catch (Exception ex)
-        {
-            return ex.ToOperationError("listing pipelines").ToMcpJson();
-        }
+        return result.ToErrorResponse("listing pipelines").ToMcpJson();
     }
 
     [McpServerTool, Description(@"Creates a Pipeline in the specified workspace.")]
@@ -81,18 +62,11 @@ public class PipelineTool
         [Description("The Pipeline description (optional, max 256 characters)")] string? description = null,
         [Description("The folder ID where the pipeline will be created (optional, defaults to workspace root)")] string? folderId = null)
     {
-        try
+        var result = await _pipelineHandler.CreateAsync(workspaceId, displayName, description, folderId);
+        if (result.IsSuccess)
         {
-            var request = new CreatePipelineRequest
-            {
-                DisplayName = displayName,
-                Description = description,
-                FolderId = folderId
-            };
-
-            var response = await _pipelineService.CreatePipelineAsync(workspaceId, request);
-
-            var result = new
+            var response = result.Value!.Pipeline;
+            return new
             {
                 Success = true,
                 Message = $"Pipeline '{displayName}' created successfully",
@@ -103,26 +77,9 @@ public class PipelineTool
                 WorkspaceId = response.WorkspaceId,
                 FolderId = response.FolderId,
                 CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
-            };
-
-            return result.ToMcpJson();
+            }.ToMcpJson();
         }
-        catch (ArgumentException ex)
-        {
-            return ex.ToValidationError().ToMcpJson();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return ex.ToAuthenticationError().ToMcpJson();
-        }
-        catch (HttpRequestException ex)
-        {
-            return ex.ToHttpError().ToMcpJson();
-        }
-        catch (Exception ex)
-        {
-            return ex.ToOperationError("creating pipeline").ToMcpJson();
-        }
+        return result.ToErrorResponse("creating pipeline").ToMcpJson();
     }
 
     [McpServerTool, Description(@"Gets the metadata of a Pipeline by ID.")]
@@ -130,31 +87,12 @@ public class PipelineTool
         [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
         [Description("The pipeline ID to retrieve (required)")] string pipelineId)
     {
-        try
+        var result = await _pipelineHandler.GetAsync(workspaceId, pipelineId);
+        if (result.IsSuccess)
         {
-            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
-            _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
-
-            var pipeline = await _pipelineService.GetPipelineAsync(workspaceId, pipelineId);
-
-            return pipeline.ToFormattedInfo().ToMcpJson();
+            return result.Value!.Pipeline.ToFormattedInfo().ToMcpJson();
         }
-        catch (ArgumentException ex)
-        {
-            return ex.ToValidationError().ToMcpJson();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return ex.ToAuthenticationError().ToMcpJson();
-        }
-        catch (HttpRequestException ex)
-        {
-            return ex.ToHttpError().ToMcpJson();
-        }
-        catch (Exception ex)
-        {
-            return ex.ToOperationError("getting pipeline").ToMcpJson();
-        }
+        return result.ToErrorResponse("getting pipeline").ToMcpJson();
     }
 
     [McpServerTool, Description(@"Gets the definition of a Pipeline. The definition contains the pipeline JSON configuration with base64-encoded parts.")]
@@ -329,63 +267,36 @@ public class PipelineTool
         [Description("The pipeline ID to run (required)")] string pipelineId,
         [Description("Optional execution data as JSON string for parameterized pipeline runs (optional)")] string? executionDataJson = null)
     {
-        try
+        JsonElement? executionData = null;
+        if (!string.IsNullOrEmpty(executionDataJson))
         {
-            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
-            _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
-
-            object? executionData = null;
-            if (!string.IsNullOrEmpty(executionDataJson))
+            try
             {
-                try
-                {
-                    executionData = JsonSerializer.Deserialize<object>(executionDataJson);
-                }
-                catch (JsonException ex)
-                {
-                    throw new ArgumentException($"Invalid executionData JSON format: {ex.Message}");
-                }
+                executionData = JsonSerializer.Deserialize<JsonElement>(executionDataJson);
             }
-
-            var location = await _pipelineService.RunPipelineAsync(workspaceId, pipelineId, executionData);
-
-            // Extract job instance ID from the Location header URL
-            string? jobInstanceId = null;
-            if (!string.IsNullOrEmpty(location))
+            catch (JsonException ex)
             {
-                var segments = new Uri(location).Segments;
-                jobInstanceId = segments.LastOrDefault()?.TrimEnd('/');
+                return ToolResult<object>.Failure($"Invalid executionData JSON format: {ex.Message}", "validation")
+                    .ToErrorResponse("running pipeline").ToMcpJson();
             }
+        }
 
-            var result = new
+        var result = await _pipelineHandler.RunAsync(workspaceId, pipelineId, executionData);
+        if (result.IsSuccess)
+        {
+            var value = result.Value!;
+            return new
             {
                 Success = true,
-                Message = $"Pipeline run triggered successfully",
+                Message = "Pipeline run triggered successfully",
                 PipelineId = pipelineId,
                 WorkspaceId = workspaceId,
-                JobInstanceId = jobInstanceId,
-                LocationUrl = location,
+                JobInstanceId = value.JobInstanceId,
+                LocationUrl = value.LocationUrl,
                 Hint = "Use GetPipelineRunStatusAsync with the jobInstanceId to check the run status"
-            };
-
-            return result.ToMcpJson();
+            }.ToMcpJson();
         }
-        catch (ArgumentException ex)
-        {
-            return ex.ToValidationError().ToMcpJson();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return ex.ToAuthenticationError().ToMcpJson();
-        }
-        catch (HttpRequestException ex)
-        {
-            return ex.ToHttpError().ToMcpJson();
-        }
-        catch (Exception ex)
-        {
-            return ex.ToOperationError("running pipeline").ToMcpJson();
-        }
+        return result.ToErrorResponse("running pipeline").ToMcpJson();
     }
 
     [McpServerTool, Description(@"Gets the status of a Pipeline run (job instance). Use the jobInstanceId returned from RunPipelineAsync to check the run status. Possible statuses: NotStarted, InProgress, Completed, Failed, Cancelled, Deduped.")]
@@ -453,11 +364,10 @@ public class PipelineTool
             _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
             _validationService.ValidateRequiredString(configurationJson, nameof(configurationJson));
 
-            object configuration;
+            JsonElement configuration;
             try
             {
-                configuration = JsonSerializer.Deserialize<object>(configurationJson)
-                    ?? throw new ArgumentException("Configuration JSON cannot be null");
+                configuration = JsonSerializer.Deserialize<JsonElement>(configurationJson);
             }
             catch (JsonException ex)
             {

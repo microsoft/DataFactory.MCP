@@ -2,6 +2,8 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
+using DataFactory.MCP.Handlers;
+using DataFactory.MCP.Handlers.Dataflow;
 using DataFactory.MCP.Models.Dataflow;
 
 namespace DataFactory.MCP.Tools.Dataflow;
@@ -16,15 +18,18 @@ public class DataflowTool
     private readonly IFabricDataflowService _dataflowService;
     private readonly IFabricConnectionService _connectionService;
     private readonly IValidationService _validationService;
+    private readonly DataflowHandler _dataflowHandler;
 
     public DataflowTool(
         IFabricDataflowService dataflowService,
         IFabricConnectionService connectionService,
-        IValidationService validationService)
+        IValidationService validationService,
+        DataflowHandler dataflowHandler)
     {
         _dataflowService = dataflowService;
         _connectionService = connectionService;
         _validationService = validationService;
+        _dataflowHandler = dataflowHandler;
     }
 
     [McpServerTool, Description(@"Returns a list of Dataflows from the specified workspace. This API supports pagination.")]
@@ -32,45 +37,21 @@ public class DataflowTool
         [Description("The workspace ID to list dataflows from (required)")] string workspaceId,
         [Description("A token for retrieving the next page of results (optional)")] string? continuationToken = null)
     {
-        try
+        var result = await _dataflowHandler.ListAsync(workspaceId, continuationToken);
+        if (result.IsSuccess)
         {
-            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
-
-            var response = await _dataflowService.ListDataflowsAsync(workspaceId, continuationToken);
-
-            if (!response.Value.Any())
+            var value = result.Value!;
+            return new
             {
-                return $"No dataflows found in workspace '{workspaceId}'.";
-            }
-
-            var result = new
-            {
-                WorkspaceId = workspaceId,
-                DataflowCount = response.Value.Count,
-                ContinuationToken = response.ContinuationToken,
-                ContinuationUri = response.ContinuationUri,
-                HasMoreResults = !string.IsNullOrEmpty(response.ContinuationToken),
-                Dataflows = response.Value.Select(d => d.ToFormattedInfo())
-            };
-
-            return result.ToMcpJson();
+                value.WorkspaceId,
+                value.DataflowCount,
+                value.ContinuationToken,
+                value.ContinuationUri,
+                value.HasMoreResults,
+                Dataflows = value.Dataflows.Select(d => d.ToFormattedInfo())
+            }.ToMcpJson();
         }
-        catch (ArgumentException ex)
-        {
-            return ex.ToValidationError().ToMcpJson();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return ex.ToAuthenticationError().ToMcpJson();
-        }
-        catch (HttpRequestException ex)
-        {
-            return ex.ToHttpError().ToMcpJson();
-        }
-        catch (Exception ex)
-        {
-            return ex.ToOperationError("listing dataflows").ToMcpJson();
-        }
+        return result.ToErrorResponse("listing dataflows").ToMcpJson();
     }
 
     [McpServerTool, Description(@"Creates a Dataflow in the specified workspace. The workspace must be on a supported Fabric capacity.")]
@@ -80,18 +61,11 @@ public class DataflowTool
         [Description("The Dataflow description (optional, max 256 characters)")] string? description = null,
         [Description("The folder ID where the dataflow will be created (optional, defaults to workspace root)")] string? folderId = null)
     {
-        try
+        var result = await _dataflowHandler.CreateAsync(workspaceId, displayName, description, folderId);
+        if (result.IsSuccess)
         {
-            var request = new CreateDataflowRequest
-            {
-                DisplayName = displayName,
-                Description = description,
-                FolderId = folderId
-            };
-
-            var response = await _dataflowService.CreateDataflowAsync(workspaceId, request);
-
-            var result = new
+            var response = result.Value!.Dataflow;
+            return new
             {
                 Success = true,
                 Message = $"Dataflow '{displayName}' created successfully",
@@ -102,31 +76,9 @@ public class DataflowTool
                 WorkspaceId = response.WorkspaceId,
                 FolderId = response.FolderId,
                 CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
-            };
-
-            return result.ToMcpJson();
+            }.ToMcpJson();
         }
-        catch (ArgumentException ex)
-        {
-            return ex.ToValidationError().ToMcpJson();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return ex.ToAuthenticationError().ToMcpJson();
-        }
-        catch (HttpRequestException ex) when (ex.Message.Contains("403") || ex.Message.Contains("Forbidden"))
-        {
-            return new HttpRequestException("Access denied or feature not available. The workspace must be on a supported Fabric capacity to create dataflows.")
-                .ToHttpError().ToMcpJson();
-        }
-        catch (HttpRequestException ex)
-        {
-            return ex.ToHttpError().ToMcpJson();
-        }
-        catch (Exception ex)
-        {
-            return ex.ToOperationError("creating dataflow").ToMcpJson();
-        }
+        return result.ToErrorResponse("creating dataflow").ToMcpJson();
     }
 
     [McpServerTool, Description(@"Adds or replaces connections in an existing dataflow, or clears all connections. When clearExisting is true with no connectionIds, all connections are removed. When clearExisting is true with connectionIds, existing connections are replaced. When clearExisting is false (default), connections are appended.")]

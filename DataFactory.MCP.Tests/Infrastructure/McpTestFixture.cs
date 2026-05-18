@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Abstractions.Interfaces.DMTSv2;
 using DataFactory.MCP.Configuration;
+using DataFactory.MCP.Handlers.Dataflow;
+using DataFactory.MCP.Handlers.Pipeline;
 using DataFactory.MCP.Infrastructure.Http;
 using DataFactory.MCP.Services;
 using DataFactory.MCP.Services.Authentication;
@@ -97,6 +99,10 @@ public class McpTestFixture : IDisposable
                 services.AddSingleton<INotificationQueue, NotificationQueue>();
                 services.AddSingleton<IBackgroundJobMonitor, BackgroundJobMonitor>();
                 services.AddScoped<IDataflowRefreshService, DataflowRefreshService>();
+
+                // Register handlers
+                services.AddScoped<PipelineHandler>();
+                services.AddScoped<DataflowHandler>();
 
                 // Register tools
                 services.AddScoped<AuthenticationTool>();

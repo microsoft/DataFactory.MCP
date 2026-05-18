@@ -1,6 +1,8 @@
+using System.Text.Json;
 using DataFactory.MCP.Abstractions;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Infrastructure.Http;
+using DataFactory.MCP.Models.Common;
 using DataFactory.MCP.Models.Pipeline;
 using DataFactory.MCP.Models.Pipeline.Definition;
 using DataFactory.MCP.Models.Pipeline.Schedule;
@@ -122,7 +124,7 @@ public class FabricPipelineService : FabricServiceBase, IFabricPipelineService
             Logger.LogInformation("Getting definition for pipeline {PipelineId} in workspace {WorkspaceId}",
                 pipelineId, workspaceId);
 
-            var emptyRequest = new { };
+            var emptyRequest = new EmptyRequest();
             var response = await PostAsync<GetPipelineDefinitionResponse>(endpoint, emptyRequest)
                            ?? throw new InvalidOperationException("Failed to get pipeline definition response");
 
@@ -198,7 +200,7 @@ public class FabricPipelineService : FabricServiceBase, IFabricPipelineService
     public async Task<string?> RunPipelineAsync(
         string workspaceId,
         string pipelineId,
-        object? executionData = null)
+        JsonElement? executionData = null)
     {
         try
         {
@@ -212,7 +214,9 @@ public class FabricPipelineService : FabricServiceBase, IFabricPipelineService
             Logger.LogInformation("Running pipeline {PipelineId} on demand in workspace {WorkspaceId}",
                 pipelineId, workspaceId);
 
-            var request = executionData != null ? new { executionData } : null;
+            var request = executionData != null 
+                ? new RunOnDemandRequest { ExecutionData = executionData } 
+                : null;
             var location = await PostAndGetLocationAsync(endpoint, request);
 
             Logger.LogInformation("Pipeline {PipelineId} run triggered successfully. Location: {Location}",

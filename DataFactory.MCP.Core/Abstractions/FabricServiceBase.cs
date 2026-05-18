@@ -20,6 +20,15 @@ public abstract class FabricServiceBase
     protected readonly IValidationService ValidationService;
     protected static JsonSerializerOptions JsonOptions => JsonSerializerOptionsProvider.FabricApi;
 
+    /// <summary>
+    /// Serializes a request object using source-generated JSON context for AOT compatibility.
+    /// All request types must be registered in DataFactoryJsonContext.
+    /// </summary>
+    private static string SerializeRequest(object request)
+    {
+        return JsonSerializer.Serialize(request, request.GetType(), DataFactoryJsonContext.Default);
+    }
+
     protected FabricServiceBase(
         IHttpClientFactory httpClientFactory,
         ILogger logger,
@@ -61,7 +70,7 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
-        var jsonContent = JsonSerializer.Serialize(request, JsonOptions);
+        var jsonContent = SerializeRequest(request);
         Logger.LogDebug("Request body: {Body}", jsonContent);
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
@@ -79,7 +88,7 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Patching: {Url}", url);
 
-        var jsonContent = JsonSerializer.Serialize(request, JsonOptions);
+        var jsonContent = SerializeRequest(request);
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         var httpRequest = new HttpRequestMessage(HttpMethod.Patch, url) { Content = content };
@@ -97,7 +106,7 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
-        var jsonContent = JsonSerializer.Serialize(request, JsonOptions);
+        var jsonContent = SerializeRequest(request);
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         var response = await HttpClient.PostAsync(url, content);
@@ -115,7 +124,7 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
-        var jsonContent = request != null ? JsonSerializer.Serialize(request, JsonOptions) : null;
+        var jsonContent = request != null ? SerializeRequest(request) : null;
         var content = jsonContent != null ? new StringContent(jsonContent, Encoding.UTF8, "application/json") : null;
 
         var response = await HttpClient.PostAsync(url, content);
@@ -135,7 +144,7 @@ public abstract class FabricServiceBase
             .Build();
         Logger.LogInformation("Posting to: {Url}", url);
 
-        var jsonContent = JsonSerializer.Serialize(request, JsonOptions);
+        var jsonContent = SerializeRequest(request);
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         var response = await HttpClient.PostAsync(url, content);
@@ -145,9 +154,9 @@ public abstract class FabricServiceBase
             return true;
         }
 
-        var (_, _, error) = await response.TryReadAsJsonAsync<object>(JsonOptions);
+        var errorContent = await response.Content.ReadAsStringAsync();
         Logger.LogError("API POST request failed. Status: {StatusCode}, Content: {Content}",
-            error?.StatusCode, error?.ResponseContent);
+            response.StatusCode, errorContent);
         return false;
     }
 }

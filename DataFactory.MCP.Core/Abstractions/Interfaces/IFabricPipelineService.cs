@@ -1,3 +1,4 @@
+using System.Text.Json;
 using DataFactory.MCP.Models.Pipeline;
 using DataFactory.MCP.Models.Pipeline.Definition;
 using DataFactory.MCP.Models.Pipeline.Schedule;
@@ -59,7 +60,7 @@ public interface IFabricPipelineService
     Task<string?> RunPipelineAsync(
         string workspaceId,
         string pipelineId,
-        object? executionData = null);
+        JsonElement? executionData = null);
 
     /// <summary>
     /// Gets the status of a pipeline job instance
