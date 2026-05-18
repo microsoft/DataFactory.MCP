@@ -3,6 +3,8 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using DataFactory.MCP.Models.AirflowJob;
+using DataFactory.MCP.Models.AirflowJob.Definition;
 using DataFactory.MCP.Models.Capacity;
 using DataFactory.MCP.Models.Common;
 using DataFactory.MCP.Models.Connection;
@@ -97,6 +99,16 @@ namespace DataFactory.MCP.Configuration;
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(EmptyRequest))]
 [JsonSerializable(typeof(RunOnDemandRequest))]
+// AirflowJob types
+[JsonSerializable(typeof(AirflowJob))]
+[JsonSerializable(typeof(CreateAirflowJobRequest))]
+[JsonSerializable(typeof(UpdateAirflowJobRequest))]
+[JsonSerializable(typeof(ListAirflowJobsResponse))]
+// AirflowJob Definition types
+[JsonSerializable(typeof(AirflowJobDefinition))]
+[JsonSerializable(typeof(AirflowJobDefinitionPart))]
+[JsonSerializable(typeof(GetAirflowJobDefinitionResponse))]
+[JsonSerializable(typeof(UpdateAirflowJobDefinitionRequest))]
 internal sealed partial class DataFactoryJsonContext : JsonSerializerContext
 {
 }

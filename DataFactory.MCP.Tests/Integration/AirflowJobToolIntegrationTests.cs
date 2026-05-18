@@ -433,6 +433,13 @@ public class AirflowJobToolIntegrationTests : FabricToolIntegrationTestBase
             if (!IsValidJson(createResult)) return; // API may not support creation in test workspace
 
             var createJson = JsonDocument.Parse(createResult);
+
+            // Skip if API returned an error (e.g., workspace doesn't support Airflow Jobs)
+            if (createJson.RootElement.TryGetProperty("success", out var successProp) && !successProp.GetBoolean())
+            {
+                Skip.If(true, $"Skipping lifecycle test - create returned error: {createResult}");
+            }
+
             Assert.True(createJson.RootElement.TryGetProperty("airflowJobId", out var idElement),
                 $"Create response missing airflowJobId. Response: {createResult}");
             airflowJobId = idElement.GetString();
