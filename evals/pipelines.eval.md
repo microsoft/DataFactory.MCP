@@ -7,6 +7,10 @@ Tools under test:
 - `GetPipelineDefinitionAsync(workspaceId, pipelineId)`
 - `UpdatePipelineAsync(workspaceId, pipelineId, displayName?, description?)`
 - `UpdatePipelineDefinitionAsync(workspaceId, pipelineId, definitionJson)`
+- `RunPipelineAsync(workspaceId, pipelineId)`
+- `GetPipelineRunStatusAsync(workspaceId, pipelineId, runId)`
+- `CreatePipelineScheduleAsync(workspaceId, pipelineId, scheduleConfig)`
+- `ListPipelineSchedulesAsync(workspaceId, pipelineId)`
 
 ---
 
@@ -328,3 +332,181 @@ Tools under test:
 - "Data pipeline" should map to Pipeline, not Dataflow
 - In Fabric terminology, "pipeline" specifically refers to the orchestration artifact
 - If unsure, calling both `ListPipelinesAsync` and `ListDataflowsAsync` is acceptable
+
+---
+
+## Pipeline Run & Schedule (PR #94+)
+
+### EVAL-PL-016: Run a pipeline on demand
+
+**Category:** Tool Selection
+**Difficulty:** Easy
+
+**User prompt:**
+> Run pipeline `pl-456` in workspace `ws-123`
+
+**Expected tool call(s):**
+- Tool: `RunPipelineAsync`
+  - `workspaceId`: `ws-123`
+  - `pipelineId`: `pl-456`
+
+**Assertions:**
+- Must select run tool, not update or create
+- "Run" is unambiguous for on-demand execution
+
+---
+
+### EVAL-PL-017: Check pipeline run status
+
+**Category:** Tool Selection
+**Difficulty:** Easy
+
+**User prompt:**
+> Check the status of pipeline run `run-789` for pipeline `pl-456` in workspace `ws-123`
+
+**Expected tool call(s):**
+- Tool: `GetPipelineRunStatusAsync`
+  - `workspaceId`: `ws-123`
+  - `pipelineId`: `pl-456`
+  - `runId`: `run-789`
+
+**Assertions:**
+- Must select run status tool
+- Must extract all three IDs from prompt
+
+---
+
+### EVAL-PL-018: Schedule a pipeline
+
+**Category:** Tool Selection
+**Difficulty:** Medium
+
+**User prompt:**
+> Set up a daily schedule for pipeline `pl-456` in workspace `ws-123`
+
+**Expected tool call(s):**
+- Tool: `CreatePipelineScheduleAsync`
+  - `workspaceId`: `ws-123`
+  - `pipelineId`: `pl-456`
+  - `scheduleConfig`: contains daily frequency
+
+**Assertions:**
+- Must select schedule creation tool
+- "Daily schedule" maps to schedule, not run
+
+---
+
+### EVAL-PL-019: List pipeline schedules
+
+**Category:** Tool Selection
+**Difficulty:** Easy
+
+**User prompt:**
+> What schedules are configured for pipeline `pl-456` in workspace `ws-123`?
+
+**Expected tool call(s):**
+- Tool: `ListPipelineSchedulesAsync`
+  - `workspaceId`: `ws-123`
+  - `pipelineId`: `pl-456`
+
+**Assertions:**
+- "Schedules configured" maps to list schedules
+- Must not call run status
+
+---
+
+### EVAL-PL-020: Run then poll status
+
+**Category:** Parameter Extraction
+**Difficulty:** Medium
+
+**User prompt:**
+> Check if my pipeline run finished
+
+**Context:**
+> Previous `RunPipelineAsync` returned:
+> ```json
+> { "workspaceId": "ws-main", "pipelineId": "pl-001", "runId": "run-abc-123" }
+> ```
+
+**Expected tool call(s):**
+- Tool: `GetPipelineRunStatusAsync`
+  - `workspaceId`: `ws-main`
+  - `pipelineId`: `pl-001`
+  - `runId`: `run-abc-123`
+
+**Assertions:**
+- Must extract all three IDs from prior run context
+- Must not re-run the pipeline
+
+---
+
+### EVAL-PL-021: Run pipeline by name from list
+
+**Category:** Parameter Extraction
+**Difficulty:** Medium
+
+**User prompt:**
+> Run the "Nightly Sync" pipeline
+
+**Context:**
+> Previous `ListPipelinesAsync` returned:
+> ```json
+> { "workspaceId": "ws-main", "pipelines": [
+>   { "id": "pl-001", "displayName": "Nightly Sync" },
+>   { "id": "pl-002", "displayName": "Weekly Report" }
+> ]}
+> ```
+
+**Expected tool call(s):**
+- Tool: `RunPipelineAsync`
+  - `workspaceId`: `ws-main`
+  - `pipelineId`: `pl-001`
+
+**Assertions:**
+- Must resolve name to ID from context
+- Must infer workspace from prior list
+
+---
+
+### EVAL-PL-022: Schedule vs run disambiguation
+
+**Category:** Edge Case
+**Difficulty:** Hard
+
+**User prompt:**
+> I want this pipeline to run every Monday at 6am
+
+**Context:**
+> Working with pipeline `pl-456` in workspace `ws-123`
+
+**Expected tool call(s):**
+- Tool: `CreatePipelineScheduleAsync`
+  - `workspaceId`: `ws-123`
+  - `pipelineId`: `pl-456`
+  - `scheduleConfig`: weekly, Monday, 6:00 AM
+
+**Assertions:**
+- "Run every Monday" is a schedule request, not an on-demand run
+- Must use schedule creation, not run tool
+
+---
+
+### EVAL-PL-023: Pipeline failed — what happened?
+
+**Category:** Edge Case
+**Difficulty:** Hard
+
+**User prompt:**
+> My pipeline run failed, what went wrong?
+
+**Context:**
+> Working with pipeline `pl-456` in workspace `ws-123`, last run was `run-999`
+
+**Expected behavior:**
+- Call `GetPipelineRunStatusAsync` to get error details
+- If the failure is from a Dataflow activity, suggest checking `RefreshDataflowStatus`
+
+**Assertions:**
+- Must check run status first
+- Must not attempt to fix without diagnosing
