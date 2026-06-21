@@ -23,7 +23,9 @@ Cross-tool workflows live in `multi-step.eval.md`.
 | [connections.eval.md](connections.eval.md) | `ListSupportedConnectionTypesAsync`, `ListConnectionsAsync`, `GetConnectionAsync`, `CreateConnectionAsync`, `create_connection_ui` |
 | [gateways.eval.md](gateways.eval.md) | `ListGatewaysAsync`, `GetGatewayAsync`, `create_virtualnetwork_gateway` |
 | [dataflows.eval.md](dataflows.eval.md) | `ListDataflowsAsync`, `CreateDataflowAsync`, `AddConnectionToDataflowAsync`, `AddOrUpdateQueryInDataflowAsync`, `get_dataflow_definition`, `save_dataflow_definition`, `ExecuteQueryAsync`, `RefreshDataflowBackground`, `RefreshDataflowStatus` |
-| [pipelines.eval.md](pipelines.eval.md) | `ListPipelinesAsync`, `CreatePipelineAsync`, `GetPipelineAsync`, `GetPipelineDefinitionAsync`, `UpdatePipelineAsync`, `UpdatePipelineDefinitionAsync` |
+| [pipelines.eval.md](pipelines.eval.md) | `ListPipelinesAsync`, `CreatePipelineAsync`, `GetPipelineAsync`, `GetPipelineDefinitionAsync`, `UpdatePipelineAsync`, `UpdatePipelineDefinitionAsync`, `RunPipelineAsync`, `GetPipelineRunStatusAsync`, `CreatePipelineScheduleAsync`, `ListPipelineSchedulesAsync` |
+| [copyjobs.eval.md](copyjobs.eval.md) | `ListCopyJobsAsync`, `CreateCopyJobAsync`, `GetCopyJobAsync`, `GetCopyJobDefinitionAsync`, `UpdateCopyJobAsync`, `UpdateCopyJobDefinitionAsync`, `RunCopyJobAsync`, `GetCopyJobRunStatusAsync`, `CreateCopyJobScheduleAsync`, `ListCopyJobSchedulesAsync` |
+| [operations.eval.md](operations.eval.md) | Cross-item triage: `RefreshDataflowStatus`, `GetPipelineRunStatusAsync`, `GetCopyJobRunStatusAsync`, `AddConnectionToDataflowAsync`, `GetConnectionAsync` |
 | [multi-step.eval.md](multi-step.eval.md) | Cross-tool orchestration scenarios |
 
 ## Scenario Format
@@ -116,9 +118,11 @@ OPENAI_API_KEY=sk-... python evals/integration/run_integration_evals.py
 | Connections | 5 | 5 | 5 | 15 |
 | Gateways | 3 | 3 | 3 | 9 |
 | Dataflows | 9 | 7 | 6 | 22 |
-| Pipelines | 6 | 5 | 4 | 15 |
+| Pipelines | 9 | 7 | 7 | 23 |
+| Copy Jobs | 6 | 5 | 4 | 15 |
+| Operations (Cross-Item) | 4 | 2 | 2 | 8 |
 | Multi-step | — | — | — | 10 |
-| **Total** | **33** | **26** | **25** | **94** |
+| **Total** | **47** | **35** | **43** | **125** |
 
 ### Integration Evals (M Code Quality)
 
@@ -133,4 +137,4 @@ OPENAI_API_KEY=sk-... python evals/integration/run_integration_evals.py
 | Lifecycle | 2 |
 | **Total** | **20** |
 
-**Grand total: 114 evals** (94 tool-selection + 20 integration)
+**Grand total: 145 evals** (125 tool-selection + 20 integration)

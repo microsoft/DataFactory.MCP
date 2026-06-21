@@ -459,6 +459,231 @@
           "required": ["workspaceId", "pipelineId", "definitionJson"]
         }
       }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "RunPipelineAsync",
+        "description": "Runs a Pipeline on demand. Returns a job instance ID that can be used to track the run status with GetPipelineRunStatusAsync.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the pipeline (required)" },
+            "pipelineId": { "type": "string", "description": "The pipeline ID to run (required)" },
+            "executionDataJson": { "type": "string", "description": "Optional execution data as JSON string for parameterized pipeline runs (optional)", "nullable": true }
+          },
+          "required": ["workspaceId", "pipelineId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GetPipelineRunStatusAsync",
+        "description": "Gets the status of a Pipeline run (job instance). Possible statuses: NotStarted, InProgress, Completed, Failed, Cancelled, Deduped.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the pipeline (required)" },
+            "pipelineId": { "type": "string", "description": "The pipeline ID (required)" },
+            "jobInstanceId": { "type": "string", "description": "The job instance ID returned from RunPipelineAsync (required)" }
+          },
+          "required": ["workspaceId", "pipelineId", "jobInstanceId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "CreatePipelineScheduleAsync",
+        "description": "Creates a schedule for a Pipeline. Supports Cron, Daily, Weekly, and Monthly schedule types. An item can have up to 20 schedules.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the pipeline (required)" },
+            "pipelineId": { "type": "string", "description": "The pipeline ID to schedule (required)" },
+            "enabled": { "type": "boolean", "description": "Whether the schedule is enabled (required)" },
+            "configurationJson": { "type": "string", "description": "The schedule configuration as JSON string (required). Supported types: Cron, Daily, Weekly, Monthly." }
+          },
+          "required": ["workspaceId", "pipelineId", "enabled", "configurationJson"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ListPipelineSchedulesAsync",
+        "description": "Lists all schedules for a Pipeline. Returns schedule configurations, status, and owner information.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the pipeline (required)" },
+            "pipelineId": { "type": "string", "description": "The pipeline ID to list schedules for (required)" },
+            "continuationToken": { "type": "string", "description": "A token for retrieving the next page of results (optional)", "nullable": true }
+          },
+          "required": ["workspaceId", "pipelineId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ListCopyJobsAsync",
+        "description": "Returns a list of Copy Jobs from the specified workspace. This API supports pagination.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID to list copy jobs from (required)" },
+            "continuationToken": { "type": "string", "description": "A token for retrieving the next page of results (optional)", "nullable": true }
+          },
+          "required": ["workspaceId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "CreateCopyJobAsync",
+        "description": "Creates a Copy Job in the specified workspace.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID where the copy job will be created (required)" },
+            "displayName": { "type": "string", "description": "The Copy Job display name (required)" },
+            "description": { "type": "string", "description": "The Copy Job description (optional, max 256 characters)", "nullable": true },
+            "folderId": { "type": "string", "description": "The folder ID (optional, defaults to workspace root)", "nullable": true }
+          },
+          "required": ["workspaceId", "displayName"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GetCopyJobAsync",
+        "description": "Gets the metadata of a Copy Job by ID.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the copy job (required)" },
+            "copyJobId": { "type": "string", "description": "The copy job ID to retrieve (required)" }
+          },
+          "required": ["workspaceId", "copyJobId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GetCopyJobDefinitionAsync",
+        "description": "Gets the definition of a Copy Job. Contains copy job JSON configuration with base64-encoded parts.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the copy job (required)" },
+            "copyJobId": { "type": "string", "description": "The copy job ID to get the definition for (required)" }
+          },
+          "required": ["workspaceId", "copyJobId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "UpdateCopyJobAsync",
+        "description": "Updates the metadata (displayName and/or description) of a Copy Job.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the copy job (required)" },
+            "copyJobId": { "type": "string", "description": "The copy job ID to update (required)" },
+            "displayName": { "type": "string", "description": "The new display name (optional)", "nullable": true },
+            "description": { "type": "string", "description": "The new description (optional)", "nullable": true }
+          },
+          "required": ["workspaceId", "copyJobId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "UpdateCopyJobDefinitionAsync",
+        "description": "Updates the definition of a Copy Job with provided JSON content. The JSON will be base64-encoded and sent to the API.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the copy job (required)" },
+            "copyJobId": { "type": "string", "description": "The copy job ID to update (required)" },
+            "definitionJson": { "type": "string", "description": "The copy job definition JSON content (required)" }
+          },
+          "required": ["workspaceId", "copyJobId", "definitionJson"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "RunCopyJobAsync",
+        "description": "Runs a Copy Job on demand. Returns a job instance ID that can be used to track the run status with GetCopyJobRunStatusAsync.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the copy job (required)" },
+            "copyJobId": { "type": "string", "description": "The copy job ID to run (required)" },
+            "executionDataJson": { "type": "string", "description": "Optional execution data as JSON string (optional)", "nullable": true }
+          },
+          "required": ["workspaceId", "copyJobId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GetCopyJobRunStatusAsync",
+        "description": "Gets the status of a Copy Job run (job instance). Possible statuses: NotStarted, InProgress, Completed, Failed, Cancelled, Deduped.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the copy job (required)" },
+            "copyJobId": { "type": "string", "description": "The copy job ID (required)" },
+            "jobInstanceId": { "type": "string", "description": "The job instance ID returned from RunCopyJobAsync (required)" }
+          },
+          "required": ["workspaceId", "copyJobId", "jobInstanceId"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "CreateCopyJobScheduleAsync",
+        "description": "Creates a schedule for a Copy Job. Supports Cron, Daily, Weekly, and Monthly schedule types. An item can have up to 20 schedules.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the copy job (required)" },
+            "copyJobId": { "type": "string", "description": "The copy job ID to schedule (required)" },
+            "enabled": { "type": "boolean", "description": "Whether the schedule is enabled (required)" },
+            "configurationJson": { "type": "string", "description": "The schedule configuration as JSON string (required). Supported types: Cron, Daily, Weekly, Monthly." }
+          },
+          "required": ["workspaceId", "copyJobId", "enabled", "configurationJson"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "ListCopyJobSchedulesAsync",
+        "description": "Lists all schedules for a Copy Job. Returns schedule configurations, status, and owner information.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the copy job (required)" },
+            "copyJobId": { "type": "string", "description": "The copy job ID to list schedules for (required)" },
+            "continuationToken": { "type": "string", "description": "A token for retrieving the next page of results (optional)", "nullable": true }
+          },
+          "required": ["workspaceId", "copyJobId"]
+        }
+      }
     }
   ]
 }

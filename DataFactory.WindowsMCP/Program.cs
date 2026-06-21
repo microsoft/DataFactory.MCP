@@ -37,4 +37,7 @@ mcpBuilder.AddDataFactoryMcpOptionalTools(
     args.Concat(["--interactive-auth"]).ToArray(),  // Enable interactive auth by default for stdio
     logger);
 
+// Initialize skill registry for SEP-2640 skill:// resources
+DataFactory.MCP.Resources.Skills.SkillRegistry.Initialize();
+
 await builder.Build().RunAsync();
