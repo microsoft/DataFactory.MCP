@@ -15,6 +15,7 @@ The pipeline management tools allow you to:
 - **Check** pipeline run status by job instance ID
 - **Create** pipeline schedules (Cron, Daily, Weekly, Monthly)
 - **List** schedules configured for a pipeline
+- **Enable or disable** an existing schedule (stop a schedule without deleting it)
 - Navigate paginated results for large pipeline collections
 
 ## MCP Tools
@@ -444,6 +445,50 @@ list_pipeline_schedules(
 }
 ```
 
+### set_pipeline_schedule_enabled
+
+Enables or disables an existing pipeline schedule, preserving its current configuration. Use `enabled=false` to **stop** (disable) a schedule without deleting it, and `enabled=true` to re-enable it later. Use the `scheduleId` returned from `list_pipeline_schedules`.
+
+#### Usage
+```
+# Disable (stop) a schedule
+set_pipeline_schedule_enabled(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  pipelineId: "87654321-4321-4321-4321-210987654321",
+  scheduleId: "f36bc1bb-7007-4c15-b175-f63101609f95",
+  enabled: false
+)
+
+# Re-enable a schedule
+set_pipeline_schedule_enabled(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  pipelineId: "87654321-4321-4321-4321-210987654321",
+  scheduleId: "f36bc1bb-7007-4c15-b175-f63101609f95",
+  enabled: true
+)
+```
+
+#### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `workspaceId` | Yes | The workspace ID containing the pipeline |
+| `pipelineId` | Yes | The pipeline ID whose schedule is being changed |
+| `scheduleId` | Yes | The schedule ID to enable or disable |
+| `enabled` | No | Whether the schedule should be enabled. Defaults to `false` (disable/stop the schedule) |
+
+#### Response Format
+```json
+{
+  "success": true,
+  "message": "Pipeline schedule disabled (stopped) successfully",
+  "scheduleId": "f36bc1bb-7007-4c15-b175-f63101609f95",
+  "pipelineId": "87654321-4321-4321-4321-210987654321",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "enabled": false
+}
+```
+
 ## Pipeline Properties
 
 Pipelines in Microsoft Fabric include several key properties:
@@ -506,4 +551,7 @@ Pipelines in Microsoft Fabric include several key properties:
 
 # List pipeline schedules
 > list schedules for pipeline 87654321-4321-4321-4321-210987654321 in workspace 12345678-1234-1234-1234-123456789012
+
+# Stop (disable) a schedule without deleting it
+> stop schedule f36bc1bb-7007-4c15-b175-f63101609f95 on pipeline 87654321-4321-4321-4321-210987654321 in workspace 12345678-1234-1234-1234-123456789012
 ```
