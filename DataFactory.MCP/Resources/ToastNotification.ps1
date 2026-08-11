@@ -1,7 +1,7 @@
 Add-Type -AssemblyName PresentationFramework
-[xml]$xaml = @"
+[xml]$xaml = @'
 {{XamlContent}}
-"@
+'@
 $reader = New-Object System.Xml.XmlNodeReader $xaml
 $window = [Windows.Markup.XamlReader]::Load($reader)
 $window.Left = [System.Windows.SystemParameters]::WorkArea.Right - 350
