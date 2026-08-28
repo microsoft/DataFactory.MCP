@@ -55,6 +55,59 @@ Use `dependsOn` to sequence activities. Use `templates/pipeline-chained-dataflow
 
 Dependency conditions: `Succeeded`, `Failed`, `Skipped`, `Completed` (any outcome).
 
+## Add or Modify a Single Activity
+
+Use `upsert_pipeline_activity` to add or replace a single activity without
+hand-editing the full pipeline definition.
+
+### Upsert-by-name semantics
+
+The tool matches by `name`. If an activity with the same name already exists it
+is **replaced**; otherwise the new activity is **appended**.
+
+```python
+upsert_pipeline_activity(
+  workspaceId="...",
+  pipelineId="...",
+  activityJson='{"name":"LoadNotebook","type":"TridentNotebook","dependsOn":[],"typeProperties":{"notebookId":"NOTEBOOK_ID"}}'
+)
+```
+
+### Wiring dependencies
+
+Pass `dependsOnJson` to set or override the activity's `dependsOn` array. This
+is useful when the activity template has an empty `dependsOn` but you want to
+chain it after another activity:
+
+```python
+upsert_pipeline_activity(
+  workspaceId="...",
+  pipelineId="...",
+  activityJson='{"name":"Transform","type":"TridentNotebook","dependsOn":[],"typeProperties":{"notebookId":"NB_ID"}}',
+  dependsOnJson='[{"activity":"Extract","dependencyConditions":["Succeeded"]}]'
+)
+```
+
+### Removing an activity
+
+Use `remove_pipeline_activity` to remove an activity by name. The tool refuses
+removal if any other activity's `dependsOn` references it — update or remove
+dependent activities first.
+
+```python
+remove_pipeline_activity(
+  workspaceId="...",
+  pipelineId="...",
+  activityName="OldStep"
+)
+```
+
+### Activity body templates
+
+Use `templates/activity-copy.json`, `templates/activity-notebook.json`, or
+`templates/activity-web.json` for the activity body shape. Replace placeholder
+values and pass as `activityJson`.
+
 ## Scheduling
 
 Schedules **can** be created via the MCP using `create_pipeline_schedule`

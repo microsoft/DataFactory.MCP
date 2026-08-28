@@ -1,0 +1,16 @@
+// Replace: ACTIVITY_NAME, NOTEBOOK_ID (from Fabric workspace)
+// Pass this JSON as the activityJson parameter to upsert_pipeline_activity
+// Optional: add "parameters" under typeProperties to pass values into the notebook
+{
+  "name": "ACTIVITY_NAME",
+  "type": "TridentNotebook",
+  "dependsOn": [],
+  "policy": {
+    "timeout": "0.12:00:00",
+    "retry": 0,
+    "retryIntervalInSeconds": 30
+  },
+  "typeProperties": {
+    "notebookId": "NOTEBOOK_ID"
+  }
+}

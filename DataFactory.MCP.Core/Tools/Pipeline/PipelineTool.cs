@@ -2,6 +2,7 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Handlers;
@@ -519,6 +520,386 @@ public class PipelineTool
         {
             return ex.ToOperationError("updating pipeline schedule enabled state").ToMcpJson();
         }
+    }
+
+    private static readonly HashSet<string> ValidDependencyConditions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Succeeded", "Failed", "Skipped", "Completed"
+    };
+
+    [McpServerTool, Description(@"Adds or replaces a single activity in an existing pipeline definition. Uses upsert-by-name semantics: if an activity with the same name exists it is replaced; otherwise it is appended. Validates dependency graph integrity before saving.")]
+    public async Task<string> UpsertPipelineActivityAsync(
+        [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
+        [Description("The pipeline ID to update (required)")] string pipelineId,
+        [Description("The activity JSON object with at minimum 'name' and 'type' fields (required)")] string activityJson,
+        [Description("Optional JSON array of dependsOn entries, e.g. [{\"activity\":\"Step1\",\"dependencyConditions\":[\"Succeeded\"]}]. Overrides any dependsOn in activityJson when provided (optional)")] string? dependsOnJson = null)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
+            _validationService.ValidateRequiredString(activityJson, nameof(activityJson));
+
+            // Parse and validate activity JSON
+            JsonNode? activityNode;
+            try
+            {
+                activityNode = JsonNode.Parse(activityJson);
+            }
+            catch (JsonException ex)
+            {
+                throw new ArgumentException($"Invalid activityJson format: {ex.Message}");
+            }
+
+            if (activityNode is not JsonObject activityObj)
+                throw new ArgumentException("activityJson must be a JSON object");
+
+            var activityName = activityObj["name"]?.GetValue<string>();
+            if (string.IsNullOrWhiteSpace(activityName))
+                throw new ArgumentException("Activity must have a non-empty 'name' property");
+
+            var activityType = activityObj["type"]?.GetValue<string>();
+            if (string.IsNullOrWhiteSpace(activityType))
+                throw new ArgumentException("Activity must have a non-empty 'type' property");
+
+            // Parse and apply dependsOn override if provided
+            if (!string.IsNullOrEmpty(dependsOnJson))
+            {
+                JsonNode? dependsOnNode;
+                try
+                {
+                    dependsOnNode = JsonNode.Parse(dependsOnJson);
+                }
+                catch (JsonException ex)
+                {
+                    throw new ArgumentException($"Invalid dependsOnJson format: {ex.Message}");
+                }
+
+                if (dependsOnNode is not JsonArray)
+                    throw new ArgumentException("dependsOnJson must be a JSON array");
+
+                activityObj["dependsOn"] = dependsOnNode.DeepClone();
+            }
+
+            // Pre-service validation: self-dependency and condition checks
+            ValidateActivityDependencies(activityObj, activityName);
+
+            // Type-property warnings (non-blocking)
+            var warnings = ValidateActivityTypeProperties(activityObj);
+
+            // Get current pipeline definition
+            var currentDefinition = await _pipelineService.GetPipelineDefinitionAsync(workspaceId, pipelineId);
+
+            var contentPart = currentDefinition.Parts.FirstOrDefault(p => p.Path == "pipeline-content.json")
+                ?? throw new ArgumentException("Pipeline definition does not contain a 'pipeline-content.json' part");
+
+            var contentJson = Encoding.UTF8.GetString(Convert.FromBase64String(contentPart.Payload));
+            var contentNode = JsonNode.Parse(contentJson)
+                ?? throw new ArgumentException("Failed to parse pipeline content JSON");
+
+            var properties = contentNode["properties"]?.AsObject()
+                ?? throw new ArgumentException("Pipeline content missing 'properties' object");
+
+            var activities = properties["activities"]?.AsArray();
+            if (activities == null)
+            {
+                activities = new JsonArray();
+                properties["activities"] = activities;
+            }
+
+            // Upsert-by-name
+            bool replaced = false;
+            for (int i = 0; i < activities.Count; i++)
+            {
+                var existingName = activities[i]?["name"]?.GetValue<string>();
+                if (existingName == activityName)
+                {
+                    activities[i] = activityObj.DeepClone();
+                    replaced = true;
+                    break;
+                }
+            }
+
+            if (!replaced)
+            {
+                activities.Add(activityObj.DeepClone());
+            }
+
+            // Validate full graph integrity
+            ValidateActivityGraph(activities);
+
+            // Re-serialize and update
+            var updatedContentJson = contentNode.ToJsonString();
+            var base64Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(updatedContentJson));
+
+            var definition = new PipelineDefinition
+            {
+                Parts = new List<PipelineDefinitionPart>
+                {
+                    new PipelineDefinitionPart
+                    {
+                        Path = "pipeline-content.json",
+                        Payload = base64Payload,
+                        PayloadType = "InlineBase64"
+                    }
+                }
+            };
+
+            await _pipelineService.UpdatePipelineDefinitionAsync(workspaceId, pipelineId, definition);
+
+            var result = new
+            {
+                Success = true,
+                Message = replaced
+                    ? $"Activity '{activityName}' replaced successfully"
+                    : $"Activity '{activityName}' added successfully",
+                ActivityName = activityName,
+                ActivityType = activityType,
+                Operation = replaced ? "Replaced" : "Added",
+                TotalActivityCount = activities.Count,
+                PipelineId = pipelineId,
+                WorkspaceId = workspaceId,
+                Warnings = warnings.Count > 0 ? warnings : null
+            };
+
+            return result.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("upserting pipeline activity").ToMcpJson();
+        }
+    }
+
+    [McpServerTool, Description(@"Removes a single activity from an existing pipeline definition by name. Refuses removal if other activities depend on it via dependsOn references.")]
+    public async Task<string> RemovePipelineActivityAsync(
+        [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
+        [Description("The pipeline ID to update (required)")] string pipelineId,
+        [Description("The name of the activity to remove (required)")] string activityName)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
+            _validationService.ValidateRequiredString(activityName, nameof(activityName));
+
+            var currentDefinition = await _pipelineService.GetPipelineDefinitionAsync(workspaceId, pipelineId);
+
+            var contentPart = currentDefinition.Parts.FirstOrDefault(p => p.Path == "pipeline-content.json")
+                ?? throw new ArgumentException("Pipeline definition does not contain a 'pipeline-content.json' part");
+
+            var contentJson = Encoding.UTF8.GetString(Convert.FromBase64String(contentPart.Payload));
+            var contentNode = JsonNode.Parse(contentJson)
+                ?? throw new ArgumentException("Failed to parse pipeline content JSON");
+
+            var properties = contentNode["properties"]?.AsObject()
+                ?? throw new ArgumentException("Pipeline content missing 'properties' object");
+
+            var activities = properties["activities"]?.AsArray()
+                ?? throw new ArgumentException("Pipeline has no activities array");
+
+            // Find the activity to remove
+            int removeIndex = -1;
+            for (int i = 0; i < activities.Count; i++)
+            {
+                if (activities[i]?["name"]?.GetValue<string>() == activityName)
+                {
+                    removeIndex = i;
+                    break;
+                }
+            }
+
+            if (removeIndex < 0)
+                throw new ArgumentException($"Activity '{activityName}' not found in pipeline");
+
+            // Check for dependsOn references from other activities
+            var dependentActivities = new List<string>();
+            foreach (var act in activities)
+            {
+                var name = act?["name"]?.GetValue<string>();
+                if (name == activityName) continue;
+
+                var dependsOn = act?["dependsOn"]?.AsArray();
+                if (dependsOn == null) continue;
+
+                foreach (var dep in dependsOn)
+                {
+                    if (dep?["activity"]?.GetValue<string>() == activityName)
+                    {
+                        dependentActivities.Add(name ?? "(unnamed)");
+                        break;
+                    }
+                }
+            }
+
+            if (dependentActivities.Count > 0)
+                throw new ArgumentException($"Cannot remove activity '{activityName}' because it is referenced by: {string.Join(", ", dependentActivities)}");
+
+            activities.RemoveAt(removeIndex);
+
+            // Re-serialize and update
+            var updatedContentJson = contentNode.ToJsonString();
+            var base64Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(updatedContentJson));
+
+            var definition = new PipelineDefinition
+            {
+                Parts = new List<PipelineDefinitionPart>
+                {
+                    new PipelineDefinitionPart
+                    {
+                        Path = "pipeline-content.json",
+                        Payload = base64Payload,
+                        PayloadType = "InlineBase64"
+                    }
+                }
+            };
+
+            await _pipelineService.UpdatePipelineDefinitionAsync(workspaceId, pipelineId, definition);
+
+            var result = new
+            {
+                Success = true,
+                Message = $"Activity '{activityName}' removed successfully",
+                RemovedActivity = activityName,
+                RemainingActivityCount = activities.Count,
+                PipelineId = pipelineId,
+                WorkspaceId = workspaceId
+            };
+
+            return result.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("removing pipeline activity").ToMcpJson();
+        }
+    }
+
+    private static void ValidateActivityDependencies(JsonObject activity, string activityName)
+    {
+        var dependsOn = activity["dependsOn"]?.AsArray();
+        if (dependsOn == null || dependsOn.Count == 0) return;
+
+        foreach (var dep in dependsOn)
+        {
+            var depObj = dep?.AsObject();
+            if (depObj == null) continue;
+
+            var depActivity = depObj["activity"]?.GetValue<string>();
+            if (depActivity == activityName)
+                throw new ArgumentException($"Activity '{activityName}' cannot depend on itself");
+
+            var conditions = depObj["dependencyConditions"]?.AsArray();
+            if (conditions != null)
+            {
+                foreach (var cond in conditions)
+                {
+                    var condValue = cond?.GetValue<string>();
+                    if (condValue != null && !ValidDependencyConditions.Contains(condValue))
+                        throw new ArgumentException($"Invalid dependency condition '{condValue}'. Valid values: Succeeded, Failed, Skipped, Completed");
+                }
+            }
+        }
+    }
+
+    private static void ValidateActivityGraph(JsonArray activities)
+    {
+        var activityNames = new HashSet<string>();
+        foreach (var act in activities)
+        {
+            var name = act?["name"]?.GetValue<string>();
+            if (name != null) activityNames.Add(name);
+        }
+
+        foreach (var act in activities)
+        {
+            var actObj = act?.AsObject();
+            if (actObj == null) continue;
+            var name = actObj["name"]?.GetValue<string>() ?? "";
+            var dependsOn = actObj["dependsOn"]?.AsArray();
+            if (dependsOn == null) continue;
+
+            foreach (var dep in dependsOn)
+            {
+                var depObj = dep?.AsObject();
+                if (depObj == null) continue;
+                var depActivity = depObj["activity"]?.GetValue<string>();
+
+                if (depActivity == name)
+                    throw new ArgumentException($"Activity '{name}' cannot depend on itself");
+
+                if (depActivity != null && !activityNames.Contains(depActivity))
+                    throw new ArgumentException($"Activity '{name}' depends on '{depActivity}' which does not exist in the pipeline");
+
+                var conditions = depObj["dependencyConditions"]?.AsArray();
+                if (conditions != null)
+                {
+                    foreach (var cond in conditions)
+                    {
+                        var condValue = cond?.GetValue<string>();
+                        if (condValue != null && !ValidDependencyConditions.Contains(condValue))
+                            throw new ArgumentException($"Invalid dependency condition '{condValue}' in activity '{name}'. Valid values: Succeeded, Failed, Skipped, Completed");
+                    }
+                }
+            }
+        }
+    }
+
+    private static List<string> ValidateActivityTypeProperties(JsonObject activity)
+    {
+        var warnings = new List<string>();
+        var type = activity["type"]?.GetValue<string>();
+        var typeProperties = activity["typeProperties"]?.AsObject();
+
+        if (typeProperties == null)
+        {
+            if (type is "DataflowActivity" or "Copy" or "TridentNotebook" or "Web")
+                warnings.Add($"Activity type '{type}' typically requires typeProperties");
+            return warnings;
+        }
+
+        switch (type)
+        {
+            case "DataflowActivity":
+                if (typeProperties["dataflowId"] == null) warnings.Add("DataflowActivity: missing typeProperties.dataflowId");
+                if (typeProperties["workspaceId"] == null) warnings.Add("DataflowActivity: missing typeProperties.workspaceId");
+                break;
+            case "Copy":
+                if (typeProperties["source"] == null) warnings.Add("Copy: missing typeProperties.source");
+                if (typeProperties["sink"] == null) warnings.Add("Copy: missing typeProperties.sink");
+                break;
+            case "TridentNotebook":
+                if (typeProperties["notebookId"] == null) warnings.Add("TridentNotebook: missing typeProperties.notebookId");
+                break;
+            case "Web":
+                if (typeProperties["url"] == null) warnings.Add("Web: missing typeProperties.url");
+                if (typeProperties["method"] == null) warnings.Add("Web: missing typeProperties.method");
+                break;
+        }
+
+        return warnings;
     }
 
     /// <summary>
