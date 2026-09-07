@@ -1,0 +1,17 @@
+// Replace: ACTIVITY_NAME, URL, METHOD (GET, POST, PUT, DELETE, PATCH)
+// Pass this JSON as the activityJson parameter to upsert_pipeline_activity
+// Optional: add "headers", "body" under typeProperties for POST/PUT requests
+{
+  "name": "ACTIVITY_NAME",
+  "type": "WebActivity",
+  "dependsOn": [],
+  "policy": {
+    "timeout": "0.00:10:00",
+    "retry": 1,
+    "retryIntervalInSeconds": 30
+  },
+  "typeProperties": {
+    "url": "URL",
+    "method": "METHOD"
+  }
+}

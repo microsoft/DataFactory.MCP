@@ -67,6 +67,7 @@ namespace DataFactory.MCP.Configuration;
 [JsonSerializable(typeof(Models.Pipeline.ItemJobInstance), TypeInfoPropertyName = "PipelineItemJobInstance")]
 // Pipeline Schedule types
 [JsonSerializable(typeof(CreateScheduleRequest))]
+[JsonSerializable(typeof(UpdateScheduleRequest))]
 [JsonSerializable(typeof(ItemSchedule))]
 [JsonSerializable(typeof(ListSchedulesResponse))]
 // Pipeline Definition types

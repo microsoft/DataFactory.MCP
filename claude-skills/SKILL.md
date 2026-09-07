@@ -75,3 +75,6 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 | `templates/m-sharepoint-excel-source.m` | Need the M snippet for SharePoint Excel via Web.Contents |
 | `templates/pipeline-single-dataflow.json` | Need pipeline JSON for a single Dataflow activity |
 | `templates/pipeline-chained-dataflows.json` | Need pipeline JSON for chained Dataflow activities |
+| `templates/activity-copy.json` | Need a Copy activity object for `upsert_pipeline_activity` |
+| `templates/activity-notebook.json` | Need a TridentNotebook activity object for `upsert_pipeline_activity` |
+| `templates/activity-web.json` | Need a Web activity object for `upsert_pipeline_activity` |

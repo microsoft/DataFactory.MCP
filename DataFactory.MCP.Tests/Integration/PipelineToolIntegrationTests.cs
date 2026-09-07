@@ -546,6 +546,179 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
 
     #endregion
 
+    #region UpsertPipelineActivityAsync
+
+    [Fact]
+    public async Task UpsertPipelineActivityAsync_WithEmptyWorkspaceId_ShouldReturnValidationError()
+    {
+        // Arrange
+        var activityJson = "{\"name\":\"TestActivity\",\"type\":\"Web\"}";
+
+        // Act
+        var result = await _pipelineTool.UpsertPipelineActivityAsync("", InvalidPipelineId, activityJson);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("workspaceId"));
+    }
+
+    [Fact]
+    public async Task UpsertPipelineActivityAsync_WithEmptyPipelineId_ShouldReturnValidationError()
+    {
+        // Arrange
+        var activityJson = "{\"name\":\"TestActivity\",\"type\":\"Web\"}";
+
+        // Act
+        var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, "", activityJson);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("pipelineId"));
+    }
+
+    [Fact]
+    public async Task UpsertPipelineActivityAsync_WithEmptyActivityJson_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, "");
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("activityJson"));
+    }
+
+    [Fact]
+    public async Task UpsertPipelineActivityAsync_WithInvalidActivityJson_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, "not-valid-json{");
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, "Invalid activityJson format");
+    }
+
+    [Fact]
+    public async Task UpsertPipelineActivityAsync_WithMissingActivityName_ShouldReturnValidationError()
+    {
+        // Arrange
+        var activityJson = "{\"type\":\"Web\"}";
+
+        // Act
+        var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, activityJson);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, "Activity must have a non-empty 'name' property");
+    }
+
+    [Fact]
+    public async Task UpsertPipelineActivityAsync_WithMissingActivityType_ShouldReturnValidationError()
+    {
+        // Arrange
+        var activityJson = "{\"name\":\"TestActivity\"}";
+
+        // Act
+        var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, activityJson);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, "Activity must have a non-empty 'type' property");
+    }
+
+    [Fact]
+    public async Task UpsertPipelineActivityAsync_WithSelfDependency_ShouldReturnValidationError()
+    {
+        // Arrange - activity depends on itself
+        var activityJson = "{\"name\":\"MyActivity\",\"type\":\"Web\",\"dependsOn\":[{\"activity\":\"MyActivity\",\"dependencyConditions\":[\"Succeeded\"]}]}";
+
+        // Act
+        var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, activityJson);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, "Activity 'MyActivity' cannot depend on itself");
+    }
+
+    [Fact]
+    public async Task UpsertPipelineActivityAsync_WithInvalidDependencyCondition_ShouldReturnValidationError()
+    {
+        // Arrange - activity has an invalid dependency condition
+        var activityJson = "{\"name\":\"MyActivity\",\"type\":\"Web\",\"dependsOn\":[{\"activity\":\"OtherActivity\",\"dependencyConditions\":[\"InvalidCondition\"]}]}";
+
+        // Act
+        var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, activityJson);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, "Invalid dependency condition 'InvalidCondition'");
+    }
+
+    [Fact]
+    public async Task UpsertPipelineActivityAsync_WithoutAuthentication_ShouldReturnAuthenticationError()
+    {
+        // Arrange - valid activity that passes all validation
+        var activityJson = "{\"name\":\"TestActivity\",\"type\":\"Web\",\"dependsOn\":[]}";
+
+        // Act
+        var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, activityJson);
+
+        // Assert
+        AssertAuthenticationError(result);
+    }
+
+    [Fact]
+    public async Task UpsertPipelineActivityAsync_WithInvalidDependsOnJson_ShouldReturnValidationError()
+    {
+        // Arrange
+        var activityJson = "{\"name\":\"TestActivity\",\"type\":\"Web\"}";
+        var dependsOnJson = "not-valid-json{";
+
+        // Act
+        var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, activityJson, dependsOnJson);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, "Invalid dependsOnJson format");
+    }
+
+    #endregion
+
+    #region RemovePipelineActivityAsync
+
+    [Fact]
+    public async Task RemovePipelineActivityAsync_WithEmptyWorkspaceId_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.RemovePipelineActivityAsync("", InvalidPipelineId, "TestActivity");
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("workspaceId"));
+    }
+
+    [Fact]
+    public async Task RemovePipelineActivityAsync_WithEmptyPipelineId_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.RemovePipelineActivityAsync(TestWorkspaceId, "", "TestActivity");
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("pipelineId"));
+    }
+
+    [Fact]
+    public async Task RemovePipelineActivityAsync_WithEmptyActivityName_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.RemovePipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, "");
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("activityName"));
+    }
+
+    [Fact]
+    public async Task RemovePipelineActivityAsync_WithoutAuthentication_ShouldReturnAuthenticationError()
+    {
+        // Act
+        var result = await _pipelineTool.RemovePipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, "TestActivity");
+
+        // Assert
+        AssertAuthenticationError(result);
+    }
+
+    #endregion
+
 
     #region Authenticated Scenarios
 

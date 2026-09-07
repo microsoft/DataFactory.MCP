@@ -11,6 +11,8 @@ The pipeline management tools allow you to:
 - **Update** pipeline metadata (display name and description)
 - **Get** pipeline definitions with decoded base64 content
 - **Update** pipeline definitions with JSON content
+- **Upsert** a single activity by name (add or replace)
+- **Remove** a single activity by name (with dependency safety)
 - **Run** pipelines on demand (with optional execution data)
 - **Check** pipeline run status by job instance ID
 - **Create** pipeline schedules (Cron, Daily, Weekly, Monthly)
@@ -256,6 +258,86 @@ update_pipeline_definition(
   "pipelineId": "87654321-4321-4321-4321-210987654321",
   "workspaceId": "12345678-1234-1234-1234-123456789012",
   "message": "Pipeline definition updated successfully"
+}
+```
+
+### upsert_pipeline_activity
+
+Adds or replaces a single activity in an existing pipeline definition. Uses upsert-by-name semantics: if an activity with the same name exists it is replaced; otherwise it is appended. Validates dependency graph integrity before saving.
+
+#### Usage
+```
+upsert_pipeline_activity(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  pipelineId: "87654321-4321-4321-4321-210987654321",
+  activityJson: "{\"name\":\"LoadNotebook\",\"type\":\"TridentNotebook\",\"dependsOn\":[],\"typeProperties\":{\"notebookId\":\"NOTEBOOK_ID\"}}"
+)
+```
+
+#### With Dependency Wiring
+```
+upsert_pipeline_activity(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  pipelineId: "87654321-4321-4321-4321-210987654321",
+  activityJson: "{\"name\":\"Transform\",\"type\":\"TridentNotebook\",\"dependsOn\":[],\"typeProperties\":{\"notebookId\":\"NB_ID\"}}",
+  dependsOnJson: "[{\"activity\":\"Extract\",\"dependencyConditions\":[\"Succeeded\"]}]"
+)
+```
+
+#### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `workspaceId` | Yes | The workspace ID containing the pipeline |
+| `pipelineId` | Yes | The pipeline ID to update |
+| `activityJson` | Yes | The activity JSON object with at minimum `name` and `type` fields |
+| `dependsOnJson` | No | JSON array of dependsOn entries. Overrides any dependsOn in activityJson when provided |
+
+#### Response Format
+```json
+{
+  "success": true,
+  "message": "Activity 'LoadNotebook' added successfully",
+  "activityName": "LoadNotebook",
+  "activityType": "TridentNotebook",
+  "operation": "Added",
+  "totalActivityCount": 3,
+  "pipelineId": "87654321-4321-4321-4321-210987654321",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "warnings": null
+}
+```
+
+### remove_pipeline_activity
+
+Removes a single activity from an existing pipeline definition by name. Refuses removal if other activities depend on it via dependsOn references.
+
+#### Usage
+```
+remove_pipeline_activity(
+  workspaceId: "12345678-1234-1234-1234-123456789012",
+  pipelineId: "87654321-4321-4321-4321-210987654321",
+  activityName: "OldStep"
+)
+```
+
+#### Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `workspaceId` | Yes | The workspace ID containing the pipeline |
+| `pipelineId` | Yes | The pipeline ID to update |
+| `activityName` | Yes | The name of the activity to remove |
+
+#### Response Format
+```json
+{
+  "success": true,
+  "message": "Activity 'OldStep' removed successfully",
+  "removedActivity": "OldStep",
+  "remainingActivityCount": 2,
+  "pipelineId": "87654321-4321-4321-4321-210987654321",
+  "workspaceId": "12345678-1234-1234-1234-123456789012"
 }
 ```
 

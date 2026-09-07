@@ -9,3 +9,9 @@ tmpclaude-*
 **/McpApps/node_modules/
 **/McpApps/dist/
 **/build-output.txt
+
+# Local Fabric tooling state (not source)
+.fabric/
+.workspaces/
+fabric-di.yaml
+probe-endpoints.ps1
