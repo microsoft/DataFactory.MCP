@@ -1,6 +1,6 @@
 ---
 name: datafactory-tips
-description: Operational tips and best practices for working with Microsoft Fabric Data Factory MCP tools. Use when executing queries, troubleshooting timeouts, creating dataflows end-to-end, or working with large datasets via the DataFactory.MCP tools.
+description: Operational guidance for Microsoft Fabric Data Factory MCP tools. Use when executing queries, troubleshooting timeouts, creating dataflows, or building a Dataflow Gen2 visual, dashboard, report, chart, or KPI.
 ---
 
 # Data Factory Tips
@@ -39,6 +39,10 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 | Multi-source instant fail via API | Dirty dataflow or separate Lakehouse.Contents calls | `sources/multi-source.md` |
 | `IsNewTarget = false` fails | Direct navigation on API-created dataflow | `destinations/dest-new-table.md` |
 | Stale connections after revert | save_dataflow_definition doesn't remove connections | `datafactory-connections.md` (Troubleshooting) |
+| Visual renders as a plain table | A required column is missing or renamed | `datafactory-data-visuals.md` |
+| `Visual not recognized: "<value>"` | PartType outside the closed set | `datafactory-data-visuals.md` |
+| Chart shows one `undefined` bucket | Property names a column missing from `Data` | `datafactory-data-visuals.md` |
+| `must contain exactly one root row` | Zero or multiple rows with `Parent = null` | `datafactory-data-visuals.md` |
 
 ## Knowledge Files
 
@@ -49,6 +53,7 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 | `datafactory-performance.md` | Query timeouts, chunking, query folding, connector selection |
 | `datafactory-advanced.md` | Fast Copy limits, Action.Sequence, Modern Evaluator |
 | `datafactory-pipelines.md` | Pipeline creation, Dataflow activities, chaining, scheduling |
+| `datafactory-data-visuals.md` | Dataflow Gen2 Visual, dashboard, report, chart, and KPI generation |
 
 ### Destination Files (read only the one you need)
 

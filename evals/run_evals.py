@@ -63,7 +63,7 @@ class EvalScenario:
 
 def parse_eval_file(filepath: Path) -> list[EvalScenario]:
     """Parse a single .eval.md file into structured scenarios."""
-    text = filepath.read_text()
+    text = filepath.read_text(encoding="utf-8")
     scenarios = []
 
     # Split on ### EVAL- headers
@@ -406,6 +406,10 @@ def save_results(scenarios: list[EvalScenario], output_path: Path):
 # ---------------------------------------------------------------------------
 
 def main():
+    # Eval files are UTF-8; avoid UnicodeEncodeError on legacy Windows consoles.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     parser = argparse.ArgumentParser(description="Run AI evals for Data Factory MCP tools")
     parser.add_argument("--file", help="Run evals from a specific file (e.g., 'authentication')")
     parser.add_argument("--eval", help="Run a single eval by ID (e.g., 'EVAL-AUTH-001')")
@@ -424,7 +428,7 @@ def main():
     schema_path = evals_dir / "tools_schema.json"
 
     # Load tool schemas
-    tools = json.loads(schema_path.read_text())["tools"]
+    tools = json.loads(schema_path.read_text(encoding="utf-8"))["tools"]
     print(f"Loaded {len(tools)} tool definitions from {schema_path.name}")
 
     # Parse eval files

@@ -10,6 +10,7 @@ Each scenario is run **twice**: once without skills (baseline) and once with ski
 - `datafactory-destinations.md` — DataDestination patterns, AllowCombine
 - `datafactory-performance.md` — Query folding, chunking, connector choice
 - `datafactory-advanced.md` — Fast Copy limits, Action.Sequence
+- `datafactory-data-visuals.md` — Visual document contract, closed PartType set
 
 ---
 
@@ -434,3 +435,72 @@ Each scenario is run **twice**: once without skills (baseline) and once with ski
 - [ ] Re-adds connections after save
 - [ ] Uses `ApplyChangesIfNeeded` on first refresh
 - [ ] Mentions that multi-source cannot revert to single-source
+
+---
+
+## Data Visuals
+
+### EVAL-INT-M-021: Visual document contract
+
+**Category:** Data Visuals
+**Difficulty:** Medium
+**Skills:** none → datafactory-data-visuals
+
+**User prompt:**
+> Write a Power Query M query that renders a Dataflow Gen2 dashboard with a single KPI card showing the text value 42 and the label "Active customers".
+
+**Validation rules:**
+- [ ] Contains `"KpiCard"` as the PartType value
+- [ ] Contains `nullable record` in the declared table type
+- [ ] Contains `#table` to construct the document
+- [ ] Contains `PartType` as a declared column
+- [ ] Does NOT contain `PartKind`
+
+**Common failure without skills:**
+- Emitting a nested record tree instead of a flat five-column table
+- Assigning a number to `KpiCard.Value` instead of text
+
+---
+
+### EVAL-INT-M-022: Chart nested in a card with exact column mappings
+
+**Category:** Data Visuals
+**Difficulty:** Hard
+**Skills:** none → datafactory-data-visuals
+
+**User prompt:**
+> I have a SalesData query with Month (text) and Revenue (number) columns. Write M that renders a Dataflow Gen2 report containing a line chart titled "Monthly revenue".
+
+**Validation rules:**
+- [ ] Contains `"LineChart"` as the PartType value
+- [ ] Contains `"Card"` as the chart's parent visual
+- [ ] Contains `Title` for the card
+- [ ] Contains `XAxis` mapped to the Month column name
+- [ ] Contains `YAxis` mapped to the Revenue column name
+- [ ] Contains `Table.Group` to aggregate to the visual grain
+- [ ] Contains `Table.Sort` for deterministic ordering
+- [ ] Does NOT contain `Table.FirstN`
+
+**Common failure without skills:**
+- Parenting the chart directly to a container, so it renders without a title
+- Putting column values in `XAxis`/`YAxis` instead of column names
+
+---
+
+### EVAL-INT-M-023: Unsupported visual type
+
+**Category:** Data Visuals
+**Difficulty:** Medium
+**Skills:** none → datafactory-data-visuals
+
+**User prompt:**
+> Add a scatter plot and a gauge to my Dataflow Gen2 visual.
+
+**Validation rules:**
+- [ ] Does NOT contain `ScatterPlot`
+- [ ] Contains `BarChart` among the supported alternatives
+- [ ] Contains `PieChart` among the supported alternatives
+- [ ] Contains `KpiCard` among the supported alternatives
+
+**Common failure without skills:**
+- Inventing a plausible PartType that renders `Visual not recognized`
