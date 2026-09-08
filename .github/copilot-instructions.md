@@ -28,6 +28,7 @@ When these topics come up, reference the corresponding file in `docs/datafactory
 | Query timeout, slow performance, chunking | `performance.md` |
 | Output destinations, new tables, staging | `destinations.md` |
 | Fast Copy, Action.Sequence, Modern Evaluator | `advanced.md` |
+| Data visuals, dashboards, reports, charts, KPI cards | `data-visuals.md` |
 
 For connection management (creating/listing connections, supported types, UI form), reference `docs/connection-management.md`.
 

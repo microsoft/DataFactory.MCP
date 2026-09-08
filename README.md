@@ -150,6 +150,7 @@ Upload the skill files from the [`claude-skills/`](claude-skills/) folder to you
    - `datafactory-performance.md` - Query optimization, timeouts, chunking
    - `datafactory-destinations.md` - Output configuration, programmatic setup
    - `datafactory-advanced.md` - Fast Copy, Action.Sequence, Modern Evaluator
+   - `datafactory-data-visuals.md` - Dataflow Gen2 Visual generation
 
 ### What's Covered
 
@@ -159,6 +160,7 @@ Upload the skill files from the [`claude-skills/`](claude-skills/) folder to you
 | **Performance** | Query timeouts, chunking strategies, filter optimization, connector selection |
 | **Destinations** | Lakehouse architecture, schema settings, programmatic destination configuration |
 | **Advanced** | `Action.Sequence` for writes, Fast Copy, Modern Evaluator |
+| **Data visuals** | Visualization documents, visual selection, validation, and limitations |
 
 ### Usage
 
@@ -180,8 +182,26 @@ Create a Custom GPT or use ChatGPT Projects with pre-built Data Factory knowledg
    - `knowledge-performance.md` - Query optimization, timeouts
    - `knowledge-destinations.md` - Output configuration
    - `knowledge-advanced.md` - Fast Copy, Action.Sequence
+   - `knowledge-data-visuals.md` - Dataflow Gen2 Visual contract and workflow
 
 See [`chatgpt-skills/README.md`](chatgpt-skills/README.md) for detailed setup options.
+
+## Dataflow Gen2 Visual Builder (Optional)
+
+Generate Dataflow Gen2 data visuals in Power Query M. **Visual** is the canonical
+artifact name; dashboard, report, and chart are discovery synonyms.
+
+| Client | Knowledge file |
+|--------|----------------|
+| Claude | [`claude-skills/datafactory-data-visuals.md`](claude-skills/datafactory-data-visuals.md) |
+| ChatGPT | [`chatgpt-skills/knowledge-data-visuals.md`](chatgpt-skills/knowledge-data-visuals.md) |
+| Repo agents | [`docs/datafactory/data-visuals.md`](docs/datafactory/data-visuals.md) |
+
+To confirm both clients produce equivalent results, run the checklist in
+[`evals/dataflow-visuals-parity.md`](evals/dataflow-visuals-parity.md).
+
+These are client-side companion files. They are not included in the MCP NuGet
+package, because installing an MCP server does not register skills with a client.
 
 ## Documentation
 
