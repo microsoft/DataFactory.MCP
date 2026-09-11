@@ -41,7 +41,8 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 | Stale connections after revert | save_dataflow_definition doesn't remove connections | `datafactory-connections.md` (Troubleshooting) |
 | Visual renders as a plain table | A required column is missing or renamed | `datafactory-data-visuals.md` |
 | `Visual not recognized: "<value>"` | PartType outside the closed set | `datafactory-data-visuals.md` |
-| Chart shows one `undefined` bucket | Property names a column missing from `Data` | `datafactory-data-visuals.md` |
+| Chart shows one `undefined` category | `DataSeries.AxisColumns` names a column missing from `Data` | `datafactory-data-visuals.md` |
+| Chart is empty without a visible error | `DataSeries.ValueColumns` can name a column missing from `Data` | `datafactory-data-visuals.md` |
 | `must contain exactly one root row` | Zero or multiple rows with `Parent = null` | `datafactory-data-visuals.md` |
 
 ## Knowledge Files

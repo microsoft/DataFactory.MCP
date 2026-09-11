@@ -440,6 +440,11 @@ Each scenario is run **twice**: once without skills (baseline) and once with ski
 
 ## Data Visuals
 
+These are keyword-based response checks, not an M parser or a Fabric rendering
+test. Passing does not prove correct assignments, hierarchy, or data types.
+Review those details using the existing `../dataflow-visuals-parity.md` checklist;
+do not interpret a parse-only dry run as a successful visual-generation test.
+
 ### EVAL-INT-M-021: Visual document contract
 
 **Category:** Data Visuals
@@ -454,6 +459,8 @@ Each scenario is run **twice**: once without skills (baseline) and once with ski
 - [ ] Contains `nullable record` in the declared table type
 - [ ] Contains `#table` to construct the document
 - [ ] Contains `PartType` as a declared column
+- [ ] Contains `"42"` as the formatted KPI value
+- [ ] Contains `"Active customers"` as the KPI label
 - [ ] Does NOT contain `PartKind`
 
 **Common failure without skills:**
@@ -469,21 +476,31 @@ Each scenario is run **twice**: once without skills (baseline) and once with ski
 **Skills:** none → datafactory-data-visuals
 
 **User prompt:**
-> I have a SalesData query with Month (text) and Revenue (number) columns. Write M that renders a Dataflow Gen2 report containing a line chart titled "Monthly revenue".
+> I have a SalesData query with Month (text) and Revenue (number) columns. Write M that renders a Dataflow Gen2 report containing a line chart inside a card titled "Monthly revenue". Return only runnable Power Query M.
 
 **Validation rules:**
-- [ ] Contains `"LineChart"` as the PartType value
+- [ ] Contains `"Chart"` as the PartType value
+- [ ] Contains `ChartType` to select the renderer
+- [ ] Contains `"Line"` as the chart type
 - [ ] Contains `"Card"` as the chart's parent visual
 - [ ] Contains `Title` for the card
-- [ ] Contains `XAxis` mapped to the Month column name
-- [ ] Contains `YAxis` mapped to the Revenue column name
+- [ ] Contains `"Monthly revenue"` as the requested title
+- [ ] Contains `DataSeries` for the chart mappings
+- [ ] Contains `AxisColumns` for the axis mapping
+- [ ] Contains `"Month"` as the axis column name
+- [ ] Contains `ValueColumns` for the value mapping
+- [ ] Contains `"Revenue"` as the value column name
 - [ ] Contains `Table.Group` to aggregate to the visual grain
 - [ ] Contains `Table.Sort` for deterministic ordering
 - [ ] Does NOT contain `Table.FirstN`
+- [ ] Does NOT contain `LineChart`
+- [ ] Does NOT contain `XAxis`
+- [ ] Does NOT contain `YAxis`
 
 **Common failure without skills:**
-- Parenting the chart directly to a container, so it renders without a title
-- Putting column values in `XAxis`/`YAxis` instead of column names
+- Using an obsolete chart-specific PartType or legacy axis properties
+- Putting column values in `DataSeries` instead of column names
+- Omitting the card explicitly requested by the user
 
 ---
 
@@ -494,13 +511,74 @@ Each scenario is run **twice**: once without skills (baseline) and once with ski
 **Skills:** none → datafactory-data-visuals
 
 **User prompt:**
-> Add a scatter plot and a gauge to my Dataflow Gen2 visual.
+> Can I add a scatter plot and a gauge to my Dataflow Gen2 visual? If they are unsupported, explain that and suggest the supported ChartType alternatives Bar and Pie, plus KpiCard. Do not generate M code.
 
 **Validation rules:**
-- [ ] Does NOT contain `ScatterPlot`
-- [ ] Contains `BarChart` among the supported alternatives
-- [ ] Contains `PieChart` among the supported alternatives
+- [ ] Contains `ChartType` when explaining supported charts
+- [ ] Contains `Bar` among the supported alternatives
+- [ ] Contains `Pie` among the supported alternatives
 - [ ] Contains `KpiCard` among the supported alternatives
+
+**Manual review:**
+- Explains that scatter plots and gauges are unsupported without inventing a renderer.
+- Mentioning an unsupported type while rejecting it is valid.
 
 **Common failure without skills:**
 - Inventing a plausible PartType that renders `Visual not recognized`
+
+---
+
+### EVAL-INT-M-024: Stacked bar from long-form data
+
+**Category:** Data Visuals
+**Difficulty:** Hard
+**Skills:** none → datafactory-data-visuals
+
+**User prompt:**
+> SalesData has Region (text), ProductCategory (text), and Revenue (number). ProductCategory contains Hardware and Software. Create a Dataflow Gen2 stacked bar chart of revenue by region and product category. Aggregate and pivot the source into wide form. Return only runnable Power Query M.
+
+**Validation rules:**
+- [ ] Contains `"Chart"` as the PartType value
+- [ ] Contains `ChartType` to select the renderer
+- [ ] Contains `"StackedBar"` as the chart type
+- [ ] Contains `DataSeries` for the chart mappings
+- [ ] Contains `AxisColumns` for the category column
+- [ ] Contains `"Region"` as the category column name
+- [ ] Contains `ValueColumns` for the series column names
+- [ ] Contains `Table.Group` to aggregate category and series
+- [ ] Contains `Table.Pivot` to produce wide-form data
+- [ ] Does NOT contain `StackedBarChart`
+
+**Common failure without skills:**
+- Passing long-form Category/Value/Series mappings instead of pivoted columns
+- Listing ProductCategory as a value column rather than the columns created by the pivot
+
+---
+
+### EVAL-INT-M-025: Root doughnut chart with its own title
+
+**Category:** Data Visuals
+**Difficulty:** Medium
+**Skills:** none → datafactory-data-visuals
+
+**User prompt:**
+> SalesByRegion already has one row per Region (text) and Revenue (number). Create a single root doughnut chart titled "Revenue share" in Dataflow Gen2, without a card or container. Use one-item lists for both column mappings. Return only runnable Power Query M.
+
+**Validation rules:**
+- [ ] Contains `"Chart"` as the PartType value
+- [ ] Contains `ChartType` to select the renderer
+- [ ] Contains `"Doughnut"` as the chart type
+- [ ] Contains `ChartTitle` for the chart's own title
+- [ ] Contains `"Revenue share"` as the requested title
+- [ ] Contains `DataSeries` for the chart mappings
+- [ ] Contains `AxisColumns` for the category mapping
+- [ ] Contains `ValueColumns` for the numeric mapping
+- [ ] Does NOT contain `"Card"`
+- [ ] Does NOT contain `"Container"`
+- [ ] Does NOT contain `DonutChart`
+- [ ] Does NOT contain `"Donut"`
+
+**Common failure without skills:**
+- Requiring every chart to have a card parent
+- Using the unsupported Donut spelling
+- Rejecting valid one-item text lists

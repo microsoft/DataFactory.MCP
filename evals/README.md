@@ -97,6 +97,11 @@ OPENAI_API_KEY=sk-... python evals/run_evals.py
 OPENAI_API_KEY=sk-... python evals/integration/run_integration_evals.py
 ```
 
+The integration runner scores response-text patterns, not M semantics. Dry runs
+check that the specifications parse; they do not execute M or verify rendering.
+Use the existing `dataflow-visuals-parity.md` checklist to review exact mappings,
+hierarchy, and equivalent output. Rendering still requires a live Fabric check.
+
 ### Files
 
 | File | Purpose |
@@ -104,7 +109,7 @@ OPENAI_API_KEY=sk-... python evals/integration/run_integration_evals.py
 | `.github/workflows/ai-evals.yml` | GitHub Actions workflow |
 | `evals/run_evals.py` | Tool-selection runner (parses markdown, calls LLM, scores) |
 | `evals/integration/run_integration_evals.py` | Integration runner (M code quality, baseline vs skills) |
-| `evals/integration/m-code-quality.eval.md` | 20 integration eval scenarios |
+| `evals/integration/m-code-quality.eval.md` | 25 integration eval scenarios |
 | `evals/tools_schema.json` | 32 tool definitions (OpenAI function-calling format) |
 
 ---
@@ -135,7 +140,7 @@ OPENAI_API_KEY=sk-... python evals/integration/run_integration_evals.py
 | Pipeline JSON | 2 |
 | Workflow | 3 |
 | Lifecycle | 2 |
-| Data Visuals | 3 |
-| **Total** | **23** |
+| Data Visuals | 5 |
+| **Total** | **25** |
 
-**Grand total: 120 evals** (97 tool-selection + 23 integration)
+**Grand total: 122 evals** (97 tool-selection + 25 integration)

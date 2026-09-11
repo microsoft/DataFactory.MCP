@@ -145,7 +145,7 @@ Upload the skill files from the [`claude-skills/`](claude-skills/) folder to you
 
 1. Go to your Claude Project settings
 2. Add these files to **Project Knowledge**:
-   - `datafactory-SKILL.md` - Index file (always loaded)
+   - `SKILL.md` - Index file with topic routing
    - `datafactory-core.md` - M basics, MCP tools overview
    - `datafactory-performance.md` - Query optimization, timeouts, chunking
    - `datafactory-destinations.md` - Output configuration, programmatic setup
@@ -202,6 +202,8 @@ To confirm both clients produce equivalent results, run the checklist in
 
 These are client-side companion files. They are not included in the MCP NuGet
 package, because installing an MCP server does not register skills with a client.
+Upload the index/instructions and the corresponding knowledge file to your
+client's project; these files are not a separately packaged, auto-installed skill.
 
 ## Documentation
 
