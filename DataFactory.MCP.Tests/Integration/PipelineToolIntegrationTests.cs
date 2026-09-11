@@ -552,7 +552,7 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
     public async Task UpsertPipelineActivityAsync_WithEmptyWorkspaceId_ShouldReturnValidationError()
     {
         // Arrange
-        var activityJson = "{\"name\":\"TestActivity\",\"type\":\"Web\"}";
+        var activityJson = "{\"name\":\"TestActivity\",\"type\":\"WebActivity\"}";
 
         // Act
         var result = await _pipelineTool.UpsertPipelineActivityAsync("", InvalidPipelineId, activityJson);
@@ -565,7 +565,7 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
     public async Task UpsertPipelineActivityAsync_WithEmptyPipelineId_ShouldReturnValidationError()
     {
         // Arrange
-        var activityJson = "{\"name\":\"TestActivity\",\"type\":\"Web\"}";
+        var activityJson = "{\"name\":\"TestActivity\",\"type\":\"WebActivity\"}";
 
         // Act
         var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, "", activityJson);
@@ -598,7 +598,7 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
     public async Task UpsertPipelineActivityAsync_WithMissingActivityName_ShouldReturnValidationError()
     {
         // Arrange
-        var activityJson = "{\"type\":\"Web\"}";
+        var activityJson = "{\"type\":\"WebActivity\"}";
 
         // Act
         var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, activityJson);
@@ -624,7 +624,7 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
     public async Task UpsertPipelineActivityAsync_WithSelfDependency_ShouldReturnValidationError()
     {
         // Arrange - activity depends on itself
-        var activityJson = "{\"name\":\"MyActivity\",\"type\":\"Web\",\"dependsOn\":[{\"activity\":\"MyActivity\",\"dependencyConditions\":[\"Succeeded\"]}]}";
+        var activityJson = "{\"name\":\"MyActivity\",\"type\":\"WebActivity\",\"dependsOn\":[{\"activity\":\"MyActivity\",\"dependencyConditions\":[\"Succeeded\"]}]}";
 
         // Act
         var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, activityJson);
@@ -637,7 +637,7 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
     public async Task UpsertPipelineActivityAsync_WithInvalidDependencyCondition_ShouldReturnValidationError()
     {
         // Arrange - activity has an invalid dependency condition
-        var activityJson = "{\"name\":\"MyActivity\",\"type\":\"Web\",\"dependsOn\":[{\"activity\":\"OtherActivity\",\"dependencyConditions\":[\"InvalidCondition\"]}]}";
+        var activityJson = "{\"name\":\"MyActivity\",\"type\":\"WebActivity\",\"dependsOn\":[{\"activity\":\"OtherActivity\",\"dependencyConditions\":[\"InvalidCondition\"]}]}";
 
         // Act
         var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, activityJson);
@@ -649,8 +649,8 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
     [Fact]
     public async Task UpsertPipelineActivityAsync_WithoutAuthentication_ShouldReturnAuthenticationError()
     {
-        // Arrange - valid activity that passes all validation
-        var activityJson = "{\"name\":\"TestActivity\",\"type\":\"Web\",\"dependsOn\":[]}";
+        // Arrange - activity passes local input/dependency checks, not full Fabric schema validation
+        var activityJson = "{\"name\":\"TestActivity\",\"type\":\"WebActivity\",\"dependsOn\":[]}";
 
         // Act
         var result = await _pipelineTool.UpsertPipelineActivityAsync(TestWorkspaceId, InvalidPipelineId, activityJson);
@@ -663,7 +663,7 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
     public async Task UpsertPipelineActivityAsync_WithInvalidDependsOnJson_ShouldReturnValidationError()
     {
         // Arrange
-        var activityJson = "{\"name\":\"TestActivity\",\"type\":\"Web\"}";
+        var activityJson = "{\"name\":\"TestActivity\",\"type\":\"WebActivity\"}";
         var dependsOnJson = "not-valid-json{";
 
         // Act

@@ -527,12 +527,12 @@ public class PipelineTool
         "Succeeded", "Failed", "Skipped", "Completed"
     };
 
-    [McpServerTool, Description(@"Adds or replaces a single activity in an existing pipeline definition. Uses upsert-by-name semantics: if an activity with the same name exists it is replaced; otherwise it is appended. Validates dependency graph integrity before saving.")]
+    [McpServerTool, Description(@"Adds or replaces a single top-level activity in properties.activities by exact, case-sensitive name. Replaces the whole activity object (no merge), or appends if no top-level name matches, even when that name exists only as a nested child. Does not search inside containers; to change children, supply the complete top-level container including all children to retain. Checks required inputs and top-level dependency references for missing targets, self-dependency and supported conditions, not cycles or the full graph. Activity-type-specific payloads are not locally schema-validated. A successful response does not guarantee runtime validity or comprehensive synchronous Fabric validation.")]
     public async Task<string> UpsertPipelineActivityAsync(
         [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
         [Description("The pipeline ID to update (required)")] string pipelineId,
-        [Description("The activity JSON object with at minimum 'name' and 'type' fields (required)")] string activityJson,
-        [Description("Optional JSON array of dependsOn entries, e.g. [{\"activity\":\"Step1\",\"dependencyConditions\":[\"Succeeded\"]}]. Overrides any dependsOn in activityJson when provided (optional)")] string? dependsOnJson = null)
+        [Description("The complete top-level activity JSON object with non-empty 'name' and 'type' fields (required). Name matching is case-sensitive; replacement is whole-object, not a merge. To edit nested children, include the complete top-level container and all children to retain. Type-specific payloads are not locally schema-validated. Submit strict JSON without comments.")] string activityJson,
+        [Description("Optional JSON array of dependsOn entries referencing top-level activities only, e.g. [{\"activity\":\"Step1\",\"dependencyConditions\":[\"Succeeded\"]}]. Names are case-sensitive; nested-only targets are not resolved. Overrides any dependsOn in activityJson when provided (optional)")] string? dependsOnJson = null)
     {
         try
         {
@@ -584,9 +584,6 @@ public class PipelineTool
             // Pre-service validation: self-dependency and condition checks
             ValidateActivityDependencies(activityObj, activityName);
 
-            // Type-property warnings (non-blocking)
-            var warnings = ValidateActivityTypeProperties(activityObj);
-
             // Get current pipeline definition
             var currentDefinition = await _pipelineService.GetPipelineDefinitionAsync(workspaceId, pipelineId);
 
@@ -607,7 +604,7 @@ public class PipelineTool
                 properties["activities"] = activities;
             }
 
-            // Upsert-by-name
+            // Upsert by exact top-level name, replacing the whole activity
             bool replaced = false;
             for (int i = 0; i < activities.Count; i++)
             {
@@ -625,7 +622,7 @@ public class PipelineTool
                 activities.Add(activityObj.DeepClone());
             }
 
-            // Validate full graph integrity
+            // Validate top-level dependency references and conditions (not cycles or nested activities)
             ValidateActivityGraph(activities);
 
             // Re-serialize and update
@@ -658,8 +655,7 @@ public class PipelineTool
                 Operation = replaced ? "Replaced" : "Added",
                 TotalActivityCount = activities.Count,
                 PipelineId = pipelineId,
-                WorkspaceId = workspaceId,
-                Warnings = warnings.Count > 0 ? warnings : null
+                WorkspaceId = workspaceId
             };
 
             return result.ToMcpJson();
@@ -682,11 +678,11 @@ public class PipelineTool
         }
     }
 
-    [McpServerTool, Description(@"Removes a single activity from an existing pipeline definition by name. Refuses removal if other activities depend on it via dependsOn references.")]
+    [McpServerTool, Description(@"Removes a single top-level activity from properties.activities by exact, case-sensitive name. Does not search inside containers; a nested-only name is not found. Refuses removal if another top-level activity references it via dependsOn. To remove a nested child, use upsert_pipeline_activity with the complete top-level container including all children to retain. These guards are not full graph or activity-schema validation.")]
     public async Task<string> RemovePipelineActivityAsync(
         [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
         [Description("The pipeline ID to update (required)")] string pipelineId,
-        [Description("The name of the activity to remove (required)")] string activityName)
+        [Description("The exact, case-sensitive name of the top-level activity to remove (required). Nested child names are not searched; a nested-only name is not found.")] string activityName)
     {
         try
         {
@@ -709,7 +705,7 @@ public class PipelineTool
             var activities = properties["activities"]?.AsArray()
                 ?? throw new ArgumentException("Pipeline has no activities array");
 
-            // Find the activity to remove
+            // Find the top-level activity to remove
             int removeIndex = -1;
             for (int i = 0; i < activities.Count; i++)
             {
@@ -723,7 +719,7 @@ public class PipelineTool
             if (removeIndex < 0)
                 throw new ArgumentException($"Activity '{activityName}' not found in pipeline");
 
-            // Check for dependsOn references from other activities
+            // Check for dependsOn references from other top-level activities
             var dependentActivities = new List<string>();
             foreach (var act in activities)
             {
@@ -865,41 +861,6 @@ public class PipelineTool
                 }
             }
         }
-    }
-
-    private static List<string> ValidateActivityTypeProperties(JsonObject activity)
-    {
-        var warnings = new List<string>();
-        var type = activity["type"]?.GetValue<string>();
-        var typeProperties = activity["typeProperties"]?.AsObject();
-
-        if (typeProperties == null)
-        {
-            if (type is "DataflowActivity" or "Copy" or "TridentNotebook" or "Web")
-                warnings.Add($"Activity type '{type}' typically requires typeProperties");
-            return warnings;
-        }
-
-        switch (type)
-        {
-            case "DataflowActivity":
-                if (typeProperties["dataflowId"] == null) warnings.Add("DataflowActivity: missing typeProperties.dataflowId");
-                if (typeProperties["workspaceId"] == null) warnings.Add("DataflowActivity: missing typeProperties.workspaceId");
-                break;
-            case "Copy":
-                if (typeProperties["source"] == null) warnings.Add("Copy: missing typeProperties.source");
-                if (typeProperties["sink"] == null) warnings.Add("Copy: missing typeProperties.sink");
-                break;
-            case "TridentNotebook":
-                if (typeProperties["notebookId"] == null) warnings.Add("TridentNotebook: missing typeProperties.notebookId");
-                break;
-            case "Web":
-                if (typeProperties["url"] == null) warnings.Add("Web: missing typeProperties.url");
-                if (typeProperties["method"] == null) warnings.Add("Web: missing typeProperties.method");
-                break;
-        }
-
-        return warnings;
     }
 
     /// <summary>

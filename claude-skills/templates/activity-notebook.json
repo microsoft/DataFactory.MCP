@@ -1,5 +1,5 @@
-// Replace: ACTIVITY_NAME, NOTEBOOK_ID (from Fabric workspace)
-// Pass this JSON as the activityJson parameter to upsert_pipeline_activity
+// Replace: ACTIVITY_NAME, NOTEBOOK_ID, NOTEBOOK_WORKSPACE_ID (workspace containing the notebook)
+// Pass only the JSON object, without these comments, as activityJson to upsert_pipeline_activity (top-level only)
 // Optional: add "parameters" under typeProperties to pass values into the notebook
 {
   "name": "ACTIVITY_NAME",
@@ -11,6 +11,7 @@
     "retryIntervalInSeconds": 30
   },
   "typeProperties": {
-    "notebookId": "NOTEBOOK_ID"
+    "notebookId": "NOTEBOOK_ID",
+    "workspaceId": "NOTEBOOK_WORKSPACE_ID"
   }
 }

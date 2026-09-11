@@ -48,7 +48,7 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 | `datafactory-connections.md` | Connection discovery, creation, binding, gateways, troubleshooting connection errors |
 | `datafactory-performance.md` | Query timeouts, chunking, query folding, connector selection |
 | `datafactory-advanced.md` | Fast Copy limits, Action.Sequence, Modern Evaluator |
-| `datafactory-pipelines.md` | Pipeline creation, Dataflow activities, chaining, scheduling |
+| `datafactory-pipelines.md` | Pipeline creation, top-level activity editing, Dataflow activities, chaining, scheduling |
 
 ### Destination Files (read only the one you need)
 
@@ -77,4 +77,9 @@ Operational knowledge for working with Microsoft Fabric Data Factory.
 | `templates/pipeline-chained-dataflows.json` | Need pipeline JSON for chained Dataflow activities |
 | `templates/activity-copy.json` | Need a Copy activity object for `upsert_pipeline_activity` |
 | `templates/activity-notebook.json` | Need a TridentNotebook activity object for `upsert_pipeline_activity` |
-| `templates/activity-web.json` | Need a Web activity object for `upsert_pipeline_activity` |
+| `templates/activity-web.json` | Need a WebActivity activity object for `upsert_pipeline_activity` |
+
+Activity-body templates target top-level `upsert_pipeline_activity` edits, not
+individual nested children. Replace placeholders and submit only the JSON object
+without the leading guidance comments. See `datafactory-pipelines.md` for
+whole-container replacement and local validation limits.

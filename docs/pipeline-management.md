@@ -11,8 +11,8 @@ The pipeline management tools allow you to:
 - **Update** pipeline metadata (display name and description)
 - **Get** pipeline definitions with decoded base64 content
 - **Update** pipeline definitions with JSON content
-- **Upsert** a single activity by name (add or replace)
-- **Remove** a single activity by name (with dependency safety)
+- **Upsert** a single top-level activity by name (append or whole-object replacement)
+- **Remove** a single top-level activity by name (checking top-level dependents)
 - **Run** pipelines on demand (with optional execution data)
 - **Check** pipeline run status by job instance ID
 - **Create** pipeline schedules (Cron, Daily, Weekly, Monthly)
@@ -263,14 +263,24 @@ update_pipeline_definition(
 
 ### upsert_pipeline_activity
 
-Adds or replaces a single activity in an existing pipeline definition. Uses upsert-by-name semantics: if an activity with the same name exists it is replaced; otherwise it is appended. Validates dependency graph integrity before saving.
+Adds or replaces a single **top-level** activity in `properties.activities` in an existing pipeline definition. Names are matched exactly and case-sensitively. A matching top-level activity is **replaced as a whole object**, not merged; otherwise the activity is appended.
+
+Targeting is **not recursive**. If a name exists only inside a ForEach, Switch, or other container, upsert appends a new top-level activity instead of changing that child. If both a top-level activity and a child have that name, only the top-level activity is targeted.
+
+To change nested children, read the current definition and supply the **complete top-level container**, including all children and properties to retain. Omitted content is not automatically retained. Editing unrelated top-level siblings leaves existing container content in `pipeline-content.json` unchanged.
+
+Dependencies reference **top-level activities only**, by case-sensitive name; a nested-only target is rejected. Before saving, the tool checks top-level references for missing targets, self-dependency and supported conditions (`Succeeded`, `Failed`, `Skipped`, `Completed`). It does not detect cycles, validate nested dependencies, or validate the full graph.
+
+#### Local Validation Limits
+
+Activities are **not fully validated locally**. Required inputs and the top-level dependency guards are checked, but activity-type-specific payloads are opaque: even the shape and contents of `typeProperties` are not locally schema-validated. No activity-type warnings are returned. A successful tool response is **not a guarantee of runtime validity** or comprehensive synchronous Fabric validation; the [definition update API](https://learn.microsoft.com/en-us/rest/api/fabric/core/items/update-item-definition) can accept work asynchronously.
 
 #### Usage
 ```
 upsert_pipeline_activity(
   workspaceId: "12345678-1234-1234-1234-123456789012",
   pipelineId: "87654321-4321-4321-4321-210987654321",
-  activityJson: "{\"name\":\"LoadNotebook\",\"type\":\"TridentNotebook\",\"dependsOn\":[],\"typeProperties\":{\"notebookId\":\"NOTEBOOK_ID\"}}"
+  activityJson: "{\"name\":\"LoadNotebook\",\"type\":\"TridentNotebook\",\"dependsOn\":[],\"typeProperties\":{\"notebookId\":\"NOTEBOOK_ID\",\"workspaceId\":\"NOTEBOOK_WORKSPACE_ID\"}}"
 )
 ```
 
@@ -279,7 +289,7 @@ upsert_pipeline_activity(
 upsert_pipeline_activity(
   workspaceId: "12345678-1234-1234-1234-123456789012",
   pipelineId: "87654321-4321-4321-4321-210987654321",
-  activityJson: "{\"name\":\"Transform\",\"type\":\"TridentNotebook\",\"dependsOn\":[],\"typeProperties\":{\"notebookId\":\"NB_ID\"}}",
+  activityJson: "{\"name\":\"Transform\",\"type\":\"TridentNotebook\",\"dependsOn\":[],\"typeProperties\":{\"notebookId\":\"NB_ID\",\"workspaceId\":\"NOTEBOOK_WORKSPACE_ID\"}}",
   dependsOnJson: "[{\"activity\":\"Extract\",\"dependencyConditions\":[\"Succeeded\"]}]"
 )
 ```
@@ -290,8 +300,16 @@ upsert_pipeline_activity(
 |-----------|----------|-------------|
 | `workspaceId` | Yes | The workspace ID containing the pipeline |
 | `pipelineId` | Yes | The pipeline ID to update |
-| `activityJson` | Yes | The activity JSON object with at minimum `name` and `type` fields |
-| `dependsOnJson` | No | JSON array of dependsOn entries. Overrides any dependsOn in activityJson when provided |
+| `activityJson` | Yes | Complete top-level activity JSON object with non-empty `name` and `type` fields. Case-sensitive name matching; whole-object replacement, not a merge. To edit children, supply the complete top-level container and all children to retain. Type-specific payloads are not locally schema-validated. Use strict JSON without comments. |
+| `dependsOnJson` | No | JSON array of dependsOn entries targeting top-level activities only, by case-sensitive name. Nested-only targets are not resolved. Overrides any dependsOn in activityJson when provided. |
+
+#### Activity Templates and Schema
+
+The notebook examples require both `typeProperties.notebookId` and `typeProperties.workspaceId` per the [TridentNotebook schema](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/datapipeline-definition#tridentnotebook-activity-type-properties). The outer MCP `workspaceId` identifies the **pipeline's** workspace and does not populate the **notebook's** workspace property, even when both workspaces are the same. See the [notebook template](../claude-skills/templates/activity-notebook.json).
+
+For Web activities, use `WebActivity`, `typeProperties.relativeUrl`, `typeProperties.method`, and activity-level `externalReferences.connection`. The [Web template](../claude-skills/templates/activity-web.json) requires an existing appropriate Fabric connection ID and the request's relative URL. See the documented [Web activity properties](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/datapipeline-definition#web-activity-properties), [Web type properties](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/datapipeline-definition#web-activity-type-properties), and [connection reference](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/datapipeline-definition#external-references).
+
+Replace template placeholders and submit only the JSON object as `activityJson`, without the leading guidance comments. These templates provide authoring guidance, not local schema validation.
 
 #### Response Format
 ```json
@@ -303,14 +321,15 @@ upsert_pipeline_activity(
   "operation": "Added",
   "totalActivityCount": 3,
   "pipelineId": "87654321-4321-4321-4321-210987654321",
-  "workspaceId": "12345678-1234-1234-1234-123456789012",
-  "warnings": null
+  "workspaceId": "12345678-1234-1234-1234-123456789012"
 }
 ```
 
 ### remove_pipeline_activity
 
-Removes a single activity from an existing pipeline definition by name. Refuses removal if other activities depend on it via dependsOn references.
+Removes a single **top-level** activity from `properties.activities` by exact, case-sensitive name. A nested-only name is **not found**; containers are not searched. If a top-level activity and a child share a name, only the top-level entry is removed.
+
+Removal is refused if another **top-level** activity references it via `dependsOn`; update or remove those dependents first. Nested dependencies are not checked, and these guards are not full graph or activity-schema validation. To remove a nested child, use `upsert_pipeline_activity` with the complete top-level container including all children and properties to retain. Removing an unrelated top-level sibling leaves existing container content in `pipeline-content.json` unchanged.
 
 #### Usage
 ```
@@ -327,7 +346,7 @@ remove_pipeline_activity(
 |-----------|----------|-------------|
 | `workspaceId` | Yes | The workspace ID containing the pipeline |
 | `pipelineId` | Yes | The pipeline ID to update |
-| `activityName` | Yes | The name of the activity to remove |
+| `activityName` | Yes | Exact, case-sensitive name of the top-level activity to remove. Nested child names are not searched; a nested-only name is not found. |
 
 #### Response Format
 ```json

@@ -5,6 +5,8 @@
 - `create_pipeline` → create empty pipeline in a workspace
 - `update_pipeline_definition` → set the pipeline JSON (activities, schedule)
 - `get_pipeline_definition` → read current pipeline JSON
+- `upsert_pipeline_activity` → add or replace a top-level activity by exact name
+- `remove_pipeline_activity` → remove a top-level activity by exact name, checking top-level dependents
 - `get_pipeline` → get pipeline metadata (name, description)
 - `update_pipeline` → update pipeline metadata
 - `list_pipelines` → list all pipelines in a workspace
@@ -55,44 +57,65 @@ Use `dependsOn` to sequence activities. Use `templates/pipeline-chained-dataflow
 
 Dependency conditions: `Succeeded`, `Failed`, `Skipped`, `Completed` (any outcome).
 
-## Add or Modify a Single Activity
+## Add or Modify a Single Top-Level Activity
 
-Use `upsert_pipeline_activity` to add or replace a single activity without
-hand-editing the full pipeline definition.
+Use `upsert_pipeline_activity` to add or replace a single **top-level** activity
+in `properties.activities` without hand-editing the full pipeline definition.
 
 ### Upsert-by-name semantics
 
-The tool matches by `name`. If an activity with the same name already exists it
-is **replaced**; otherwise the new activity is **appended**.
+The tool matches top-level `name` values exactly and case-sensitively. A matching
+activity is **replaced as a whole object**, not merged; otherwise the new activity
+is **appended**.
+
+Targeting is not recursive: a name found only inside a ForEach, Switch, or other
+container causes a **new top-level append**, not a child update. To change
+children, read the current definition and supply the **complete top-level
+container**, including all children and properties to retain. Omitted content is
+not automatically retained. Editing an unrelated top-level sibling leaves
+existing container content in `pipeline-content.json` unchanged.
 
 ```python
 upsert_pipeline_activity(
   workspaceId="...",
   pipelineId="...",
-  activityJson='{"name":"LoadNotebook","type":"TridentNotebook","dependsOn":[],"typeProperties":{"notebookId":"NOTEBOOK_ID"}}'
+  activityJson='{"name":"LoadNotebook","type":"TridentNotebook","dependsOn":[],"typeProperties":{"notebookId":"NOTEBOOK_ID","workspaceId":"NOTEBOOK_WORKSPACE_ID"}}'
 )
 ```
+
+For `TridentNotebook`, both `typeProperties.notebookId` and
+`typeProperties.workspaceId` are required by the documented activity schema.
+The outer MCP `workspaceId` identifies the **pipeline's** workspace; it does not
+populate the **notebook's** workspace property, even when both workspaces are the same.
 
 ### Wiring dependencies
 
 Pass `dependsOnJson` to set or override the activity's `dependsOn` array. This
 is useful when the activity template has an empty `dependsOn` but you want to
-chain it after another activity:
+chain it after another **top-level** activity. Dependency names are case-sensitive;
+nested-only names are not resolved. The tool checks top-level references for
+missing targets, self-dependency and supported conditions (`Succeeded`, `Failed`,
+`Skipped`, `Completed`). It does not detect cycles, validate nested dependencies,
+or validate the full graph.
 
 ```python
 upsert_pipeline_activity(
   workspaceId="...",
   pipelineId="...",
-  activityJson='{"name":"Transform","type":"TridentNotebook","dependsOn":[],"typeProperties":{"notebookId":"NB_ID"}}',
+  activityJson='{"name":"Transform","type":"TridentNotebook","dependsOn":[],"typeProperties":{"notebookId":"NB_ID","workspaceId":"NOTEBOOK_WORKSPACE_ID"}}',
   dependsOnJson='[{"activity":"Extract","dependencyConditions":["Succeeded"]}]'
 )
 ```
 
-### Removing an activity
+### Removing a top-level activity
 
-Use `remove_pipeline_activity` to remove an activity by name. The tool refuses
-removal if any other activity's `dependsOn` references it — update or remove
-dependent activities first.
+Use `remove_pipeline_activity` to remove an activity from `properties.activities`
+by exact, case-sensitive name. A nested-only name is **not found**; the tool does
+not search inside containers. If a top-level activity and a child share a name,
+only the top-level entry is targeted. Removal is refused if another top-level
+activity's `dependsOn` references it — update or remove those dependents first.
+Nested dependencies are not checked. To remove a child, upsert the complete
+top-level container with all children to retain.
 
 ```python
 remove_pipeline_activity(
@@ -105,8 +128,31 @@ remove_pipeline_activity(
 ### Activity body templates
 
 Use `templates/activity-copy.json`, `templates/activity-notebook.json`, or
-`templates/activity-web.json` for the activity body shape. Replace placeholder
-values and pass as `activityJson`.
+`templates/activity-web.json` for a top-level activity body. Replace placeholder
+values and pass only the JSON object as `activityJson`, **without the leading
+guidance comments**; the tool requires strict JSON.
+
+- [Notebook template](templates/activity-notebook.json): `TridentNotebook` with
+  `typeProperties.notebookId` and `typeProperties.workspaceId`; see the
+  [notebook schema](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/datapipeline-definition#tridentnotebook-activity-type-properties).
+- [Web template](templates/activity-web.json): `WebActivity` with
+  `typeProperties.relativeUrl`, `typeProperties.method` and activity-level
+  `externalReferences.connection`. Use an existing appropriate Fabric connection
+  and the request's relative URL. See the
+  [Web activity schema](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/datapipeline-definition#web-activity-properties),
+  [Web type properties](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/datapipeline-definition#web-activity-type-properties)
+  and [connection reference](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/datapipeline-definition#external-references).
+
+### Local validation limits
+
+Activities are **not fully validated locally**. The tool checks required inputs
+and the top-level dependency guards above; activity-type-specific payloads are
+opaque, including the shape and contents of `typeProperties`. It does not provide
+activity-type warnings or enforce the schema requirements described by the
+templates. A successful tool response is **not a guarantee of runtime validity**.
+Fabric's [definition update API](https://learn.microsoft.com/en-us/rest/api/fabric/core/items/update-item-definition)
+can accept work asynchronously, so success does not promise comprehensive
+synchronous Fabric validation either.
 
 ## Scheduling
 
