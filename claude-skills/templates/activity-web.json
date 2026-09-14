@@ -1,0 +1,21 @@
+// Replace: ACTIVITY_NAME, RELATIVE_URL, METHOD (documented: GET, POST, PUT, DELETE), CONNECTION_ID
+// Use an existing appropriate Fabric connection ID and the request's relative URL
+// Pass only the JSON object, without these comments, as activityJson to upsert_pipeline_activity (top-level only)
+// Optional: add "headers", "body" under typeProperties for POST/PUT requests
+{
+  "name": "ACTIVITY_NAME",
+  "type": "WebActivity",
+  "dependsOn": [],
+  "policy": {
+    "timeout": "0.00:10:00",
+    "retry": 1,
+    "retryIntervalInSeconds": 30
+  },
+  "typeProperties": {
+    "relativeUrl": "RELATIVE_URL",
+    "method": "METHOD"
+  },
+  "externalReferences": {
+    "connection": "CONNECTION_ID"
+  }
+}
