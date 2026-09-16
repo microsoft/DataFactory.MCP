@@ -40,6 +40,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
+          include-prerelease: true
 
       - name: 📦 Restore Dependencies
         run: dotnet restore --configfile ../nuget.config
@@ -117,12 +118,6 @@ jobs:
               '⚠️ Some integration tests failed. Please check the logs and fix the issues.'}
 
             [View full results](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
-
-            await core.summary.addRaw(body).write();
-
-            if (context.payload.pull_request.head.repo.full_name !== context.payload.pull_request.base.repo.full_name) {
-              return;
-            }
 
             // Find existing comment
             const comments = await github.rest.issues.listComments({
