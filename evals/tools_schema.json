@@ -459,6 +459,23 @@
           "required": ["workspaceId", "pipelineId", "definitionJson"]
         }
       }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "SetPipelineScheduleEnabledAsync",
+        "description": "Enables or disables an existing Pipeline schedule, preserving its current configuration. Set enabled=false to STOP (disable) a schedule without deleting it; set enabled=true to re-enable it later. To stop several schedules, first call ListPipelineSchedulesAsync to get each schedule ID, then call this for each one. Use the scheduleId returned from ListPipelineSchedulesAsync.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceId": { "type": "string", "description": "The workspace ID containing the pipeline (required)" },
+            "pipelineId": { "type": "string", "description": "The pipeline ID whose schedule is being changed (required)" },
+            "scheduleId": { "type": "string", "description": "The schedule ID to enable or disable (required)" },
+            "enabled": { "type": "boolean", "description": "Whether the schedule should be enabled. Defaults to false (disable/stop the schedule)." }
+          },
+          "required": ["workspaceId", "pipelineId", "scheduleId"]
+        }
+      }
     }
   ]
 }

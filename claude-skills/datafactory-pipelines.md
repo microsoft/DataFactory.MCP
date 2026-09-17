@@ -8,6 +8,13 @@
 - `get_pipeline` → get pipeline metadata (name, description)
 - `update_pipeline` → update pipeline metadata
 - `list_pipelines` → list all pipelines in a workspace
+- `create_pipeline_schedule` → create a schedule (Cron, Daily, Weekly, Monthly)
+- `list_pipeline_schedules` → list a pipeline's schedules (returns `id` + `enabled` + `configuration`)
+- `set_pipeline_schedule_enabled` → enable or disable (stop) an existing schedule, preserving its configuration
+
+> To **stop** a schedule, use `set_pipeline_schedule_enabled` with `enabled=false`
+> — see **Stopping schedules** below. There is still no MCP tool to *delete* a
+> schedule; for deletion, fall back to the Fabric public REST API.
 
 ## Creating a Pipeline with a Dataflow Activity
 
@@ -50,13 +57,89 @@ Dependency conditions: `Succeeded`, `Failed`, `Skipped`, `Completed` (any outcom
 
 ## Scheduling
 
-Pipeline schedules cannot be set via the MCP API. After creating the pipeline, the user must configure the schedule in Fabric Studio:
+Schedules **can** be created via the MCP using `create_pipeline_schedule`
+(Cron, Daily, Weekly, Monthly). An item supports up to 20 schedules. Use
+`list_pipeline_schedules` to read existing ones and `set_pipeline_schedule_enabled`
+to stop or re-enable one.
 
-1. Open pipeline in the workspace
-2. Click **Schedule** on the toolbar
-3. Set frequency (hourly, daily, weekly, monthly)
+The MCP can **disable/enable** a schedule via `set_pipeline_schedule_enabled`,
+but has no tool to **delete** a schedule. For deletion, use the Fabric public
+REST API (see below).
 
-Always inform the user of this manual step after creating a pipeline.
+## Stopping schedules (disable)
+
+To stop a schedule, set its `enabled` flag to `false`. The schedule keeps
+existing but no longer triggers runs. Re-enable it later by setting `enabled`
+back to `true`.
+
+### Preferred: use the MCP tool
+
+```python
+# Stop (disable) a schedule
+set_pipeline_schedule_enabled(
+  workspaceId="...",
+  pipelineId="...",
+  scheduleId="...",   # from list_pipeline_schedules
+  enabled=False       # default; omit to disable
+)
+
+# Re-enable it later
+set_pipeline_schedule_enabled(
+  workspaceId="...", pipelineId="...", scheduleId="...", enabled=True
+)
+```
+
+The tool reads the schedule's existing `configuration` and preserves it
+automatically — you only pass the IDs and the `enabled` flag. It runs through
+the MCP server's own authentication, so it works on any surface without a
+separate `az login`.
+
+### Bulk pattern: stop a bunch of schedules
+
+1. For each pipeline, call `list_pipeline_schedules` to get every schedule `id`.
+2. For each schedule where `enabled = true`, call
+   `set_pipeline_schedule_enabled(..., enabled=False)`.
+3. Re-run `list_pipeline_schedules` to confirm `enabled` is now `false`.
+
+### Fallback: Fabric public REST API
+
+If you need to **delete** a schedule, or are working outside the MCP, use the
+Fabric [Update Item Schedule](https://learn.microsoft.com/rest/api/fabric/core/job-scheduler/update-item-schedule)
+endpoint directly.
+
+```
+PATCH https://api.fabric.microsoft.com/v1/workspaces/{workspaceId}/items/{pipelineId}/jobs/Pipeline/schedules/{scheduleId}
+Content-Type: application/json
+
+{
+  "enabled": false,
+  "configuration": { ...existing configuration... }
+}
+```
+
+The `configuration` block is required on update, so do **not** invent it —
+read the current schedule first and reuse its `configuration` verbatim.
+
+Use `az rest` (or any authenticated HTTP client) to issue the PATCH, e.g.:
+
+```bash
+az rest --method patch \
+  --url "https://api.fabric.microsoft.com/v1/workspaces/$WS/items/$PIPE/jobs/Pipeline/schedules/$SCHED" \
+  --headers "Content-Type=application/json" \
+  --body '{"enabled": false, "configuration": <existing-config>}'
+```
+
+> **Auth caveat.** The MCP server holds its own Azure AD token internally; an
+> `az rest` call uses a *separate* identity (`az login`). They may differ, so a
+> caller who can list schedules through the MCP is not guaranteed to be
+> authorized for the PATCH — expect possible `401`/`403` and confirm the
+> `az` identity has write access to the workspace.
+
+### Deleting vs. disabling
+
+Disabling (`enabled: false`) is reversible — flip it back to `true` later.
+Deleting a schedule (`DELETE` on the same URL) is permanent. Prefer disabling
+unless the user explicitly wants the schedule removed.
 
 ## Common Pipeline Patterns
 

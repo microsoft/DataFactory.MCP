@@ -471,6 +471,82 @@ public class PipelineToolIntegrationTests : FabricToolIntegrationTestBase
 
     #endregion
 
+    #region SetPipelineScheduleEnabledAsync - Unauthenticated
+
+    [Fact]
+    public async Task SetPipelineScheduleEnabledAsync_WithoutAuthentication_ShouldReturnAuthenticationError()
+    {
+        // Arrange
+        var scheduleId = "00000000-0000-0000-0000-000000000003";
+
+        // Act
+        var result = await _pipelineTool.SetPipelineScheduleEnabledAsync(TestWorkspaceId, InvalidPipelineId, scheduleId, false);
+
+        // Assert
+        AssertAuthenticationError(result);
+    }
+
+    [Fact]
+    public async Task SetPipelineScheduleEnabledAsync_WithEmptyWorkspaceId_ShouldReturnValidationError()
+    {
+        // Arrange
+        var scheduleId = "00000000-0000-0000-0000-000000000003";
+
+        // Act
+        var result = await _pipelineTool.SetPipelineScheduleEnabledAsync("", InvalidPipelineId, scheduleId, false);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("workspaceId"));
+    }
+
+    [Fact]
+    public async Task SetPipelineScheduleEnabledAsync_WithEmptyPipelineId_ShouldReturnValidationError()
+    {
+        // Arrange
+        var scheduleId = "00000000-0000-0000-0000-000000000003";
+
+        // Act
+        var result = await _pipelineTool.SetPipelineScheduleEnabledAsync(TestWorkspaceId, "", scheduleId, false);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("pipelineId"));
+    }
+
+    [Fact]
+    public async Task SetPipelineScheduleEnabledAsync_WithEmptyScheduleId_ShouldReturnValidationError()
+    {
+        // Act
+        var result = await _pipelineTool.SetPipelineScheduleEnabledAsync(TestWorkspaceId, InvalidPipelineId, "", false);
+
+        // Assert
+        McpResponseAssertHelper.AssertValidationError(result, Messages.InvalidParameterEmpty("scheduleId"));
+    }
+
+    [Fact]
+    public async Task SetPipelineScheduleEnabledAsync_DisableWithDefaultEnabled_ShouldReturnAuthenticationError()
+    {
+        // Act - enabled defaults to false (disable)
+        var scheduleId = "00000000-0000-0000-0000-000000000003";
+        var result = await _pipelineTool.SetPipelineScheduleEnabledAsync(TestWorkspaceId, InvalidPipelineId, scheduleId);
+
+        // Assert - should get auth error since validation passes but we're not authenticated
+        AssertAuthenticationError(result);
+    }
+
+    [Fact]
+    public async Task SetPipelineScheduleEnabledAsync_EnableWithTrue_ShouldReturnAuthenticationError()
+    {
+        // Act
+        var scheduleId = "00000000-0000-0000-0000-000000000003";
+        var result = await _pipelineTool.SetPipelineScheduleEnabledAsync(TestWorkspaceId, InvalidPipelineId, scheduleId, true);
+
+        // Assert - should get auth error since validation passes but we're not authenticated
+        AssertAuthenticationError(result);
+    }
+
+    #endregion
+
+
     #region Authenticated Scenarios
 
     [SkippableFact]

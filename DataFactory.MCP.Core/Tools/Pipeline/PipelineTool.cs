@@ -471,6 +471,56 @@ public class PipelineTool
         }
     }
 
+    [McpServerTool, Description(@"Enables or disables an existing Pipeline schedule, preserving its current configuration. Set enabled=false to STOP (disable) a schedule without deleting it; set enabled=true to re-enable it later. To stop several schedules, first call ListPipelineSchedulesAsync to get each schedule ID, then call this for each one. Use the scheduleId returned from ListPipelineSchedulesAsync.")]
+    public async Task<string> SetPipelineScheduleEnabledAsync(
+        [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
+        [Description("The pipeline ID whose schedule is being changed (required)")] string pipelineId,
+        [Description("The schedule ID to enable or disable (required)")] string scheduleId,
+        [Description("Whether the schedule should be enabled. Defaults to false (disable/stop the schedule).")] bool enabled = false)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
+            _validationService.ValidateRequiredString(scheduleId, nameof(scheduleId));
+
+            var schedule = await _pipelineService.SetPipelineScheduleEnabledAsync(workspaceId, pipelineId, scheduleId, enabled);
+
+            var result = new
+            {
+                Success = true,
+                Message = enabled
+                    ? "Pipeline schedule enabled successfully"
+                    : "Pipeline schedule disabled (stopped) successfully",
+                ScheduleId = schedule.Id,
+                PipelineId = pipelineId,
+                WorkspaceId = workspaceId,
+                Enabled = schedule.Enabled,
+                CreatedDateTime = schedule.CreatedDateTime,
+                Configuration = schedule.Configuration,
+                Owner = schedule.Owner
+            };
+
+            return result.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (Exception ex)
+        {
+            return ex.ToOperationError("updating pipeline schedule enabled state").ToMcpJson();
+        }
+    }
+
     /// <summary>
     /// Attempts to decode a base64-encoded string. Returns the decoded string or the original payload if decoding fails.
     /// </summary>

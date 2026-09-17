@@ -324,4 +324,84 @@ public class FabricPipelineService : FabricServiceBase, IFabricPipelineService
             throw;
         }
     }
+
+    public async Task<ItemSchedule> GetPipelineScheduleAsync(
+        string workspaceId,
+        string pipelineId,
+        string scheduleId)
+    {
+        try
+        {
+            ValidateGuids(
+                (workspaceId, nameof(workspaceId)),
+                (pipelineId, nameof(pipelineId)),
+                (scheduleId, nameof(scheduleId)));
+
+            var endpoint = FabricUrlBuilder.ForFabricApi()
+                .WithLiteralPath($"workspaces/{workspaceId}/items/{pipelineId}/jobs/{PipelineJobType}/schedules/{scheduleId}")
+                .BuildEndpoint();
+            Logger.LogInformation("Getting schedule {ScheduleId} for pipeline {PipelineId} in workspace {WorkspaceId}",
+                scheduleId, pipelineId, workspaceId);
+
+            var schedule = await GetAsync<ItemSchedule>(endpoint);
+
+            Logger.LogInformation("Successfully retrieved schedule {ScheduleId} for pipeline {PipelineId}",
+                scheduleId, pipelineId);
+            return schedule ?? throw new InvalidOperationException($"Schedule {scheduleId} not found");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error getting schedule {ScheduleId} for pipeline {PipelineId} in workspace {WorkspaceId}",
+                scheduleId, pipelineId, workspaceId);
+            throw;
+        }
+    }
+
+    public async Task<ItemSchedule> SetPipelineScheduleEnabledAsync(
+        string workspaceId,
+        string pipelineId,
+        string scheduleId,
+        bool enabled)
+    {
+        try
+        {
+            ValidateGuids(
+                (workspaceId, nameof(workspaceId)),
+                (pipelineId, nameof(pipelineId)),
+                (scheduleId, nameof(scheduleId)));
+
+            // The Fabric Update Item Schedule endpoint requires the configuration block on
+            // update, so fetch the existing schedule and reuse its configuration verbatim,
+            // only flipping the enabled flag.
+            var existing = await GetPipelineScheduleAsync(workspaceId, pipelineId, scheduleId);
+
+            var configuration = existing.Configuration is JsonElement je
+                ? je
+                : JsonSerializer.SerializeToElement(existing.Configuration);
+
+            var request = new UpdateScheduleRequest
+            {
+                Enabled = enabled,
+                Configuration = configuration
+            };
+
+            var endpoint = FabricUrlBuilder.ForFabricApi()
+                .WithLiteralPath($"workspaces/{workspaceId}/items/{pipelineId}/jobs/{PipelineJobType}/schedules/{scheduleId}")
+                .BuildEndpoint();
+            Logger.LogInformation("Setting schedule {ScheduleId} enabled={Enabled} for pipeline {PipelineId} in workspace {WorkspaceId}",
+                scheduleId, enabled, pipelineId, workspaceId);
+
+            var updated = await PatchAsync<ItemSchedule>(endpoint, request);
+
+            Logger.LogInformation("Successfully set schedule {ScheduleId} enabled={Enabled} for pipeline {PipelineId}",
+                scheduleId, enabled, pipelineId);
+            return updated ?? throw new InvalidOperationException($"Failed to update schedule {scheduleId}");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error setting schedule {ScheduleId} enabled state for pipeline {PipelineId} in workspace {WorkspaceId}",
+                scheduleId, pipelineId, workspaceId);
+            throw;
+        }
+    }
 }

@@ -85,4 +85,22 @@ public interface IFabricPipelineService
         string workspaceId,
         string pipelineId,
         string? continuationToken = null);
+
+    /// <summary>
+    /// Gets a single schedule for a pipeline by schedule ID
+    /// </summary>
+    Task<ItemSchedule> GetPipelineScheduleAsync(
+        string workspaceId,
+        string pipelineId,
+        string scheduleId);
+
+    /// <summary>
+    /// Enables or disables a pipeline schedule, preserving its existing configuration.
+    /// Use this to stop (disable) a schedule without deleting it, or to re-enable it later.
+    /// </summary>
+    Task<ItemSchedule> SetPipelineScheduleEnabledAsync(
+        string workspaceId,
+        string pipelineId,
+        string scheduleId,
+        bool enabled);
 }

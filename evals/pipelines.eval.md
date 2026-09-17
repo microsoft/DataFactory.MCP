@@ -7,6 +7,7 @@ Tools under test:
 - `GetPipelineDefinitionAsync(workspaceId, pipelineId)`
 - `UpdatePipelineAsync(workspaceId, pipelineId, displayName?, description?)`
 - `UpdatePipelineDefinitionAsync(workspaceId, pipelineId, definitionJson)`
+- `SetPipelineScheduleEnabledAsync(workspaceId, pipelineId, scheduleId, enabled?)`
 
 ---
 
@@ -328,3 +329,68 @@ Tools under test:
 - "Data pipeline" should map to Pipeline, not Dataflow
 - In Fabric terminology, "pipeline" specifically refers to the orchestration artifact
 - If unsure, calling both `ListPipelinesAsync` and `ListDataflowsAsync` is acceptable
+
+---
+
+## Schedule Enable/Disable
+
+### EVAL-PL-016: Disable a pipeline schedule
+
+**Category:** Tool Selection
+**Difficulty:** Medium
+
+**User prompt:**
+> Stop the schedule `sch-001` on pipeline `pl-456` in workspace `ws-123` without deleting it
+
+**Expected tool call(s):**
+- Tool: `SetPipelineScheduleEnabledAsync`
+  - `workspaceId`: `ws-123`
+  - `pipelineId`: `pl-456`
+  - `scheduleId`: `sch-001`
+  - `enabled`: `false`
+
+**Assertions:**
+- "Stop ... without deleting" maps to disable, not a delete operation
+- Must set `enabled` to `false`
+- Must not invent a delete tool
+
+---
+
+### EVAL-PL-017: Re-enable a pipeline schedule
+
+**Category:** Parameter Extraction
+**Difficulty:** Medium
+
+**User prompt:**
+> Turn schedule `sch-001` back on for pipeline `pl-456` in workspace `ws-123`
+
+**Expected tool call(s):**
+- Tool: `SetPipelineScheduleEnabledAsync`
+  - `workspaceId`: `ws-123`
+  - `pipelineId`: `pl-456`
+  - `scheduleId`: `sch-001`
+  - `enabled`: `true`
+
+**Assertions:**
+- "Turn back on" / "re-enable" maps to `enabled` = `true`
+- All three IDs extracted correctly
+
+---
+
+### EVAL-PL-018: Disable all schedules on a pipeline
+
+**Category:** Edge Case
+**Difficulty:** Hard
+
+**User prompt:**
+> Pause all schedules on pipeline `pl-456` in workspace `ws-123`
+
+**Expected behavior:**
+- Schedule IDs are not known from the prompt
+- Must first call `ListPipelineSchedulesAsync` to enumerate schedule IDs
+- Then call `SetPipelineScheduleEnabledAsync` with `enabled` = `false` for each returned schedule
+
+**Assertions:**
+- Must call `ListPipelineSchedulesAsync` before disabling
+- Must not guess or fabricate schedule IDs
+- Each disable call sets `enabled` to `false`
