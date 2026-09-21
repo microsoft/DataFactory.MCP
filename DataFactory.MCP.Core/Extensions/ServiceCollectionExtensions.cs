@@ -91,6 +91,7 @@ public static class ServiceCollectionExtensions
             // Dataflow handlers
             .AddSingleton<DataflowHandler>()
             .AddSingleton<DataflowQueryHandler>()
+            .AddSingleton<DataflowRefreshHandler>()
             // Copy Job service
             .AddSingleton<IFabricCopyJobService, FabricCopyJobService>()
             // Apache Airflow Job service
@@ -99,6 +100,7 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IMcpSessionAccessor, McpSessionAccessor>()
             // Background task system (consolidated: monitor handles start, track, poll, notify)
             .AddSingleton<IBackgroundJobMonitor, BackgroundJobMonitor>()
+            .AddSingleton<Func<IBackgroundJobMonitor>>(sp => sp.GetRequiredService<IBackgroundJobMonitor>)
             .AddSingleton<IDataflowRefreshService, DataflowRefreshService>()
             // Notification queue - processes notifications with spacing to prevent overlap
             .AddSingleton<INotificationQueue, NotificationQueue>();
