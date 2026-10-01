@@ -13,6 +13,9 @@
         "react": "^18.2.0",
         "react-dom": "^18.2.0"
     },
+    "overrides": {
+        "hono": "^4.12.25"
+    },
     "devDependencies": {
         "@types/react": "^18.2.0",
         "@types/react-dom": "^18.2.0",
