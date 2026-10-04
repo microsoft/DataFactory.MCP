@@ -26,6 +26,7 @@ DataFactory.MCP.Http/        — HTTP transport layer (AspNetCore)
 DataFactory.MCP.Tests/       — Test suite (xUnit)
 DataFactory.WindowsMCP/      — Windows-specific MCP implementation
 claude-skills/               — Claude skill definitions (RAG pattern)
+chatgpt-skills/              — ChatGPT instructions and knowledge files
 docs/                        — Feature documentation
 evals/                       — Evaluation test scenarios
 ```
@@ -89,3 +90,4 @@ For Data Factory / M language / Dataflow patterns, see `claude-skills/`:
 - `datafactory-destinations.md` — Output destinations, DataDestination patterns
 - `datafactory-performance.md` — Query tuning, chunking, query folding
 - `datafactory-advanced.md` — Fast Copy, Action.Sequence, Modern Evaluator
+- `datafactory-data-visuals.md` — Dataflow Gen2 Visual generation and validation
