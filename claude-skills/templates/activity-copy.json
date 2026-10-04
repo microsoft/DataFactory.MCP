@@ -1,0 +1,21 @@
+// Replace: ACTIVITY_NAME, SOURCE_TYPE, SINK_TYPE
+// Pass this JSON as the activityJson parameter to upsert_pipeline_activity
+// source and sink objects vary by connector — see Fabric documentation for your connector type
+{
+  "name": "ACTIVITY_NAME",
+  "type": "Copy",
+  "dependsOn": [],
+  "policy": {
+    "timeout": "0.01:00:00",
+    "retry": 1,
+    "retryIntervalInSeconds": 60
+  },
+  "typeProperties": {
+    "source": {
+      "type": "SOURCE_TYPE"
+    },
+    "sink": {
+      "type": "SINK_TYPE"
+    }
+  }
+}

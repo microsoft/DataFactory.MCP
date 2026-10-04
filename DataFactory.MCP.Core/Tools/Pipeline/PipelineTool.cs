@@ -2,6 +2,7 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
 using DataFactory.MCP.Handlers;
@@ -9,6 +10,8 @@ using DataFactory.MCP.Handlers.Pipeline;
 using DataFactory.MCP.Models.Pipeline;
 using DataFactory.MCP.Models.Pipeline.Definition;
 using DataFactory.MCP.Models.Pipeline.Schedule;
+using DataFactory.MCP.Parsing;
+using DataFactory.MCP.Validation;
 
 namespace DataFactory.MCP.Tools.Pipeline;
 
@@ -518,6 +521,199 @@ public class PipelineTool
         catch (Exception ex)
         {
             return ex.ToOperationError("updating pipeline schedule enabled state").ToMcpJson();
+        }
+    }
+
+    [McpServerTool, Description(@"Adds or replaces a single top-level activity in properties.activities by exact, case-sensitive name. Replaces the whole activity object (no merge), or appends if no top-level name matches, even when that name exists only as a nested child. Does not search inside containers; to change children, supply the complete top-level container including all children to retain. Checks required inputs and top-level dependency references for missing targets, self-dependency and supported conditions, not cycles or the full graph. Activity-type-specific payloads are not locally schema-validated. A successful response does not guarantee runtime validity or comprehensive synchronous Fabric validation.")]
+    public async Task<string> UpsertPipelineActivityAsync(
+        [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
+        [Description("The pipeline ID to update (required)")] string pipelineId,
+        [Description("The complete top-level activity JSON object with non-empty 'name' and 'type' fields (required). Name matching is case-sensitive; replacement is whole-object, not a merge. To edit nested children, include the complete top-level container and all children to retain. Type-specific payloads are not locally schema-validated. Submit strict JSON without comments.")] string activityJson,
+        [Description("Optional JSON array of dependsOn entries referencing top-level activities only, e.g. [{\"activity\":\"Step1\",\"dependencyConditions\":[\"Succeeded\"]}]. Names are case-sensitive; nested-only targets are not resolved. Overrides any dependsOn in activityJson when provided (optional)")] string? dependsOnJson = null)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
+            _validationService.ValidateRequiredString(activityJson, nameof(activityJson));
+
+            var activity = PipelineActivityDocument.Parse(activityJson);
+
+            var activityName = activity.Name;
+            _validationService.ValidateRequiredString(activityName ?? string.Empty, "activity.name");
+
+            var activityType = activity.Type;
+            _validationService.ValidateRequiredString(activityType ?? string.Empty, "activity.type");
+
+            activity.ApplyDependsOnOverride(dependsOnJson);
+
+            // Pre-service validation: self-dependency and condition checks
+            PipelineActivityValidator.ValidateActivityDependencies(activity.Content, activityName!);
+
+            // Get current pipeline definition
+            var currentDefinition = await _pipelineService.GetPipelineDefinitionAsync(workspaceId, pipelineId);
+
+            var content = PipelineContentDocument.Parse(currentDefinition);
+            var activities = content.GetActivities(createIfMissing: true);
+
+            // Upsert by exact top-level name, replacing the whole activity
+            bool replaced = false;
+            for (int i = 0; i < activities.Count; i++)
+            {
+                var existingActivity = activities[i];
+                if (existingActivity is null)
+                    continue;
+                if (existingActivity is not JsonObject existingObject)
+                    throw new InvalidOperationException("Pipeline activity must be an object or null");
+
+                var existingName = existingObject["name"]?.GetValue<string>();
+                if (string.Equals(existingName, activityName, StringComparison.Ordinal))
+                {
+                    activities[i] = activity.Content.DeepClone();
+                    replaced = true;
+                    break;
+                }
+            }
+
+            if (!replaced)
+            {
+                activities.Add(activity.Content.DeepClone());
+            }
+
+            // Validate top-level dependency references and conditions (not cycles or nested activities)
+            PipelineActivityValidator.ValidateActivityGraph(activities);
+
+            await _pipelineService.UpdatePipelineDefinitionAsync(workspaceId, pipelineId, content.ToDefinition());
+
+            var result = new
+            {
+                Success = true,
+                Message = replaced
+                    ? $"Activity '{activityName}' replaced successfully"
+                    : $"Activity '{activityName}' added successfully",
+                ActivityName = activityName,
+                ActivityType = activityType,
+                Operation = replaced ? "Replaced" : "Added",
+                TotalActivityCount = activities.Count,
+                PipelineId = pipelineId,
+                WorkspaceId = workspaceId
+            };
+
+            return result.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (JsonException ex)
+        {
+            return ex.ToOperationError("upserting pipeline activity").ToMcpJson();
+        }
+        catch (FormatException ex)
+        {
+            return ex.ToOperationError("upserting pipeline activity").ToMcpJson();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return ex.ToOperationError("upserting pipeline activity").ToMcpJson();
+        }
+        catch (OperationCanceledException ex)
+        {
+            return ex.ToOperationError("upserting pipeline activity").ToMcpJson();
+        }
+    }
+
+    [McpServerTool, Description(@"Removes a single top-level activity from properties.activities by exact, case-sensitive name. Does not search inside containers; a nested-only name is not found. Refuses removal if another top-level activity references it via dependsOn. To remove a nested child, use upsert_pipeline_activity with the complete top-level container including all children to retain. These guards are not full graph or activity-schema validation.")]
+    public async Task<string> RemovePipelineActivityAsync(
+        [Description("The workspace ID containing the pipeline (required)")] string workspaceId,
+        [Description("The pipeline ID to update (required)")] string pipelineId,
+        [Description("The exact, case-sensitive name of the top-level activity to remove (required). Nested child names are not searched; a nested-only name is not found.")] string activityName)
+    {
+        try
+        {
+            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
+            _validationService.ValidateRequiredString(pipelineId, nameof(pipelineId));
+            _validationService.ValidateRequiredString(activityName, nameof(activityName));
+
+            var currentDefinition = await _pipelineService.GetPipelineDefinitionAsync(workspaceId, pipelineId);
+
+            var content = PipelineContentDocument.Parse(currentDefinition);
+            var activities = content.GetActivities(createIfMissing: false);
+
+            // Find the top-level activity to remove
+            int removeIndex = -1;
+            for (int i = 0; i < activities.Count; i++)
+            {
+                var existingActivity = activities[i];
+                if (existingActivity is null)
+                    continue;
+                if (existingActivity is not JsonObject existingObject)
+                    throw new InvalidOperationException("Pipeline activity must be an object or null");
+
+                if (string.Equals(
+                    existingObject["name"]?.GetValue<string>(), activityName, StringComparison.Ordinal))
+                {
+                    removeIndex = i;
+                    break;
+                }
+            }
+
+            if (removeIndex < 0)
+                throw new ArgumentException($"Activity '{activityName}' not found in pipeline");
+
+            PipelineActivityValidator.ValidateRemoval(activities, activityName);
+
+            activities.RemoveAt(removeIndex);
+
+            await _pipelineService.UpdatePipelineDefinitionAsync(workspaceId, pipelineId, content.ToDefinition());
+
+            var result = new
+            {
+                Success = true,
+                Message = $"Activity '{activityName}' removed successfully",
+                RemovedActivity = activityName,
+                RemainingActivityCount = activities.Count,
+                PipelineId = pipelineId,
+                WorkspaceId = workspaceId
+            };
+
+            return result.ToMcpJson();
+        }
+        catch (ArgumentException ex)
+        {
+            return ex.ToValidationError().ToMcpJson();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ex.ToAuthenticationError().ToMcpJson();
+        }
+        catch (HttpRequestException ex)
+        {
+            return ex.ToHttpError().ToMcpJson();
+        }
+        catch (JsonException ex)
+        {
+            return ex.ToOperationError("removing pipeline activity").ToMcpJson();
+        }
+        catch (FormatException ex)
+        {
+            return ex.ToOperationError("removing pipeline activity").ToMcpJson();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return ex.ToOperationError("removing pipeline activity").ToMcpJson();
+        }
+        catch (OperationCanceledException ex)
+        {
+            return ex.ToOperationError("removing pipeline activity").ToMcpJson();
         }
     }
 

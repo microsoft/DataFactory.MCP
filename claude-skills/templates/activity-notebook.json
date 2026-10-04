@@ -1,0 +1,17 @@
+// Replace: ACTIVITY_NAME, NOTEBOOK_ID, NOTEBOOK_WORKSPACE_ID (workspace containing the notebook)
+// Pass only the JSON object, without these comments, as activityJson to upsert_pipeline_activity (top-level only)
+// Optional: add "parameters" under typeProperties to pass values into the notebook
+{
+  "name": "ACTIVITY_NAME",
+  "type": "TridentNotebook",
+  "dependsOn": [],
+  "policy": {
+    "timeout": "0.12:00:00",
+    "retry": 0,
+    "retryIntervalInSeconds": 30
+  },
+  "typeProperties": {
+    "notebookId": "NOTEBOOK_ID",
+    "workspaceId": "NOTEBOOK_WORKSPACE_ID"
+  }
+}
