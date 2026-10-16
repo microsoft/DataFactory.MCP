@@ -35,14 +35,20 @@ from typing import Optional
 # Skill loader
 # ---------------------------------------------------------------------------
 
-SKILLS_DIR = Path(__file__).parent.parent / "claude-skills"
+# evals/integration/ -> repo root
+SKILLS_DIR = Path(__file__).resolve().parent.parent.parent / "claude-skills"
 
 SKILL_FILES = {
-    "datafactory-core": "datafactory-core.md",
-    "datafactory-destinations": "datafactory-destinations.md",
-    "datafactory-performance": "datafactory-performance.md",
-    "datafactory-advanced": "datafactory-advanced.md",
-    "datafactory-pipelines": "datafactory-pipelines.md",
+    "datafactory-core": ["datafactory-core.md"],
+    "datafactory-destinations": [
+        "destinations/dest-new-table.md",
+        "destinations/dest-existing-table.md",
+        "destinations/dest-troubleshooting.md",
+    ],
+    "datafactory-performance": ["datafactory-performance.md"],
+    "datafactory-advanced": ["datafactory-advanced.md"],
+    "datafactory-pipelines": ["datafactory-pipelines.md"],
+    "datafactory-data-visuals": ["datafactory-data-visuals.md"],
 }
 
 # Always-loaded skill tip file
@@ -50,15 +56,20 @@ SKILL_TIPS_FILE = "SKILL.md"
 
 
 def load_skill(name: str) -> str:
-    path = SKILLS_DIR / SKILL_FILES.get(name, "")
-    if path.exists():
-        return path.read_text()
-    return ""
+    filenames = SKILL_FILES.get(name)
+    if not filenames:
+        return ""
+    parts = [
+        (SKILLS_DIR / filename).read_text(encoding="utf-8")
+        for filename in filenames
+        if (SKILLS_DIR / filename).exists()
+    ]
+    return "\n\n---\n\n".join(parts)
 
 
 def load_tips() -> str:
     path = SKILLS_DIR / SKILL_TIPS_FILE
-    return path.read_text() if path.exists() else ""
+    return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
 def build_system_prompt(skill_names: list[str]) -> str:
@@ -173,7 +184,7 @@ def _extract_code_block(text: str, lang: str) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 def parse_integration_eval_file(filepath: Path) -> list[IntegrationScenario]:
-    text = filepath.read_text()
+    text = filepath.read_text(encoding="utf-8")
     scenarios = []
 
     blocks = re.split(r"(?=^### EVAL-)", text, flags=re.MULTILINE)
@@ -537,6 +548,10 @@ def save_results(scenarios: list[IntegrationScenario], output_path: Path):
 # ---------------------------------------------------------------------------
 
 def main():
+    # Eval files are UTF-8; avoid UnicodeEncodeError on legacy Windows consoles.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     parser = argparse.ArgumentParser(description="Run integration evals for M code quality")
     parser.add_argument("--eval", help="Run a single eval by ID")
     parser.add_argument("--category", help="Filter by category")
