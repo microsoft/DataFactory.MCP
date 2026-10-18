@@ -15,22 +15,41 @@ namespace DataFactory.MCP.Services.BackgroundTasks;
 /// </summary>
 public class DataflowRefreshService : IDataflowRefreshService
 {
-    private readonly IBackgroundJobMonitor _jobMonitor;
+    private readonly Func<IBackgroundJobMonitor> _jobMonitorFactory;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILoggerFactory _loggerFactory;
+    private readonly IMcpSessionAccessor _sessionAccessor;
 
     public DataflowRefreshService(
-        IBackgroundJobMonitor jobMonitor,
+        Func<IBackgroundJobMonitor> jobMonitorFactory,
         IHttpClientFactory httpClientFactory,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IMcpSessionAccessor sessionAccessor)
     {
-        _jobMonitor = jobMonitor;
+        _jobMonitorFactory = jobMonitorFactory;
         _httpClientFactory = httpClientFactory;
         _loggerFactory = loggerFactory;
+        _sessionAccessor = sessionAccessor;
     }
 
     public async Task<DataflowRefreshResult> StartRefreshAsync(
         McpSession session,
+        string workspaceId,
+        string dataflowId,
+        string? displayName = null,
+        string executeOption = ExecuteOptions.SkipApplyChanges,
+        List<ItemJobParameter>? parameters = null)
+    {
+        _sessionAccessor.CurrentSession = session;
+        return await StartRefreshAsync(
+            workspaceId,
+            dataflowId,
+            displayName,
+            executeOption,
+            parameters);
+    }
+
+    public async Task<DataflowRefreshResult> StartRefreshAsync(
         string workspaceId,
         string dataflowId,
         string? displayName = null,
@@ -47,8 +66,10 @@ public class DataflowRefreshService : IDataflowRefreshService
             executeOption,
             parameters);
 
-        // Start and monitor it
-        var result = await _jobMonitor.StartJobAsync(job, session);
+        var session = _sessionAccessor.CurrentSession;
+        var result = session != null
+            ? await _jobMonitorFactory().StartJobAsync(job, session)
+            : await job.StartAsync();
 
         // Map to DataflowRefreshResult for backward compatibility
         return new DataflowRefreshResult

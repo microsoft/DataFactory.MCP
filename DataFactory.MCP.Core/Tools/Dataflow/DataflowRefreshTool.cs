@@ -2,6 +2,8 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 using DataFactory.MCP.Abstractions.Interfaces;
 using DataFactory.MCP.Extensions;
+using DataFactory.MCP.Handlers;
+using DataFactory.MCP.Handlers.Dataflow;
 using DataFactory.MCP.Models.Dataflow.BackgroundTask;
 
 namespace DataFactory.MCP.Tools.Dataflow;
@@ -15,13 +17,19 @@ public class DataflowRefreshTool
 {
     private readonly IDataflowRefreshService _dataflowRefreshService;
     private readonly IValidationService _validationService;
+    private readonly DataflowRefreshHandler _handler;
+    private readonly IMcpSessionAccessor _sessionAccessor;
 
     public DataflowRefreshTool(
         IDataflowRefreshService dataflowRefreshService,
-        IValidationService validationService)
+        IValidationService validationService,
+        DataflowRefreshHandler handler,
+        IMcpSessionAccessor sessionAccessor)
     {
         _dataflowRefreshService = dataflowRefreshService;
         _validationService = validationService;
+        _handler = handler;
+        _sessionAccessor = sessionAccessor;
     }
 
     [McpServerTool, Description(@"Start a dataflow refresh in the background. Returns immediately with task info.
@@ -36,18 +44,16 @@ Use this for long-running refresh operations. For quick status checks, use Refre
         [Description("User-friendly name for notifications (optional, defaults to dataflow ID)")] string? displayName = null,
         [Description("Execute option: 'SkipApplyChanges' (default, faster) or 'ApplyChangesIfNeeded' (applies pending changes first)")] string executeOption = "SkipApplyChanges")
     {
-        try
-        {
-            _validationService.ValidateRequiredString(workspaceId, nameof(workspaceId));
-            _validationService.ValidateRequiredString(dataflowId, nameof(dataflowId));
+        _sessionAccessor.CurrentSession = mcpServer;
+        var handlerResult = await _handler.StartAsync(
+            workspaceId,
+            dataflowId,
+            displayName,
+            executeOption);
 
-            // Pass the MCP server (session) to the service for notifications
-            var result = await _dataflowRefreshService.StartRefreshAsync(
-                mcpServer,
-                workspaceId,
-                dataflowId,
-                displayName,
-                executeOption);
+        if (handlerResult.IsSuccess)
+        {
+            var result = handlerResult.Value!;
 
             var response = new
             {
@@ -73,22 +79,8 @@ Use this for long-running refresh operations. For quick status checks, use Refre
 
             return response.ToMcpJson();
         }
-        catch (ArgumentException ex)
-        {
-            return ex.ToValidationError().ToMcpJson();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return ex.ToAuthenticationError().ToMcpJson();
-        }
-        catch (HttpRequestException ex)
-        {
-            return ex.ToHttpError().ToMcpJson();
-        }
-        catch (Exception ex)
-        {
-            return ex.ToOperationError("starting dataflow refresh").ToMcpJson();
-        }
+
+        return handlerResult.ToErrorResponse("starting dataflow refresh").ToMcpJson();
     }
 
     [McpServerTool, Description(@"Check the status of a dataflow refresh operation.

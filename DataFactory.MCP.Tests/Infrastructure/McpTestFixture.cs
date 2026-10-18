@@ -98,11 +98,13 @@ public class McpTestFixture : IDisposable
                 services.AddSingleton<IUserNotificationService, SystemToastNotificationService>();
                 services.AddSingleton<INotificationQueue, NotificationQueue>();
                 services.AddSingleton<IBackgroundJobMonitor, BackgroundJobMonitor>();
+                services.AddSingleton<Func<IBackgroundJobMonitor>>(sp => sp.GetRequiredService<IBackgroundJobMonitor>);
                 services.AddScoped<IDataflowRefreshService, DataflowRefreshService>();
 
                 // Register handlers
                 services.AddScoped<PipelineHandler>();
                 services.AddScoped<DataflowHandler>();
+                services.AddScoped<DataflowRefreshHandler>();
 
                 // Register tools
                 services.AddScoped<AuthenticationTool>();
