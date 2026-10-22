@@ -16,6 +16,7 @@ Operational tips and best practices for working with Microsoft Fabric Data Facto
    - `knowledge-performance.md`
    - `knowledge-destinations.md`
    - `knowledge-advanced.md`
+   - `knowledge-data-visuals.md`
 4. Under **Capabilities**, enable:
    - ✅ Code Interpreter (for M code analysis)
 5. Click **Create** → **Save**
@@ -41,6 +42,7 @@ Operational tips and best practices for working with Microsoft Fabric Data Facto
 | `knowledge-performance.md` | Query optimization, timeouts, chunking |
 | `knowledge-destinations.md` | Output configuration, programmatic setup |
 | `knowledge-advanced.md` | Fast Copy, Action.Sequence, Modern Evaluator |
+| `knowledge-data-visuals.md` | Dataflow Gen2 Visual contract, workflow, and limitations |
 
 ## What's Covered
 
@@ -66,6 +68,11 @@ Operational tips and best practices for working with Microsoft Fabric Data Facto
 - Fast Copy (limited transforms, fast ingestion)
 - Modern Evaluator (complex transforms, limited connectors)
 
+### Data visuals
+- Visualization document contract (flat five-column table)
+- Closed PartType set and required properties
+- Visual selection, validation, and Preview limitations
+
 ## Usage Examples
 
 Once your GPT is created, you can ask:
@@ -75,6 +82,7 @@ Once your GPT is created, you can ask:
 - "What's the difference between Fast Copy and Modern Evaluator?"
 - "Help me write an M query to aggregate sales by month"
 - "Explain Action.Sequence and when to use it"
+- "Build a dashboard from my SalesData query"
 
 ## Comparison with Claude Skills
 
@@ -83,3 +91,13 @@ Once your GPT is created, you can ask:
 | Format | Multiple .md files with YAML frontmatter | Instructions + Knowledge files |
 | Loading | On-demand via RAG triggers | All knowledge available |
 | Best for | Claude Projects | Custom GPTs or ChatGPT Projects |
+
+## Dataflow Gen2 Visual builder
+
+Visual requests are routed by `gpt-instructions.md`, which loads
+`knowledge-data-visuals.md`. Visual is the canonical artifact name; dashboard,
+report, and chart remain discovery synonyms.
+
+Use the shared cases in `../evals/dataflow-visuals-parity.md` to run the same
+prompts in ChatGPT and Claude and compare both outputs with one checklist. No
+provider API keys are required.
