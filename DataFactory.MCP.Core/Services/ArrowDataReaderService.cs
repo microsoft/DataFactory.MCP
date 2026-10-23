@@ -96,7 +96,7 @@ public class ArrowDataReaderService : IArrowDataReaderService
             DoubleArray dbl => dbl.GetValue(index),
             BooleanArray bln => bln.GetValue(index),
             TimestampArray ts => ts.GetTimestamp(index)?.ToString("yyyy-MM-dd HH:mm:ss"),
-            Date32Array dt32 => DateTimeOffset.FromUnixTimeSeconds(dt32.GetValue(index) ?? 0).ToString("yyyy-MM-dd"),
+            Date32Array dt32 => dt32.GetDateTime(index)?.ToString("yyyy-MM-dd"),
             Date64Array dt64 => DateTimeOffset.FromUnixTimeMilliseconds(dt64.GetValue(index) ?? 0).ToString("yyyy-MM-dd"),
             Decimal128Array dec => dec.GetValue(index)?.ToString(),
             Decimal256Array dec256 => dec256.GetValue(index)?.ToString(),
