@@ -9,3 +9,5 @@ tmpclaude-*
 **/McpApps/node_modules/
 **/McpApps/dist/
 **/build-output.txt
+**/__pycache__/
+*.pyc

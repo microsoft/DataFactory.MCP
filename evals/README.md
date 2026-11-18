@@ -26,6 +26,10 @@ Cross-tool workflows live in `multi-step.eval.md`.
 | [pipelines.eval.md](pipelines.eval.md) | `ListPipelinesAsync`, `CreatePipelineAsync`, `GetPipelineAsync`, `GetPipelineDefinitionAsync`, `UpdatePipelineAsync`, `UpdatePipelineDefinitionAsync` |
 | [multi-step.eval.md](multi-step.eval.md) | Cross-tool orchestration scenarios |
 
+Provider-neutral skill comparison cases are documented in
+[`dataflow-visuals-parity.md`](dataflow-visuals-parity.md). They are run manually
+against Claude and ChatGPT because the repository CI doesn't host either client.
+
 ## Scenario Format
 
 Each scenario follows this template:
@@ -93,6 +97,11 @@ OPENAI_API_KEY=sk-... python evals/run_evals.py
 OPENAI_API_KEY=sk-... python evals/integration/run_integration_evals.py
 ```
 
+The integration runner scores response-text patterns, not M semantics. Dry runs
+check that the specifications parse; they do not execute M or verify rendering.
+Use the existing `dataflow-visuals-parity.md` checklist to review exact mappings,
+hierarchy, and equivalent output. Rendering still requires a live Fabric check.
+
 ### Files
 
 | File | Purpose |
@@ -100,7 +109,7 @@ OPENAI_API_KEY=sk-... python evals/integration/run_integration_evals.py
 | `.github/workflows/ai-evals.yml` | GitHub Actions workflow |
 | `evals/run_evals.py` | Tool-selection runner (parses markdown, calls LLM, scores) |
 | `evals/integration/run_integration_evals.py` | Integration runner (M code quality, baseline vs skills) |
-| `evals/integration/m-code-quality.eval.md` | 20 integration eval scenarios |
+| `evals/integration/m-code-quality.eval.md` | 25 integration eval scenarios |
 | `evals/tools_schema.json` | 32 tool definitions (OpenAI function-calling format) |
 
 ---
@@ -116,9 +125,9 @@ OPENAI_API_KEY=sk-... python evals/integration/run_integration_evals.py
 | Connections | 5 | 5 | 5 | 15 |
 | Gateways | 3 | 3 | 3 | 9 |
 | Dataflows | 9 | 7 | 6 | 22 |
-| Pipelines | 6 | 5 | 4 | 15 |
+| Pipelines | 7 | 6 | 5 | 18 |
 | Multi-step | — | — | — | 10 |
-| **Total** | **33** | **26** | **25** | **94** |
+| **Total** | **34** | **27** | **26** | **97** |
 
 ### Integration Evals (M Code Quality)
 
@@ -131,6 +140,7 @@ OPENAI_API_KEY=sk-... python evals/integration/run_integration_evals.py
 | Pipeline JSON | 2 |
 | Workflow | 3 |
 | Lifecycle | 2 |
-| **Total** | **20** |
+| Data Visuals | 5 |
+| **Total** | **25** |
 
-**Grand total: 114 evals** (94 tool-selection + 20 integration)
+**Grand total: 122 evals** (97 tool-selection + 25 integration)
